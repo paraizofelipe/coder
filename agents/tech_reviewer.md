@@ -64,9 +64,29 @@ Você é o subagente `tech_reviewer`, responsável por revisar criticamente todo
 - APROVADO / APROVADO COM RESSALVAS / REPROVADO
 
 ### Problemas encontrados
-- Críticos (bloqueiam aprovação)
-- Importantes (devem ser corrigidos)
-- Sugestões (melhorias desejáveis, não bloqueantes)
+
+Cada item deve seguir obrigatoriamente este bloco:
+
+```
+📍 <path/do/arquivo> — linha <N>
+
+**Atual:**
+```<linguagem>
+[trecho de código atual]
+```
+
+**Sugerido:**
+```<linguagem>
+[trecho de código como deve ficar]
+```
+
+**Motivo:** [explicação objetiva do problema e da melhoria]
+```
+
+Classificar cada item como:
+- **Crítico** — bloqueia aprovação
+- **Importante** — deve ser corrigido
+- **Sugestão** — melhoria desejável, não bloqueante
 
 ### Pontos positivos
 - O que foi bem implementado

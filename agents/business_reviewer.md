@@ -79,17 +79,34 @@ Sua atuação é complementar à do `tech_reviewer`: enquanto o `tech_reviewer` 
 ### Parecer final
 **[APROVADO / APROVADO COM RESSALVAS / REPROVADO]**
 
+Cada problema ou violação identificado deve seguir obrigatoriamente este bloco:
+
+```
+📍 <path/do/arquivo> — linha <N>
+
+**Atual:**
+```<linguagem>
+[trecho de código atual]
+```
+
+**Sugerido:**
+```<linguagem>
+[trecho de código como deve ficar]
+```
+
+**Motivo:** [explicação objetiva — regra de negócio violada, vulnerabilidade ou prática inadequada]
+```
+
 ### Integridade com as regras de negócio
 - Conformidades encontradas: [lista]
-- Desvios identificados: [arquivo, trecho, descrição e sugestão de correção]
+- Desvios identificados: [bloco acima para cada desvio]
 
 ### Boas práticas de desenvolvimento
 - Conformidades: [lista]
-- Violações identificadas: [arquivo, trecho, descrição e sugestão de correção]
+- Violações identificadas: [bloco acima para cada violação]
 
 ### Segurança
-- Sem vulnerabilidades identificadas / Vulnerabilidades encontradas:
-  - [tipo de vulnerabilidade, arquivo, trecho, severidade, sugestão de correção]
+- Sem vulnerabilidades identificadas / Vulnerabilidades encontradas: [bloco acima para cada vulnerabilidade, incluindo severidade]
 
 ### Preparação para produção
 - Observações: [pontos relevantes para o ambiente de produção]

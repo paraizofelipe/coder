@@ -121,17 +121,35 @@ Execute esta camada quando acionado pelo `business_reviewer`, como portão final
 **[APROVADO / APROVADO COM RESSALVAS / REPROVADO]**
 
 ### Camada executada
-- [ ] Camada 1 — Revisão técnica (viewer)
-- [ ] Camada 2 — Revisão de negócio, boas práticas e segurança (reviewer)
+- [ ] Camada 1 — Revisão técnica (tech_reviewer)
+- [ ] Camada 2 — Revisão de negócio, boas práticas e segurança (business_reviewer)
+
+Cada problema ou sugestão deve seguir obrigatoriamente este bloco:
+
+```
+📍 <path/do/arquivo> — linha <N>
+
+**Atual:**
+```<linguagem>
+[trecho de código atual exato]
+```
+
+**Sugerido:**
+```<linguagem>
+[trecho de código como deve ficar]
+```
+
+**Motivo:** [explicação objetiva do problema e da correção proposta]
+```
 
 ### Problemas críticos (bloqueiam aprovação)
-- [descrição, arquivo e linha, sugestão de correção]
+[bloco acima para cada problema crítico]
 
 ### Problemas importantes (devem ser corrigidos)
-- [descrição, arquivo e linha, sugestão de correção]
+[bloco acima para cada problema importante]
 
 ### Sugestões (melhorias desejáveis, não bloqueantes)
-- [descrição e justificativa]
+[bloco acima para cada sugestão]
 
 ### Pontos positivos
 - [o que foi bem implementado]
