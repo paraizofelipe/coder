@@ -1,0 +1,106 @@
+# coder
+
+Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa um fluxo disciplinado de desenvolvimento de software com análise prévia, TDD, revisão técnica, revisão de segurança e versionamento controlado.
+
+## Agentes
+
+| Agente | Função |
+|---|---|
+| `coder` | Orquestrador principal — coordena todos os subagentes |
+| `analyzer` | Inspeciona a codebase antes de qualquer modificação |
+| `tester` | Cria e executa testes com abordagem TDD |
+| `tech_reviewer` | Revisão técnica de código logo após a implementação |
+| `business_reviewer` | Portão final de negócio e segurança antes do commit |
+| `versioner` | Executa operações Git com confirmação explícita |
+
+## Fluxo de desenvolvimento
+
+```
+analyzer → plano → confirmação → tester → implementação
+         → tech_reviewer → business_reviewer → confirmação → versioner
+```
+
+Toda sessão com o agente `coder` segue esse fluxo com dois portões obrigatórios de confirmação com o usuário: antes de modificar qualquer arquivo e antes de fazer commit.
+
+## Instalação
+
+### Via curl (recomendado)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash
+```
+
+### Via wget
+
+```bash
+wget -qO- https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash
+```
+
+### A partir do repositório local
+
+Clone o repositório e execute o script com a flag `--local`:
+
+```bash
+git clone https://github.com/paraizofelipe/coder.git
+cd coder
+./install.sh --local
+```
+
+## Opções do instalador
+
+| Flag | Descrição |
+|---|---|
+| `--force`, `-f` | Substitui todos os arquivos sem perguntar |
+| `--local`, `-l` | Instala a partir dos arquivos locais do repositório clonado |
+| `--help`, `-h` | Exibe a ajuda |
+
+### Exemplo: forçar substituição
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash -s -- --force
+```
+
+## Checagem antes de instalar
+
+O instalador verifica, para cada agente e skill, se já existe um arquivo com o mesmo nome no diretório de destino. Quando encontra um conflito, exibe um aviso e pergunta se deve substituir:
+
+```
+[warn]  Já existe: /home/user/.opencode/agents/coder.md
+[?]    Substituir coder.md? [s/N]
+```
+
+Responda `s` para substituir ou pressione Enter para pular.
+
+## Diretórios de instalação
+
+Por padrão, os arquivos são instalados em:
+
+```
+~/.opencode/agents/   ← agentes
+~/.opencode/skills/   ← skills
+```
+
+Para instalar em outro diretório, defina a variável `OPENCODE_DIR` antes de executar:
+
+```bash
+OPENCODE_DIR=/caminho/personalizado curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash
+```
+
+## Requisitos
+
+- [OpenCode](https://opencode.ai) instalado
+- `curl` ou `wget` (para instalação remota)
+- `bash` >= 4.0
+
+## Modelos configurados
+
+Os agentes estão configurados para usar modelos **OpenAI Codex**:
+
+| Agente | Modelo | Motivo |
+|---|---|---|
+| `coder` | `openai/codex` | Orquestração e planejamento complexo |
+| `analyzer` | `openai/codex` | Análise de contexto longo |
+| `tester` | `openai/codex` | Geração precisa de testes |
+| `tech_reviewer` | `openai/codex` | Análise técnica de código |
+| `business_reviewer` | `openai/codex` | Revisão crítica de segurança e negócio |
+| `versioner` | `openai/codex-mini` | Operações Git simples |

@@ -4,6 +4,25 @@ description: Skill do subagente analyzer. Inspeciona profundamente a codebase pa
 
 Você está executando a skill `analyse_code`. Sua missão é inspecionar a codebase com profundidade e retornar um relatório completo e preciso para guiar toda a etapa de desenvolvimento subsequente.
 
+<code_navigation>
+Toda consulta ao código deve seguir esta ordem de prioridade obrigatória:
+
+1. **LSP (prioritário):** Usar o LSP da linguagem disponível no OpenCode:
+   - `go to definition` — navegar até a definição de classes, funções e tipos
+   - `find references` — localizar todos os usos de um símbolo no projeto
+   - `workspace symbols` — buscar símbolos por nome em todo o workspace
+   - `hover` — inspecionar tipo, assinatura e documentação inline
+   - `call hierarchy` — mapear quem chama e quem é chamado por uma função
+   - `type hierarchy` — explorar herança e implementações de interfaces
+
+2. **Fallback — grep:** Usar somente se o LSP não estiver disponível ou não retornar resultado suficiente:
+   - Busca textual por nomes, padrões de import, strings literais
+
+3. **Fallback — glob:** Usar como último recurso:
+   - Localização de arquivos por padrão de nome ou extensão
+   - Mapeamento de estrutura de diretórios quando LSP não indexar o workspace
+</code_navigation>
+
 <instructions>
 ### 1. Inspecionar a estrutura do projeto
 - Listar os diretórios e arquivos principais
@@ -45,9 +64,11 @@ Você está executando a skill `analyse_code`. Sua missão é inspecionar a code
 - Hooks de pre-commit configurados
 
 ### 7. Mapear áreas impactadas
-Com base na solicitação do usuário:
-- Identificar os arquivos e módulos que provavelmente serão afetados
-- Identificar dependências que podem ser impactadas
+Com base na solicitação do usuário, usando LSP como método primário:
+- Usar `find references` via LSP para localizar todos os pontos de uso dos símbolos afetados
+- Usar `call hierarchy` via LSP para mapear dependências diretas e indiretas
+- Usar `workspace symbols` via LSP para identificar classes e funções relacionadas pelo nome
+- Se LSP não disponível: usar grep para rastrear imports e referências textuais, glob para localizar arquivos relacionados
 - Identificar testes existentes relacionados à área de mudança
 
 ### 8. Verificar estado do repositório
@@ -60,6 +81,8 @@ Com base na solicitação do usuário:
 - Se algo não puder ser determinado com certeza, indique claramente a incerteza
 - Não faça suposições sobre padrões sem verificar na codebase
 - Prefira verificar múltiplos arquivos antes de afirmar uma convenção
+- **LSP é o método primário** para toda consulta a símbolos, referências e definições — grep e glob são fallback, não padrão
+- Indicar no relatório qual método foi utilizado em cada consulta (LSP / grep / glob) e o motivo do fallback quando aplicável
 </rules>
 
 <output_format>

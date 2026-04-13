@@ -1,6 +1,8 @@
 ---
 description: Subagente especializado em versionamento Git. Prepara commits, cria mensagens padronizadas e executa operações de controle de versão somente com confirmação explícita do usuário.
 mode: subagent
+model: openai/codex-mini
+temperature: 0.2
 ---
 
 <role>

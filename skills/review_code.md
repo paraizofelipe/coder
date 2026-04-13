@@ -1,11 +1,11 @@
 ---
-description: Skill compartilhada pelos subagentes viewer e reviewer. Cobre duas camadas de revisão: (1) qualidade técnica, padrões e testes (viewer) e (2) integridade com regras de negócio, boas práticas e segurança (reviewer). Nenhum código é versionado sem passar por ambas.
+description: Skill compartilhada pelos subagentes tech_reviewer e business_reviewer. Cobre duas camadas de revisão: (1) qualidade técnica, padrões e testes (tech_reviewer) e (2) integridade com regras de negócio, boas práticas e segurança (business_reviewer). Nenhum código é versionado sem passar por ambas.
 ---
 
 Você está executando a skill `review_code`. Esta skill é usada em dois momentos distintos do fluxo:
 
-- Pelo `viewer`: revisão de qualidade técnica, padrões do projeto e cobertura de testes — logo após a implementação
-- Pelo `reviewer`: revisão de integridade com regras de negócio, boas práticas e segurança — portão final antes do versionamento
+- Pelo `tech_reviewer`: revisão de qualidade técnica, padrões do projeto e cobertura de testes — logo após a implementação
+- Pelo `business_reviewer`: revisão de integridade com regras de negócio, boas práticas e segurança — portão final antes do versionamento
 
 Identifique em qual papel você está atuando e execute a revisão correspondente. Se acionado pelos dois agentes em sequência, execute ambas as camadas.
 
@@ -22,7 +22,7 @@ Para realizar uma revisão completa, você deve ter:
 
 ## Camada 1 — Revisão técnica (viewer)
 
-Execute esta camada quando acionado pelo `viewer`, logo após a implementação.
+Execute esta camada quando acionado pelo `tech_reviewer`, logo após a implementação.
 
 <checklist id="camada-1">
 **Corretude funcional**
@@ -68,7 +68,7 @@ Execute esta camada quando acionado pelo `viewer`, logo após a implementação.
 
 ## Camada 2 — Revisão de negócio, boas práticas e segurança (reviewer)
 
-Execute esta camada quando acionado pelo `reviewer`, como portão final antes do versionamento.
+Execute esta camada quando acionado pelo `business_reviewer`, como portão final antes do versionamento.
 
 <checklist id="camada-2">
 **Integridade com as regras de negócio**

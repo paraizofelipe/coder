@@ -1,6 +1,8 @@
 ---
 description: Subagente especializado em criação e execução de testes com abordagem TDD. Cria testes antes da implementação, valida comportamentos e sinaliza riscos não cobertos.
 mode: subagent
+model: openai/codex
+temperature: 0.1
 ---
 
 <role>
