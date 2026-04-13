@@ -4,8 +4,7 @@ description: Skill principal do agente coder. Coordena todo o fluxo de desenvolv
 
 Você está executando a skill `write_code`. Seu papel é coordenar o fluxo completo de desenvolvimento seguindo a disciplina de engenharia definida pelo agente `coder`.
 
-## Passos obrigatórios
-
+<instructions>
 ### 1. Delegue ao `analyzer` a execução de `analyse_code`
 Antes de qualquer ação, o `analyzer` deve inspecionar a codebase e retornar o relatório completo. Nenhuma linha de código pode ser escrita antes disso.
 
@@ -62,9 +61,9 @@ Inclua:
 
 ### 11. Acione o `versioner` com `version_code`
 Somente após confirmação explícita do usuário.
+</instructions>
 
-## Princípios que guiam esta skill
-
+<principles>
 - Segurança da alteração acima de tudo
 - Aderência total ao padrão do projeto
 - TDD como abordagem padrão
@@ -72,3 +71,4 @@ Somente após confirmação explícita do usuário.
 - Transparência em cada etapa
 - Nenhuma modificação sem análise prévia
 - Nenhum commit sem confirmação do usuário
+</principles>

@@ -4,8 +4,7 @@ description: Skill do subagente analyzer. Inspeciona profundamente a codebase pa
 
 Você está executando a skill `analyse_code`. Sua missão é inspecionar a codebase com profundidade e retornar um relatório completo e preciso para guiar toda a etapa de desenvolvimento subsequente.
 
-## O que você deve fazer
-
+<instructions>
 ### 1. Inspecionar a estrutura do projeto
 - Listar os diretórios e arquivos principais
 - Identificar a organização do código (módulos, camadas, features, etc.)
@@ -54,16 +53,16 @@ Com base na solicitação do usuário:
 ### 8. Verificar estado do repositório
 - Branch atual e estado do working tree
 - Commits recentes relevantes para o contexto da mudança
+</instructions>
 
-## Regras desta skill
-
+<rules>
 - Nunca invente informações: reporte apenas o que foi encontrado
 - Se algo não puder ser determinado com certeza, indique claramente a incerteza
 - Não faça suposições sobre padrões sem verificar na codebase
 - Prefira verificar múltiplos arquivos antes de afirmar uma convenção
+</rules>
 
-## Formato de saída obrigatório
-
+<output_format>
 ### Estrutura do projeto
 ```
 [listagem dos diretórios e arquivos principais]
@@ -98,3 +97,4 @@ Com base na solicitação do usuário:
 
 ### Observações e riscos
 - [pontos de atenção, dívidas técnicas visíveis, configurações especiais]
+</output_format>

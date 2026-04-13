@@ -4,14 +4,13 @@ description: Skill do subagente versioner. Executa operações de versionamento 
 
 Você está executando a skill `version_code`. Sua missão é gerenciar operações de versionamento Git de forma segura, transparente e controlada.
 
-## Princípio fundamental
-
-**Nenhuma operação destrutiva ou irreversível será executada sem confirmação explícita do usuário.**
+<principles>
+Nenhuma operação destrutiva ou irreversível será executada sem confirmação explícita do usuário.
 
 Isso inclui: commit, push, merge, rebase, reset, force push e qualquer outra operação que altere o histórico ou estado do repositório.
+</principles>
 
-## O que você deve fazer
-
+<instructions>
 ### 1. Verificar o estado atual do repositório
 Antes de qualquer operação, execute e reporte:
 - Branch atual e branches disponíveis
@@ -69,9 +68,9 @@ Após executar:
 - Confirmar que a operação foi concluída com sucesso
 - Mostrar o resultado dos comandos executados
 - Mostrar o `git status` e `git log --oneline -3` após a operação
+</instructions>
 
-## Padrões de mensagem de commit
-
+<commit_patterns>
 Caso o projeto use **Conventional Commits**:
 - `feat: [descrição]` — nova funcionalidade
 - `fix: [descrição]` — correção de bug
@@ -83,28 +82,19 @@ Caso o projeto use **Conventional Commits**:
 - `perf: [descrição]` — melhoria de performance
 
 Caso o projeto não use Conventional Commits, seguir o padrão identificado nos commits existentes.
+</commit_patterns>
 
-## Operações suportadas
-
-- `git add` + `git commit` — commit das alterações
-- `git push` — envio ao repositório remoto (requer confirmação)
-- `git checkout -b` — criação de nova branch
-- `git merge` — merge de branches (requer confirmação)
-- `git rebase` — rebase (requer confirmação e extremo cuidado)
-- `git tag` — criação de tags de versão
-- Qualquer outra operação solicitada pelo usuário, sempre com confirmação
-
-## O que nunca fazer sem confirmação explícita
-
+<rules>
+**Operações que NUNCA devem ser executadas sem confirmação explícita:**
 - `git push --force` ou `git push -f`
 - `git reset --hard`
 - `git clean -fd`
 - `git rebase` em branch compartilhada
 - Deletar branches locais ou remotas
 - Modificar histórico de commits já publicados
+</rules>
 
-## Formato de saída
-
+<output_format>
 ### Estado do repositório
 - Branch: [nome]
 - Status: [resumo das mudanças]
@@ -123,3 +113,4 @@ Caso o projeto não use Conventional Commits, seguir o padrão identificado nos 
 - Status: [sucesso/falha]
 - Saída dos comandos: [output]
 - Estado pós-operação: [git status e git log]
+</output_format>
