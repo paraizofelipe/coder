@@ -46,6 +46,27 @@ cd coder
 ./install.sh --local
 ```
 
+## Seleção de vendor
+
+Ao iniciar, o instalador exibe um menu interativo para escolher o vendor de IA. A escolha define os modelos usados em todos os agentes:
+
+```
+[info]  Selecione o vendor de modelos:
+
+        1) anthropic        main: anthropic/claude-sonnet-4-6       light: anthropic/claude-haiku-4-5
+        2) openai           main: openai/gpt-5.3-codex              light: openai/codex-mini-latest
+        3) google           main: google/gemini-3.1-pro             light: google/gemini-3-flash
+        4) groq             main: groq/llama-3.3-70b-versatile      light: groq/llama-3.1-8b-instant
+        5) amazon-bedrock   main: amazon-bedrock/amazon.nova-pro-v1 light: amazon-bedrock/amazon.nova-lite-v1
+        6) github-copilot   main: github-copilot/claude-sonnet-4-5  light: github-copilot/gpt-4o-mini
+
+[?]    Número do vendor [1-6]:
+```
+
+O modelo **main** é aplicado aos agentes de análise, desenvolvimento e revisão. O modelo **light** é aplicado ao `versioner`, que executa apenas operações Git simples.
+
+> Para verificar os modelos disponíveis no seu ambiente: `opencode models <vendor>`
+
 ## Opções do instalador
 
 | Flag | Descrição |
@@ -94,13 +115,18 @@ OPENCODE_DIR=/caminho/personalizado curl -fsSL https://raw.githubusercontent.com
 
 ## Modelos configurados
 
-Os agentes estão configurados para usar modelos **OpenAI Codex**:
+Os modelos são definidos durante a instalação conforme o vendor escolhido. Os agentes são divididos em dois grupos:
 
-| Agente | Modelo | Motivo |
+| Grupo | Agentes | Motivo |
 |---|---|---|
-| `coder` | `openai/codex` | Orquestração e planejamento complexo |
-| `analyzer` | `openai/codex` | Análise de contexto longo |
-| `tester` | `openai/codex` | Geração precisa de testes |
-| `tech_reviewer` | `openai/codex` | Análise técnica de código |
-| `business_reviewer` | `openai/codex` | Revisão crítica de segurança e negócio |
-| `versioner` | `openai/codex-mini` | Operações Git simples |
+| **main** | `coder`, `analyzer`, `tester`, `tech_reviewer`, `business_reviewer` | Tarefas complexas de análise e desenvolvimento |
+| **light** | `versioner` | Operações Git simples |
+
+| Vendor | main | light |
+|---|---|---|
+| `anthropic` | `anthropic/claude-sonnet-4-6` | `anthropic/claude-haiku-4-5` |
+| `openai` | `openai/gpt-5.3-codex` | `openai/codex-mini-latest` |
+| `google` | `google/gemini-3.1-pro` | `google/gemini-3-flash` |
+| `groq` | `groq/llama-3.3-70b-versatile` | `groq/llama-3.1-8b-instant` |
+| `amazon-bedrock` | `amazon-bedrock/amazon.nova-pro-v1` | `amazon-bedrock/amazon.nova-lite-v1` |
+| `github-copilot` | `github-copilot/claude-sonnet-4-5` | `github-copilot/gpt-4o-mini` |

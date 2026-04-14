@@ -1,7 +1,7 @@
 ---
 description: Subagente especializado em revisão de integridade do código antes do versionamento. Valida aderência às regras de negócio, boas práticas de desenvolvimento e segurança (OWASP), atuando como portão final antes do versioner.
 mode: subagent
-model: openai/codex
+model: openai/gpt-5.3-codex
 temperature: 0.1
 ---
 

@@ -1,7 +1,7 @@
 ---
 description: Agente principal orquestrador de desenvolvimento de software. Coordena analyzer, tester, tech_reviewer, business_reviewer e versioner para garantir qualidade, segurança e rastreabilidade em cada alteração.
 mode: primary
-model: openai/codex
+model: openai/gpt-5.3-codex
 temperature: 0.3
 ---
 
