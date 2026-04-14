@@ -9,7 +9,7 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 | `coder` | Orquestrador principal — coordena todos os subagentes |
 | `analyzer` | Inspeciona a codebase antes de qualquer modificação |
 | `tester` | Cria e executa testes com abordagem TDD |
-| `tech_reviewer` | Revisão técnica de código logo após a implementação |
+| `code_reviewer` | Revisão técnica de código logo após a implementação |
 | `business_reviewer` | Portão final de negócio e segurança antes do commit |
 | `versioner` | Executa operações Git com confirmação explícita |
 
@@ -17,7 +17,7 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 ```
 analyzer → plano → confirmação → tester → implementação
-         → tech_reviewer → business_reviewer → confirmação → versioner
+         → code_reviewer → business_reviewer → confirmação → versioner
 ```
 
 Toda sessão com o agente `coder` segue esse fluxo com dois portões obrigatórios de confirmação com o usuário: antes de modificar qualquer arquivo e antes de fazer commit.
@@ -119,7 +119,7 @@ Os modelos são definidos durante a instalação conforme o vendor escolhido. Os
 
 | Grupo | Agentes | Motivo |
 |---|---|---|
-| **main** | `coder`, `analyzer`, `tester`, `tech_reviewer`, `business_reviewer` | Tarefas complexas de análise e desenvolvimento |
+| **main** | `coder`, `analyzer`, `tester`, `code_reviewer`, `business_reviewer` | Tarefas complexas de análise e desenvolvimento |
 | **light** | `versioner` | Operações Git simples |
 
 | Vendor | main | light |

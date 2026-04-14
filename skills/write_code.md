@@ -44,7 +44,7 @@ Com testes definidos e análise em mãos:
 ### 7. Execute os testes
 Confirme que todos os testes passam após a implementação.
 
-### 8. Acione o `tech_reviewer` com `review_code`
+### 8. Acione o `code_reviewer` com `review_code`
 Submeta tudo o que foi alterado para revisão crítica:
 - Aguarde o resultado antes de considerar a tarefa concluída
 - Corrija os problemas críticos identificados pela revisão
@@ -53,7 +53,7 @@ Submeta tudo o que foi alterado para revisão crítica:
 Inclua:
 - Resumo de todas as mudanças realizadas
 - Testes criados/ajustados e resultado da execução
-- Resultado da revisão do `tech_reviewer`
+- Resultado da revisão do `code_reviewer`
 - Pendências ou limitações conhecidas
 
 ### 10. Solicite confirmação antes de versionar

@@ -14,7 +14,7 @@ AGENTS=(
   "agents/analyzer.md"
   "agents/business_reviewer.md"
   "agents/coder.md"
-  "agents/tech_reviewer.md"
+  "agents/code_reviewer.md"
   "agents/tester.md"
   "agents/versioner.md"
 )
