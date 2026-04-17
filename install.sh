@@ -45,20 +45,20 @@ VENDOR_NAMES=(
 
 declare -A MODEL_MAIN=(
   [anthropic]="anthropic/claude-sonnet-4-6"
-  [openai]="openai/gpt-5.3-codex"
-  [google]="google/gemini-3.1-pro"
+  [openai]="openai/gpt-4o"
+  [google]="google/gemini-2.5-pro"
   [groq]="groq/llama-3.3-70b-versatile"
-  [amazon-bedrock]="amazon-bedrock/amazon.nova-pro-v1"
-  [github-copilot]="github-copilot/claude-sonnet-4-5"
+  [amazon-bedrock]="amazon-bedrock/amazon.nova-pro-v1:0"
+  [github-copilot]="github-copilot/claude-sonnet-4.6"
 )
 
 declare -A MODEL_LIGHT=(
   [anthropic]="anthropic/claude-haiku-4-5"
-  [openai]="openai/codex-mini-latest"
-  [google]="google/gemini-3-flash"
+  [openai]="openai/gpt-4o-mini"
+  [google]="google/gemini-2.5-flash"
   [groq]="groq/llama-3.1-8b-instant"
-  [amazon-bedrock]="amazon-bedrock/amazon.nova-lite-v1"
-  [github-copilot]="github-copilot/gpt-4o-mini"
+  [amazon-bedrock]="amazon-bedrock/amazon.nova-lite-v1:0"
+  [github-copilot]="github-copilot/gpt-4.1"
 )
 
 # ── helpers ──────────────────────────────────

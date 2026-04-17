@@ -93,12 +93,12 @@ Ao iniciar, o instalador exibe um menu interativo para escolher o vendor de IA. 
 ```
 [info]  Selecione o vendor de modelos:
 
-        1) anthropic        main: anthropic/claude-sonnet-4-6       light: anthropic/claude-haiku-4-5
-        2) openai           main: openai/gpt-5.3-codex              light: openai/codex-mini-latest
-        3) google           main: google/gemini-3.1-pro             light: google/gemini-3-flash
-        4) groq             main: groq/llama-3.3-70b-versatile      light: groq/llama-3.1-8b-instant
-        5) amazon-bedrock   main: amazon-bedrock/amazon.nova-pro-v1 light: amazon-bedrock/amazon.nova-lite-v1
-        6) github-copilot   main: github-copilot/claude-sonnet-4-5  light: github-copilot/gpt-4o-mini
+        1) anthropic        main: anthropic/claude-sonnet-4-6        light: anthropic/claude-haiku-4-5
+        2) openai           main: openai/gpt-4o                      light: openai/gpt-4o-mini
+        3) google           main: google/gemini-2.5-pro              light: google/gemini-2.5-flash
+        4) groq             main: groq/llama-3.3-70b-versatile       light: groq/llama-3.1-8b-instant
+        5) amazon-bedrock   main: amazon-bedrock/amazon.nova-pro-v1:0  light: amazon-bedrock/amazon.nova-lite-v1:0
+        6) github-copilot   main: github-copilot/claude-sonnet-4.6   light: github-copilot/gpt-4.1
 
 [?]    Número do vendor [1-6]:
 ```
@@ -166,8 +166,8 @@ Os modelos são definidos durante a instalação conforme o vendor escolhido. Os
 | Vendor | main | light |
 |---|---|---|
 | `anthropic` | `anthropic/claude-sonnet-4-6` | `anthropic/claude-haiku-4-5` |
-| `openai` | `openai/gpt-5.3-codex` | `openai/codex-mini-latest` |
-| `google` | `google/gemini-3.1-pro` | `google/gemini-3-flash` |
+| `openai` | `openai/gpt-4o` | `openai/gpt-4o-mini` |
+| `google` | `google/gemini-2.5-pro` | `google/gemini-2.5-flash` |
 | `groq` | `groq/llama-3.3-70b-versatile` | `groq/llama-3.1-8b-instant` |
-| `amazon-bedrock` | `amazon-bedrock/amazon.nova-pro-v1` | `amazon-bedrock/amazon.nova-lite-v1` |
-| `github-copilot` | `github-copilot/claude-sonnet-4-5` | `github-copilot/gpt-4o-mini` |
+| `amazon-bedrock` | `amazon-bedrock/amazon.nova-pro-v1:0` | `amazon-bedrock/amazon.nova-lite-v1:0` |
+| `github-copilot` | `github-copilot/claude-sonnet-4.6` | `github-copilot/gpt-4.1` |
