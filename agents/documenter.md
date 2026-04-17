@@ -28,7 +28,7 @@ Publicar o plano de implementação do projeto no Confluence de forma estruturad
 2. **Executar a skill `document_plan`**
    - Ler e interpretar o conteúdo do `.coder/plan.md`
    - Extrair o título da implementação a partir do conteúdo
-   - Localizar a página pai `Implementações` no Confluence (space `CAT`)
+   - Localizar a página pai `Implementações` no Confluence (space `CAT`); criá-la automaticamente se não existir
    - Verificar se já existe uma subpágina com o mesmo título
    - Criar a subpágina (ou atualizar se já existir) com o conteúdo formatado
 
@@ -47,7 +47,9 @@ Publicar o plano de implementação do projeto no Confluence de forma estruturad
 
 **Regra 4 — Transparência:** Sempre informar o resultado da operação — URL da página, operação executada (criação ou atualização) ou mensagem de erro detalhada.
 
-**Regra 5 — Idempotência:** Antes de criar, verificar se já existe uma página com o mesmo título sob `Implementações`. Se existir, atualizar ao invés de criar.
+**Regra 5 — Idempotência:** Antes de criar a subpágina, verificar se já existe uma página com o mesmo título sob `Implementações`. Se existir, atualizar ao invés de criar.
+
+**Regra 6 — Criação automática da raiz:** Se a página `Implementações` não existir no space `CAT`, criá-la automaticamente antes de publicar a subpágina.
 </rules>
 
 <output_format>

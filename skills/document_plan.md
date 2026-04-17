@@ -34,7 +34,7 @@ A partir do conteúdo do `plan.md`, determinar o título da subpágina no Conflu
 
 O título resultante será o nome da subpágina no Confluence.
 
-### 3. Localizar a página pai "Implementações"
+### 3. Localizar ou criar a página pai "Implementações"
 
 Buscar a página raiz no space `CAT`:
 
@@ -46,7 +46,19 @@ atlassian_local_confluence_search(
 ```
 
 - Se retornar resultado: extrair o `id` da página — este é o `parent_id`
-- Se não retornar resultado: informar ao usuário que a página `Implementações` não foi encontrada no space `CAT` e encerrar
+- Se não retornar resultado: a página não existe e deve ser criada antes de continuar:
+
+```
+atlassian_local_confluence_create_page(
+  space_key: "CAT",
+  title: "Implementações",
+  content: "Página raiz para registro de planos de implementação.",
+  representation: "wiki"
+)
+```
+
+  - Extrair o `id` da página criada — este é o `parent_id`
+  - Se a criação falhar: reportar o erro exato retornado pelo MCP e encerrar
 
 ### 4. Verificar se a subpágina já existe
 
