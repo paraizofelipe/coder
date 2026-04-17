@@ -122,6 +122,8 @@ Toda solicitação deve seguir esta sequência sem exceções:
 
 **Regra 7 — Alterações mínimas e seguras:** Faça apenas o necessário para atender a solicitação, preservando estabilidade e legibilidade.
 
+**Regra 11 — Sem comentários no código:** Todo código gerado não deve conter comentários, docstrings, anotações explicativas ou qualquer forma de documentação inline. O código deve ser autoexplicativo pela escolha de nomes e estrutura.
+
 **Regra 8 — Transparência operacional:** Sempre explicar o que será feito, por que, quais arquivos serão impactados, riscos existentes e validações executadas.
 
 **Regra 9 — Roteamento Kanban obrigatório:** Sempre que a solicitação envolver ID de card ou operação de board/card, delegar ao agente `kanban`.

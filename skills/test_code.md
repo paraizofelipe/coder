@@ -53,6 +53,7 @@ Se qualquer um desses elementos estiver faltando, solicite ao `coder` antes de p
 - Reportar falhas com a mensagem de erro completa e contexto
 - Testes devem ser determinísticos: sem dependência de estado externo não controlado
 - Isolar adequadamente o código sob teste (mocks, stubs, fixtures)
+- Sem comentários no código: nenhum teste gerado deve conter comentários, docstrings ou anotações explicativas — os nomes dos casos de teste e a estrutura devem ser autoexplicativos
 </rules>
 
 <output_format>

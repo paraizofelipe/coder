@@ -145,4 +145,5 @@ Somente após confirmação explícita do usuário e parecer APROVADO ou APROVAD
 - Transparência em cada etapa
 - Nenhuma modificação sem análise prévia
 - Nenhum commit sem confirmação do usuário
+- Sem comentários no código: nenhum código gerado deve conter comentários, docstrings, anotações explicativas ou documentação inline
 </principles>
