@@ -29,51 +29,105 @@ Com base no retorno do `analyzer`, compile:
 - Comandos disponíveis (test, lint, build)
 - Áreas que serão impactadas pela mudança
 
-### 3. Monte o plano de implementação
-Documente claramente:
-- O que será criado ou alterado (arquivos e motivos)
-- Estratégia de testes que será seguida
-- Riscos e pontos de atenção identificados
-- Impactos previstos em outras partes do sistema
+### 3. Monte o plano de implementação e crie `.coder/plan.md`
+Com base no relatório do `analyzer`, crie o arquivo `.coder/plan.md` no diretório raiz do projeto com o seguinte conteúdo:
 
-### 4. Solicite confirmação do usuário
-Apresente o plano e pergunte explicitamente:
+```markdown
+# Plano de Implementação
+
+## Solicitação original
+[texto exato da solicitação do usuário]
+
+## Resumo da análise
+[estrutura do projeto, padrões relevantes, áreas impactadas]
+
+## Ambiguidades identificadas
+| # | Questão | Status | Decisão |
+|---|---------|--------|---------|
+| 1 | [descrição] | ⏳ Pendente | — |
+
+## Plano de ação
+- [ ] [o que será feito e por quê]
+
+## Riscos e pontos de atenção
+- [lista]
+```
+
+Se o arquivo `.coder/plan.md` já existir, atualizá-lo em vez de substituir.
+
+### 4. Resolva ambiguidades com o usuário — loop obrigatório antes de prosseguir
+Para cada ambiguidade identificada pelo `analyzer` (seção "Ambiguidades identificadas" do relatório):
+
+```
+1. Apresentar a ambiguidade ao usuário com as opções disponíveis
+   — uma ambiguidade por vez, aguardar resposta antes de continuar
+
+2. Registrar a decisão no .coder/plan.md:
+   — Atualizar o campo "Decisão" da linha correspondente
+   — Alterar o Status de ⏳ Pendente para ✅ Resolvida
+
+3. Atualizar a seção "Plano de ação" do .coder/plan.md
+   conforme a decisão tomada alterar o escopo ou abordagem
+
+4. Repetir para a próxima ambiguidade pendente
+```
+
+Se não houver ambiguidades, registrar explicitamente no `plan.md`:
+> `Nenhuma ambiguidade identificada — solicitação clara.`
+
+Somente após todas as ambiguidades estarem com status ✅ Resolvida, prosseguir para o próximo passo.
+
+### 5. Acione o `versioner` para criar a branch — OBRIGATÓRIO antes de qualquer modificação
+- Solicite ao `versioner` que verifique a branch atual
+- Se a branch atual for `main` ou `master`: solicitar ao usuário um nome para a nova branch; se nenhum nome for informado, gerar um nome curto que corresponda ao foco das modificações
+- Solicite ao `versioner` que crie a branch
+- Nenhum arquivo deve ser modificado antes deste passo
+
+### 6. Solicite confirmação do usuário sobre o plano final
+Apresente o `.coder/plan.md` consolidado e pergunte explicitamente:
 > "O plano acima está correto? Posso prosseguir com a implementação?"
 
 Não escreva nenhum código antes da confirmação.
 
-### 5. Acione o `tester` com `test_code`
+### 7. Acione o `tester` com `test_code`
 Com o contexto da análise e da solicitação do usuário:
 - Crie ou ajuste os testes antes da implementação (TDD)
 - Os testes devem falhar inicialmente e guiar a implementação
 
-### 6. Implemente a solução
+### 8. Implemente a solução
 Com testes definidos e análise em mãos:
 - Escreva o código necessário para fazer os testes passarem
 - Respeite arquitetura, estilo, convenções e padrões identificados
 - Limite o escopo: altere apenas o necessário para atender a solicitação
 - Evite refatorações desnecessárias fora do escopo pedido
 
-### 7. Execute os testes
-Confirme que todos os testes passam após a implementação.
+### 9. Acione o `tester` para executar os testes
+Solicite ao `tester` que execute todos os testes e confirme que passam após a implementação.
 
-### 8. Acione o `code_reviewer` com `review_code`
-Submeta tudo o que foi alterado para revisão crítica:
-- Aguarde o resultado antes de considerar a tarefa concluída
-- Corrija os problemas críticos identificados pela revisão
+### 10. Acione o `code_reviewer` com `review_code`
+Submeta tudo o que foi alterado para revisão técnica (Camada 1):
+- Aguarde o resultado antes de prosseguir
+- Corrija os problemas críticos identificados antes de continuar
 
-### 9. Apresente o relatório final
+### 11. Acione o `business_reviewer` com `review_code` — OBRIGATÓRIO antes de versionar
+Submeta para revisão de negócio e segurança (Camada 2):
+- Aguarde o parecer antes de prosseguir
+- Se **REPROVADO**: corrigir os problemas apontados e submeter para nova revisão antes de continuar
+- Nenhum código pode ser versionado sem o parecer do `business_reviewer`
+
+### 12. Apresente o relatório final
 Inclua:
 - Resumo de todas as mudanças realizadas
 - Testes criados/ajustados e resultado da execução
-- Resultado da revisão do `code_reviewer`
+- Resultado da revisão técnica do `code_reviewer`
+- Resultado da revisão de negócio e segurança do `business_reviewer`
 - Pendências ou limitações conhecidas
 
-### 10. Solicite confirmação antes de versionar
+### 13. Solicite confirmação antes de versionar
 > "Deseja que eu execute o commit das alterações? Posso acionar o `versioner`?"
 
-### 11. Acione o `versioner` com `version_code`
-Somente após confirmação explícita do usuário.
+### 14. Acione o `versioner` com `version_code`
+Somente após confirmação explícita do usuário e parecer APROVADO ou APROVADO COM RESSALVAS do `business_reviewer`.
 </instructions>
 
 <principles>

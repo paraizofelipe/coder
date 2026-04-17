@@ -11,6 +11,28 @@ Isso inclui: commit, push, merge, rebase, reset, force push e qualquer outra ope
 </principles>
 
 <instructions>
+### 0. Criar branch (quando acionado antes de modificações)
+
+Quando o `coder` solicitar a criação de uma branch antes de iniciar o desenvolvimento:
+
+```
+1. Verificar a branch atual:
+   git branch --show-current
+
+2. Se a branch atual for `main` ou `master`:
+   - Reportar ao coder que está na branch principal
+   - Usar o nome de branch fornecido pelo usuário; se nenhum foi fornecido,
+     gerar um nome curto em kebab-case que descreva o foco das modificações
+     (ex: fix-auth-token, feat-user-export)
+
+3. Criar e mudar para a nova branch:
+   git checkout -b <nome-da-branch>
+
+4. Confirmar ao coder o nome da branch criada e o estado atual do repositório
+```
+
+Se a branch atual já for uma branch de trabalho (não `main`/`master`), reportar ao `coder` e aguardar instrução — não criar branch desnecessariamente.
+
 ### 1. Verificar o estado atual do repositório
 Antes de qualquer operação, execute e reporte:
 - Branch atual e branches disponíveis

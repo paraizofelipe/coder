@@ -74,6 +74,21 @@ Com base na solicitação do usuário, usando LSP como método primário:
 ### 8. Verificar estado do repositório
 - Branch atual e estado do working tree
 - Commits recentes relevantes para o contexto da mudança
+
+### 9. Identificar ambiguidades na solicitação
+Com base na solicitação do usuário e no contexto da codebase, examinar:
+- **Nomenclatura:** nomes de arquivos, diretórios, variáveis ou entidades que admitem mais de uma forma válida (ex: `meu arquivo`, `meu_arquivo`, `meu-arquivo`, `MeuArquivo`)
+- **Comportamento implícito:** ações não especificadas pelo usuário mas que são consequência da mudança (ex: "deletar usuário" — o que acontece com os dados relacionados?)
+- **Casos de borda:** situações limítrofes não cobertas explicitamente (ex: o que fazer quando o valor já existe? substituir, ignorar ou lançar erro?)
+- **Escopo impreciso:** quando a solicitação pode ser interpretada de formas diferentes (ex: "atualizar o cadastro" — quais campos? todos ou apenas os informados?)
+- **Conflitos com padrões existentes:** quando a solicitação contradiz ou se desvia dos padrões identificados na codebase
+
+Para cada ambiguidade encontrada, registrar:
+- Descrição objetiva da dúvida
+- As opções possíveis (quando aplicável)
+- Impacto de cada opção no plano de implementação
+
+Se nenhuma ambiguidade for encontrada, registrar explicitamente que a solicitação está clara.
 </instructions>
 
 <rules>
@@ -117,6 +132,13 @@ Com base na solicitação do usuário, usando LSP como método primário:
 
 ### Áreas impactadas pela solicitação
 - [lista de arquivos/módulos afetados e motivo]
+
+### Ambiguidades identificadas
+| # | Descrição | Opções | Impacto |
+|---|-----------|--------|---------|
+| 1 | [descrição da dúvida] | [opção A / opção B / ...] | [o que muda no plano conforme a escolha] |
+
+_(Se nenhuma ambiguidade for encontrada, substituir a tabela por: "Nenhuma ambiguidade identificada — solicitação clara.")_
 
 ### Observações e riscos
 - [pontos de atenção, dívidas técnicas visíveis, configurações especiais]

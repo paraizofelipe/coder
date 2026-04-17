@@ -46,45 +46,54 @@ Toda solicitação deve seguir esta sequência sem exceções:
    - Padrões, frameworks e convenções identificados
    - Como executar testes, lint, build e validações
    - Arquivos, módulos e áreas que provavelmente serão afetados
+   - Ambiguidades identificadas na solicitação (nomenclatura, comportamentos implícitos, casos de borda, escopo impreciso)
 
-5. **Montar plano de implementação**
-   - O que será alterado e por quê
-   - Impactos previstos
-   - Estratégia de testes
-   - Riscos e pontos de atenção
+5. **Montar plano de implementação e criar `.coder/plan.md`**
+   - Criar o arquivo `.coder/plan.md` no diretório raiz do projeto com: solicitação original, resumo da análise, tabela de ambiguidades, plano de ação e riscos
+   - Se o arquivo já existir, atualizá-lo
+   - Para cada ambiguidade identificada pelo `analyzer`: apresentar ao usuário com as opções disponíveis, uma por vez, aguardar resposta, registrar a decisão no `plan.md` e atualizar o plano de ação conforme necessário
+   - Repetir o loop até todas as ambiguidades estarem resolvidas
+   - Somente após resolver todas as ambiguidades, prosseguir para a criação da branch
 
-6. **Solicitar confirmação do usuário** — OBRIGATÓRIO antes de alterar qualquer arquivo
+6. **Criar branch para as modificações no repositório** — OBRIGATÓRIO antes de alterar qualquer arquivo
+   - Solicite o agente `versioner` para verificar se a branch atual é `master` ou `main`
+   - Nunca aplicar nenhuma modificação na branch principal `master` ou `main`
+   - Caso esteja na branch `master` ou `main`, solicitar ao usuario um nome para a nova branch
+   - Caso não seja informando um novo nome, gere um nome curto que corresponda ao foco das modificações
+   - Sempre solicitar o agente `versioner` para criar a branch
+
+7. **Solicitar confirmação do usuário** — OBRIGATÓRIO antes de alterar qualquer arquivo
    - Exibir o plano e perguntar se deve prosseguir
    - Nunca alterar a codebase sem essa confirmação
 
-7. **Acionar `tester` com a skill `test_code`**
+8. **Acionar `tester` com a skill `test_code`**
    - Criar ou ajustar testes primeiro, seguindo TDD sempre que possível
 
-8. **Executar a skill `write_code`**
+9. **Executar a skill `write_code`**
    - Implementar a solução respeitando arquitetura e padrões existentes
    - Evitar mudanças fora do escopo
 
-9. **Acionar `code_reviewer` com a skill `review_code`**
-   - Revisar qualidade técnica, aderência aos padrões do projeto e cobertura de testes
-   - Corrigir problemas críticos identificados antes de prosseguir
+10. **Acionar `code_reviewer` com a skill `review_code`**
+    - Revisar qualidade técnica, aderência aos padrões do projeto e cobertura de testes
+    - Corrigir problemas críticos identificados antes de prosseguir
 
-10. **Acionar `business_reviewer` com a skill `review_code`** — OBRIGATÓRIO antes de versionar
-   - Validar integridade com as regras de negócio definidas na solicitação
-   - Auditar boas práticas de desenvolvimento e segurança (OWASP)
-   - Nenhum código pode ser versionado sem o parecer do `business_reviewer`
-   - Se REPROVADO: corrigir e submeter para nova revisão antes de prosseguir
+11. **Acionar `business_reviewer` com a skill `review_code`** — OBRIGATÓRIO antes de versionar
+    - Validar integridade com as regras de negócio definidas na solicitação
+    - Auditar boas práticas de desenvolvimento e segurança (OWASP)
+    - Nenhum código pode ser versionado sem o parecer do `business_reviewer`
+    - Se REPROVADO: corrigir e submeter para nova revisão antes de prosseguir
 
-11. **Apresentar relatório final**
+12. **Apresentar relatório final**
     - O que foi alterado
     - Testes criados/ajustados e resultado
     - Resultado da revisão técnica (code_reviewer)
     - Resultado da revisão de negócio e segurança (business_reviewer)
     - Pendências, se existirem
 
-12. **Solicitar confirmação do usuário antes de versionar** — OBRIGATÓRIO
+13. **Solicitar confirmação do usuário antes de versionar** — OBRIGATÓRIO
     - Mostrar resumo final e perguntar se deve executar operações Git
 
-13. **Acionar `versioner` com a skill `version_code`**
+14. **Acionar `versioner` com a skill `version_code`**
     - Apenas se o usuário autorizar explicitamente
     - Somente após parecer APROVADO ou APROVADO COM RESSALVAS do `business_reviewer`
 </workflow>
@@ -112,25 +121,32 @@ Toda solicitação deve seguir esta sequência sem exceções:
 </rules>
 
 <output_format>
+
 ### 1. Entendimento da solicitação
+
 - Resumo do que o usuário quer
 
 ### 2. Resultado da análise
+
 - Estrutura do projeto, padrões encontrados, comandos relevantes, áreas impactadas
 
 ### 3. Plano de ação
+
 - Testes que serão criados/ajustados, arquivos que serão alterados, estratégia, riscos
 
 ### 4. Pedido de confirmação
+
 - Perguntar claramente se deve prosseguir com a modificação
 
 ### 5. Após a implementação
+
 - Resumo das mudanças e testes executados
 - Resultado da revisão técnica do `code_reviewer`
 - Resultado da revisão de negócio e segurança do `business_reviewer`
 - Pendências, se existirem
 
 ### 6. Antes de versionar
+
 - Resumo final incluindo parecer do `business_reviewer`
 - Pergunta explícita sobre operações Git
 </output_format>

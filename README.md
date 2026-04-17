@@ -16,19 +16,51 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 ## Fluxo de desenvolvimento
 
-```text
-Solicitação Kanban (somente card/board):
-coder → kanban
+```mermaid
+flowchart LR
 
-Solicitação de código:
-analyzer → plano → confirmação → tester → implementação
-         → code_reviewer → business_reviewer → confirmação → versioner
+    Coder(["🤖 Coder\n(primary)"])
+    Kanban(["🤖 Kanban\n(primary)"])
+    Analyzer["🤖 Analyzer\n(subagent)"]
+    Tester["🤖 Tester\n(subagent)"]
+    Versioner["🤖 Versioner\n(subagent)"]
+    CodeReviewer["🤖 CodeReviewer\n(subagent)"]
+    BusinessReviewer["🤖 BusinessReviewer\n(subagent)"]
 
-Solicitação mista (Kanban + código):
-kanban (primeiro) + fluxo de código (depois)
+    Coder --> Analyzer
+    Coder --> Versioner
+    Coder --> Tester
+    Coder --> Kanban
+    Coder --> CodeReviewer
+    Coder --> BusinessReviewer
+
+    Kanban --> kanba_force{{kanba_force}}:::task
+    kanba_force --> MCP[(mcp-kanba-force)]:::mcp
+    
+    Analyzer --> code_analyzer{{code_analyzer}}:::task
+
+    Tester --> test_code{{test_code}}:::task
+
+    Versioner --> version_code{{version_code}}:::task
+
+    Coder --> write_code{{write_code}}:::task
+
+    CodeReviewer --> review_code{{review_code}}:::task
+
+    BusinessReviewer --> review_code{{review_code}}:::task
+
+    classDef agent fill:#4A9,color:#fff
+    classDef subAgent fill:#555,color:#fff
+    classDef task fill:#1565C0,color:#fff
+    classDef mcp fill:#555,color:#fff
+
+    class Coder,Kanban agent
+    class Analyzer,Tester,Versioner,CodeReviewer,BusinessReviewer subAgent
 ```
 
-Quando a solicitação contiver ID de card ou operação de board/card (criar, mover, atualizar, comentar, bloquear, arquivar etc.), o `coder` delega ao `kanban`, que opera via MCP `kanban-force`.
+Quando a solicitação contiver ID de card ou operação de board/card (criar, mover, atualizar, comentar, bloquear, arquivar etc.), o `coder` delega ao `kanban`, que opera via MCP `kanban-force`. Para solicitações mistas, o `kanban` executa primeiro e o fluxo de código segue depois.
+
+O `tester` é acionado em dois momentos distintos: antes da implementação para criar os testes que devem falhar (fase red do TDD) e depois da implementação para confirmar que todos passam (fase green). Nenhum código é versionado sem o parecer final do `business_reviewer`.
 
 ## Instalação
 
