@@ -6,6 +6,7 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 | Command | Uso | Descrição |
 |---|---|---|
+| `/doc_plan` | `/doc_plan` | Publica `.coder/plan.md` no Confluence (space CAT, subpágina de Implementações) via MCP `atlassian_local` |
 | `/kanban_card` | `/kanban_card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
 
 ## Agentes
@@ -13,6 +14,7 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 | Agente | Função |
 |---|---|
 | `coder` | Orquestrador principal — coordena subagentes de desenvolvimento e delega operações de card/board ao `kanban` |
+| `documenter` | Agente primary para publicar planos de implementação no Confluence via MCP `atlassian_local` |
 | `kanban` | Agente primary para gerenciamento de cards e boards via MCP `kanban-force` |
 | `analyzer` | Inspeciona a codebase antes de qualquer modificação |
 | `tester` | Cria e executa testes com abordagem TDD |

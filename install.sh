@@ -16,6 +16,7 @@ AGENTS=(
   "agents/business_reviewer.md"
   "agents/coder.md"
   "agents/code_reviewer.md"
+  "agents/documenter.md"
   "agents/kanban.md"
   "agents/tester.md"
   "agents/versioner.md"
@@ -23,6 +24,7 @@ AGENTS=(
 
 SKILLS=(
   "skills/analyse_code.md"
+  "skills/document_plan.md"
   "skills/kanban_force.md"
   "skills/review_code.md"
   "skills/test_code.md"
@@ -31,6 +33,7 @@ SKILLS=(
 )
 
 COMMANDS=(
+  "commands/doc_plan.md"
   "commands/kanban_card.md"
 )
 
