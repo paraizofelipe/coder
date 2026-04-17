@@ -6,7 +6,8 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 | Agente | Função |
 |---|---|
-| `coder` | Orquestrador principal — coordena todos os subagentes |
+| `coder` | Orquestrador principal — coordena subagentes de desenvolvimento e delega operações de card/board ao `kanban` |
+| `kanban` | Agente primary para gerenciamento de cards e boards via MCP `kanban-force` |
 | `analyzer` | Inspeciona a codebase antes de qualquer modificação |
 | `tester` | Cria e executa testes com abordagem TDD |
 | `code_reviewer` | Revisão técnica de código logo após a implementação |
@@ -15,12 +16,19 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 ## Fluxo de desenvolvimento
 
-```
+```text
+Solicitação Kanban (somente card/board):
+coder → kanban
+
+Solicitação de código:
 analyzer → plano → confirmação → tester → implementação
          → code_reviewer → business_reviewer → confirmação → versioner
+
+Solicitação mista (Kanban + código):
+kanban (primeiro) + fluxo de código (depois)
 ```
 
-Toda sessão com o agente `coder` segue esse fluxo com dois portões obrigatórios de confirmação com o usuário: antes de modificar qualquer arquivo e antes de fazer commit.
+Quando a solicitação contiver ID de card ou operação de board/card (criar, mover, atualizar, comentar, bloquear, arquivar etc.), o `coder` delega ao `kanban`, que opera via MCP `kanban-force`.
 
 ## Instalação
 
@@ -112,6 +120,7 @@ OPENCODE_DIR=/caminho/personalizado curl -fsSL https://raw.githubusercontent.com
 - [OpenCode](https://opencode.ai) instalado
 - `curl` ou `wget` (para instalação remota)
 - `bash` >= 4.0
+- MCP `kanban-force` configurado (necessário para operações de board/card com o agente `kanban`)
 
 ## Modelos configurados
 
@@ -119,7 +128,7 @@ Os modelos são definidos durante a instalação conforme o vendor escolhido. Os
 
 | Grupo | Agentes | Motivo |
 |---|---|---|
-| **main** | `coder`, `analyzer`, `tester`, `code_reviewer`, `business_reviewer` | Tarefas complexas de análise e desenvolvimento |
+| **main** | `coder`, `kanban`, `analyzer`, `tester`, `code_reviewer`, `business_reviewer` | Tarefas complexas de orquestração, análise, desenvolvimento e operações Kanban |
 | **light** | `versioner` | Operações Git simples |
 
 | Vendor | main | light |

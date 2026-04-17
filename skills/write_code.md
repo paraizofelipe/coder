@@ -5,6 +5,19 @@ description: Skill principal do agente coder. Coordena todo o fluxo de desenvolv
 Você está executando a skill `write_code`. Seu papel é coordenar o fluxo completo de desenvolvimento seguindo a disciplina de engenharia definida pelo agente `coder`.
 
 <instructions>
+### 0. Triar solicitações Kanban antes do fluxo de código
+Antes de iniciar o fluxo de desenvolvimento, verifique se a solicitação envolve cards/boards.
+
+Sinais de intenção Kanban:
+- Presença de ID de card no padrão `AAA-0000` (ex.: `STK-90AB`, `UST-FF51`)
+- Pedidos como: criar card, mover card, atualizar card, comentar card, bloquear/desbloquear, arquivar, descartar, deletar card, transferir card, listar cards/board
+
+Ação obrigatória:
+- Delegar essas operações ao agente `kanban` (skill `kanban_force`)
+- O `kanban` deve operar exclusivamente via MCP `kanban-force`
+- Se a solicitação for somente Kanban: concluir via `kanban` e reportar resultado ao usuário
+- Se a solicitação for mista (Kanban + código): executar primeiro a parte Kanban com `kanban` e depois seguir este fluxo para a parte de código
+
 ### 1. Delegue ao `analyzer` a execução de `analyse_code`
 Antes de qualquer ação, o `analyzer` deve inspecionar a codebase e retornar o relatório completo. Nenhuma linha de código pode ser escrita antes disso.
 

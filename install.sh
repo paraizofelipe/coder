@@ -15,12 +15,14 @@ AGENTS=(
   "agents/business_reviewer.md"
   "agents/coder.md"
   "agents/code_reviewer.md"
+  "agents/kanban.md"
   "agents/tester.md"
   "agents/versioner.md"
 )
 
 SKILLS=(
   "skills/analyse_code.md"
+  "skills/kanban_force.md"
   "skills/review_code.md"
   "skills/test_code.md"
   "skills/version_code.md"
