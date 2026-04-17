@@ -12,7 +12,7 @@ Utilize as ferramentas do MCP `kanban-force` para carregar no contexto as inform
 Chamar a ferramenta `kanban-force_get_cards` com os parâmetros:
 
 ```
-where: "name:*$ARGUMENTS*,archived:false"
+where: "name:*$ARGUMENTS*,active:true"
 limit: 5
 ```
 
