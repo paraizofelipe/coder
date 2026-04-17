@@ -2,6 +2,12 @@
 
 Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa um fluxo disciplinado de desenvolvimento de software com análise prévia, TDD, revisão técnica, revisão de segurança e versionamento controlado.
 
+## Commands
+
+| Command | Uso | Descrição |
+|---|---|---|
+| `/card` | `/card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
+
 ## Agentes
 
 | Agente | Função |
@@ -137,8 +143,9 @@ Responda `s` para substituir ou pressione Enter para pular.
 Por padrão, os arquivos são instalados em:
 
 ```
-~/.opencode/agents/   ← agentes
-~/.opencode/skills/   ← skills
+~/.opencode/agents/    ← agentes
+~/.opencode/skills/    ← skills
+~/.opencode/commands/  ← commands
 ```
 
 Para instalar em outro diretório, defina a variável `OPENCODE_DIR` antes de executar:

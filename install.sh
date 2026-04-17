@@ -9,6 +9,7 @@ REPO_URL="https://raw.githubusercontent.com/paraizofelipe/coder/main"
 OPENCODE_DIR="${OPENCODE_DIR:-$HOME/.opencode}"
 AGENTS_DST="$OPENCODE_DIR/agents"
 SKILLS_DST="$OPENCODE_DIR/skills"
+COMMANDS_DST="$OPENCODE_DIR/commands"
 
 AGENTS=(
   "agents/analyzer.md"
@@ -27,6 +28,10 @@ SKILLS=(
   "skills/test_code.md"
   "skills/version_code.md"
   "skills/write_code.md"
+)
+
+COMMANDS=(
+  "commands/card.md"
 )
 
 # agentes que usam modelo light (tarefas simples)
@@ -163,7 +168,7 @@ echo ""
 
 select_vendor
 
-mkdir -p "$AGENTS_DST" "$SKILLS_DST"
+mkdir -p "$AGENTS_DST" "$SKILLS_DST" "$COMMANDS_DST"
 
 is_light_agent() {
   local src="$1"
@@ -241,6 +246,15 @@ for skill in "${SKILLS[@]}"; do
 done
 
 echo ""
+
+# commands
+info "Instalando commands em $COMMANDS_DST"
+echo ""
+for command in "${COMMANDS[@]}"; do
+  install_file "$command" "$COMMANDS_DST"
+done
+
+echo ""
 ok "Instalação concluída."
 echo ""
 echo "  Vendor : ${BOLD}$VENDOR${RESET}"
@@ -254,6 +268,11 @@ echo ""
 echo "  Skills disponíveis:"
 for skill in "${SKILLS[@]}"; do
   echo "    • $(basename "$skill" .md)"
+done
+echo ""
+echo "  Commands disponíveis:"
+for command in "${COMMANDS[@]}"; do
+  echo "    • /$(basename "$command" .md)"
 done
 echo ""
 echo -e "  Reinicie o OpenCode para carregar os novos agentes e skills."
