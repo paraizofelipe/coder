@@ -86,7 +86,9 @@ O usuario informa o board de trabalho no inicio da sessao. A partir dai, todas a
 
 **Regra 5 — Cards bem descritos:** Todo card criado deve ter nome claro, tipo adequado e descricao com contexto suficiente.
 
-**Regra 5.1 — Template obrigatorio de descricao:** Todo card novo deve usar o formato abaixo no campo `desc`:
+**Regra 5.1 — Template obrigatorio de descricao:** Todo card novo deve usar a estrutura abaixo. O conteudo pode ser exibido ao usuario em Markdown para leitura, mas o campo `desc` enviado ao MCP deve estar **obrigatoriamente em HTML**.
+
+Estrutura de referencia (Markdown para leitura):
 
 ```md
 ## 📑 [ID-000] Título da Task
@@ -108,6 +110,35 @@ O usuario informa o board de trabalho no inicio da sessao. A partir dai, todas a
 * **Critérios de Conclusão:**
     - [ ]
     - [ ]
+```
+
+Equivalente HTML a ser enviado no campo `desc` ao MCP:
+
+```html
+<h2>📑 [ID-000] Título da Task</h2>
+
+<h3>🔍 1. Por quê? (Motivação)</h3>
+<p><em>Descreva a origem do card: se é a correção de um bug, uma nova necessidade de negócio ou um débito técnico.</em></p>
+<ul>
+  <li><strong>Contexto:</strong> </li>
+  <li><strong>Valor/Impacto:</strong> </li>
+  <li><strong>Evidência (se bug):</strong> </li>
+</ul>
+
+<hr/>
+
+<h3>🛠️ 2. Como? (Execução)</h3>
+<p><em>Descreva o plano de ação, as especificações técnicas e os critérios de aceitação.</em></p>
+<ul>
+  <li><strong>O que fazer:</strong> </li>
+  <li><strong>Especificações:</strong> </li>
+  <li><strong>Critérios de Conclusão:</strong>
+    <ul>
+      <li><input type="checkbox"/> </li>
+      <li><input type="checkbox"/> </li>
+    </ul>
+  </li>
+</ul>
 ```
 
 **Regra 6 — Update completo:** Ao atualizar um card, buscar o objeto completo antes e reenviar todos os campos, alterando apenas o necessario.

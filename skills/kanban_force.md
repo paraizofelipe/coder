@@ -53,7 +53,7 @@ Fluxo obrigatorio:
    - Se o usuario nao informar tipo ou coluna, perguntar
    - Sugerir valores padrao quando fizer sentido
 
-2. Montar `desc` obrigatoriamente no template abaixo:
+2. Montar `desc` seguindo a estrutura do template. Exibir ao usuario em Markdown para revisao:
 
    ## 📑 [ID-000] Título da Task
 
@@ -75,17 +75,43 @@ Fluxo obrigatorio:
        - [ ]
        - [ ]
 
+   **IMPORTANTE:** antes de enviar ao MCP, converter o conteudo acima para HTML:
+
+   ```html
+   <h2>📑 [ID-000] Título da Task</h2>
+   <h3>🔍 1. Por quê? (Motivação)</h3>
+   <p><em>...</em></p>
+   <ul>
+     <li><strong>Contexto:</strong> ...</li>
+     <li><strong>Valor/Impacto:</strong> ...</li>
+     <li><strong>Evidência (se bug):</strong> ...</li>
+   </ul>
+   <hr/>
+   <h3>🛠️ 2. Como? (Execução)</h3>
+   <p><em>...</em></p>
+   <ul>
+     <li><strong>O que fazer:</strong> ...</li>
+     <li><strong>Especificações:</strong> ...</li>
+     <li><strong>Critérios de Conclusão:</strong>
+       <ul>
+         <li><input type="checkbox"/> ...</li>
+         <li><input type="checkbox"/> ...</li>
+       </ul>
+     </li>
+   </ul>
+   ```
+
 3. Mapear nomes para IDs:
    - Coluna: buscar no mapa de colunas do board
    - Tipo: buscar no mapa de tipos de card
 
-4. Montar a chamada:
+4. Montar a chamada com `desc` em HTML:
    create_card(
       name="nome claro e descritivo",
       board_id="<board_id>",
       current_column="<column_id>",
       card_type="<type_id>",
-      desc="<descricao no template obrigatorio>",
+      desc="<descricao convertida para HTML>",
       owners=[...],     # opcional
       tags=[...],       # opcional, minusculas, sem espacos
       dt_start="...",   # opcional, formato ISO
@@ -126,11 +152,15 @@ Fluxo obrigatorio:
 2. Extrair TODOS os campos do resultado
 
 3. Modificar apenas os campos solicitados pelo usuario
+   - Se o campo `desc` for alterado: o novo valor deve estar em HTML
+   - Apresentar o conteudo ao usuario em Markdown para leitura/revisao
+     antes de converter; enviar ao MCP somente em HTML
 
 4. Chamar update_card passando TODOS os campos:
    - card_type deve ser enviado como objeto completo ou JSON string
      Ex: {"_id":"62bc98d8...","name":"TST","color":"#00BB00","active":true}
    - friendly_id deve manter o valor original
+   - desc deve estar em HTML — nunca enviar Markdown no campo desc
 
 5. Confirmar com o usuario antes de executar
 6. Reportar resultado
@@ -196,6 +226,7 @@ Fluxo obrigatorio:
 - **Confirmacao:** criar, mover, atualizar, bloquear e operacoes destrutivas exigem confirmacao do usuario
 - **Sem invencao:** se uma operacao falhar, reportar o erro exato retornado pelo MCP
 - **Template de descricao obrigatorio:** em criacao de card, o campo `desc` deve seguir exatamente o template de task definido nesta skill
+- **desc sempre em HTML:** o campo `desc` enviado ao MCP em criacao ou atualizacao deve estar obrigatoriamente em HTML — Markdown e aceito apenas para exibicao ao usuario, nunca para envio ao MCP
 </rules>
 
 <output_format>
