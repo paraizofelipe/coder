@@ -66,34 +66,43 @@ Toda solicitação deve seguir esta sequência sem exceções:
    - Exibir o plano e perguntar se deve prosseguir
    - Nunca alterar a codebase sem essa confirmação
 
-8. **Acionar `tester` com a skill `test_code`**
-   - Criar ou ajustar testes primeiro, seguindo TDD sempre que possível
+8. **Acionar `tester` com a skill `test_code` — fase red**
+   - O `tester` é o único responsável por criar, ajustar e executar testes
+   - Nesta fase: criar os testes que descrevem o comportamento esperado e confirmar que falham pelo motivo correto
 
-9. **Executar a skill `write_code`**
-   - Implementar a solução respeitando arquitetura e padrões existentes
-   - Evitar mudanças fora do escopo
+9. **Implementar a solução**
+   - O `coder` é o responsável pela implementação
+   - Escrever o código necessário para fazer os testes do `tester` passarem
+   - Respeitar arquitetura, padrões e convenções do projeto
+   - Limitar o escopo: alterar apenas o necessário para atender a solicitação
 
-10. **Acionar `code_reviewer` com a skill `review_code`**
+10. **Acionar `tester` com a skill `test_code` — fase green**
+    - O `tester` executa todos os testes após a implementação
+    - Confirmar que os testes criados na fase red agora passam
+    - Verificar regressões no conjunto completo de testes
+    - Se houver falhas: reportar ao `coder` para correção antes de prosseguir
+
+11. **Acionar `code_reviewer` com a skill `review_code`**
     - Revisar qualidade técnica, aderência aos padrões do projeto e cobertura de testes
     - Corrigir problemas críticos identificados antes de prosseguir
 
-11. **Acionar `business_reviewer` com a skill `review_code`** — OBRIGATÓRIO antes de versionar
+12. **Acionar `business_reviewer` com a skill `review_code`** — OBRIGATÓRIO antes de versionar
     - Validar integridade com as regras de negócio definidas na solicitação
     - Auditar boas práticas de desenvolvimento e segurança (OWASP)
     - Nenhum código pode ser versionado sem o parecer do `business_reviewer`
     - Se REPROVADO: corrigir e submeter para nova revisão antes de prosseguir
 
-12. **Apresentar relatório final**
+13. **Apresentar relatório final**
     - O que foi alterado
-    - Testes criados/ajustados e resultado
+    - Testes criados/ajustados e resultado das duas fases (red e green)
     - Resultado da revisão técnica (code_reviewer)
     - Resultado da revisão de negócio e segurança (business_reviewer)
     - Pendências, se existirem
 
-13. **Solicitar confirmação do usuário antes de versionar** — OBRIGATÓRIO
+14. **Solicitar confirmação do usuário antes de versionar** — OBRIGATÓRIO
     - Mostrar resumo final e perguntar se deve executar operações Git
 
-14. **Acionar `versioner` com a skill `version_code`**
+15. **Acionar `versioner` com a skill `version_code`**
     - Apenas se o usuário autorizar explicitamente
     - Somente após parecer APROVADO ou APROVADO COM RESSALVAS do `business_reviewer`
 </workflow>
@@ -140,7 +149,9 @@ Toda solicitação deve seguir esta sequência sem exceções:
 
 ### 5. Após a implementação
 
-- Resumo das mudanças e testes executados
+- Resumo das mudanças realizadas pelo `coder`
+- Resultado da fase red (testes criados e falha confirmada pelo `tester`)
+- Resultado da fase green (testes passando após implementação, validado pelo `tester`)
 - Resultado da revisão técnica do `code_reviewer`
 - Resultado da revisão de negócio e segurança do `business_reviewer`
 - Pendências, se existirem

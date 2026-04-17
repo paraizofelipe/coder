@@ -89,20 +89,27 @@ Apresente o `.coder/plan.md` consolidado e pergunte explicitamente:
 
 Não escreva nenhum código antes da confirmação.
 
-### 7. Acione o `tester` com `test_code`
-Com o contexto da análise e da solicitação do usuário:
-- Crie ou ajuste os testes antes da implementação (TDD)
-- Os testes devem falhar inicialmente e guiar a implementação
+### 7. Acione o `tester` com `test_code` — fase red
+O `tester` é o único responsável por criar, ajustar e executar testes.
+Nesta fase, solicite ao `tester` que:
+- Crie os testes que descrevem o comportamento esperado
+- Execute-os e confirme que falham pelo motivo correto (não por erro de sintaxe ou configuração)
+
+Não escreva nenhuma linha de código de implementação antes do `tester` concluir esta fase.
 
 ### 8. Implemente a solução
-Com testes definidos e análise em mãos:
+O `coder` é o responsável pela implementação.
+Com os testes do `tester` como guia:
 - Escreva o código necessário para fazer os testes passarem
 - Respeite arquitetura, estilo, convenções e padrões identificados
 - Limite o escopo: altere apenas o necessário para atender a solicitação
 - Evite refatorações desnecessárias fora do escopo pedido
 
-### 9. Acione o `tester` para executar os testes
-Solicite ao `tester` que execute todos os testes e confirme que passam após a implementação.
+### 9. Acione o `tester` com `test_code` — fase green
+Solicite ao `tester` que:
+- Execute todos os testes criados na fase red e confirme que passam
+- Execute o conjunto completo de testes para verificar regressões
+- Reporte quaisquer falhas ao `coder` para correção antes de prosseguir
 
 ### 10. Acione o `code_reviewer` com `review_code`
 Submeta tudo o que foi alterado para revisão técnica (Camada 1):
