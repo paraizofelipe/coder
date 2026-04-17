@@ -1,5 +1,6 @@
 ---
 description: Consulta e carrega no contexto as informações de um card do kanban-force pelo friendlyID. Uso: /kanban_card STK-76F4
+agent: kanban
 ---
 
 Utilize as ferramentas do MCP `kanban-force` para carregar no contexto as informações do card com friendlyID `$ARGUMENTS`.
@@ -8,7 +9,7 @@ Utilize as ferramentas do MCP `kanban-force` para carregar no contexto as inform
 
 ### 1. Buscar o card pelo friendlyID
 
-Chamar `get_cards` com o filtro abaixo para localizar o card e excluir arquivados:
+Chamar a ferramenta `kanban-force_get_cards` com os parâmetros:
 
 ```
 where: "name:*$ARGUMENTS*,archived:false"
@@ -21,11 +22,11 @@ limit: 5
 
 ### 2. Carregar os detalhes completos
 
-Com o `_id` (ObjectId de 24 caracteres hex) do card encontrado:
+Com o `_id` (ObjectId de 24 caracteres hex) do card encontrado, chamar em sequência:
 
-- `get_card(card_id)` — detalhes completos com subitens e hierarquia
-- `get_card_comments(card_id)` — comentários registrados
-- `get_card_movements(card_id)` — histórico de movimentações entre colunas
+- `kanban-force_get_card` com `card_id` — detalhes completos com subitens e hierarquia
+- `kanban-force_get_card_comments` com `card_id` — comentários registrados
+- `kanban-force_get_card_movements` com `card_id` — histórico de movimentações entre colunas
 
 ### 3. Apresentar as informações carregadas
 
