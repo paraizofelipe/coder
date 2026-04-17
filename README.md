@@ -6,7 +6,8 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 | Command | Uso | Descrição |
 |---|---|---|
-| `/doc_plan` | `/doc_plan` | Publica `.coder/plan.md` no Confluence (space CAT, subpágina de Implementações) via MCP `atlassian_local` |
+| `/doc_plan` | `/doc_plan` | Publica `.coder/plan.md` no Confluence (space CAT, subpágina de Implementações) via MCP `atlassian_local`; ignora se não houver diferenças |
+| `/get_plan` | `/get_plan` | Baixa o plano de implementação do Confluence e salva em `.coder/plan.md`; cria o arquivo se não existir |
 | `/kanban_card` | `/kanban_card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
 
 ## Agentes

@@ -89,9 +89,9 @@ atlassian_local_confluence_create_page(
 - Registrar a URL da página criada retornada pelo MCP
 - Ir para o passo 7 (resultado)
 
-### 6. Atualizar a subpágina (quando já existe)
+### 6. Comparar e atualizar a subpágina (quando já existe)
 
-Antes de atualizar, obter a versão atual da página:
+Obter a versão atual da página para comparação e controle de versão:
 
 ```
 atlassian_local_confluence_get_page(
@@ -99,9 +99,15 @@ atlassian_local_confluence_get_page(
 )
 ```
 
-Extrair o campo `version.number` do resultado.
+Extrair:
+- `version.number` — número da versão atual
+- `body.wiki.value` (ou equivalente na representação retornada) — conteúdo atual da página no Confluence
 
-Em seguida, atualizar:
+**Comparar o conteúdo atual da página com o conteúdo de `plan.md`:**
+
+- Normalizar ambos antes de comparar: remover espaços em branco no início e no fim de cada linha e ignorar linhas em branco consecutivas
+- Se o conteúdo for **idêntico após normalização**: informar ao usuário que não há diferenças e **encerrar sem atualizar**
+- Se houver **diferenças**: prosseguir com a atualização abaixo
 
 ```
 atlassian_local_confluence_update_page(
@@ -123,10 +129,10 @@ Apresentar ao usuário:
 ```
 ## Publicação concluída
 
-**Operação:** criação / atualização
+**Operação:** criação / atualização / sem alterações
 **Título:** <título extraído>
 **Local:** Confluence › CAT › Implementações › <título>
-**URL:** <link direto para a página>
+**URL:** <link direto para a página>          ← omitir se operação for "sem alterações"
 ```
 
 Se qualquer chamada ao MCP retornar erro, reportar o erro exato e encerrar sem tentar alternativas.
@@ -136,7 +142,8 @@ Se qualquer chamada ao MCP retornar erro, reportar o erro exato e encerrar sem t
 - **MCP exclusivo:** toda operação deve usar as ferramentas `atlassian_local_*` — nunca simular resultados
 - **Space e hierarquia fixos:** sempre `CAT` / `Implementações` — nunca publicar em outro local
 - **Sem modificar o plan.md:** apenas ler o arquivo, nunca escrever nele
-- **Idempotência:** verificar existência antes de criar — se já existe, atualizar com incremento de versão
+- **Idempotência:** verificar existência antes de criar — se já existe, comparar conteúdo antes de atualizar
+- **Sem publicação desnecessária:** se o conteúdo do Confluence for idêntico ao `plan.md` (após normalização), encerrar sem chamar `update_page`
 - **Sem truncar conteúdo:** publicar o plan.md completo, sem omitir seções
 - **Sem inventar:** se o MCP falhar, reportar o erro exato — nunca fingir sucesso
 </rules>
@@ -144,7 +151,7 @@ Se qualquer chamada ao MCP retornar erro, reportar o erro exato e encerrar sem t
 <output_format>
 ## Publicação concluída
 
-- **Operação:** [criação / atualização]
+- **Operação:** [criação / atualização / sem alterações]
 - **Título:** [título extraído do plan.md]
 - **Local:** Confluence › CAT › Implementações › [título]
 - **URL:** [link direto para a página]

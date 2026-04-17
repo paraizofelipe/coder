@@ -25,6 +25,7 @@ AGENTS=(
 SKILLS=(
   "skills/analyse_code.md"
   "skills/document_plan.md"
+  "skills/get_plan.md"
   "skills/kanban_force.md"
   "skills/review_code.md"
   "skills/test_code.md"
@@ -34,6 +35,7 @@ SKILLS=(
 
 COMMANDS=(
   "commands/doc_plan.md"
+  "commands/get_plan.md"
   "commands/kanban_card.md"
 )
 
