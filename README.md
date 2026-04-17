@@ -6,7 +6,7 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 | Command | Uso | Descrição |
 |---|---|---|
-| `/card` | `/card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
+| `/kanban_card` | `/kanban_card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
 
 ## Agentes
 

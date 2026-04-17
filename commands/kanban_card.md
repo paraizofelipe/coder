@@ -1,5 +1,5 @@
 ---
-description: Consulta e carrega no contexto as informações de um card do kanban-force pelo friendlyID. Uso: /card STK-76F4
+description: Consulta e carrega no contexto as informações de um card do kanban-force pelo friendlyID. Uso: /kanban_card STK-76F4
 ---
 
 Utilize as ferramentas do MCP `kanban-force` para carregar no contexto as informações do card com friendlyID `$ARGUMENTS`.

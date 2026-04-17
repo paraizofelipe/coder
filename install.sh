@@ -31,7 +31,7 @@ SKILLS=(
 )
 
 COMMANDS=(
-  "commands/card.md"
+  "commands/kanban_card.md"
 )
 
 # agentes que usam modelo light (tarefas simples)
