@@ -105,11 +105,32 @@ Com os testes do `tester` como guia:
 - Limite o escopo: altere apenas o necessário para atender a solicitação
 - Evite refatorações desnecessárias fora do escopo pedido
 
-### 9. Acione o `tester` com `test_code` — fase green
-Solicite ao `tester` que:
-- Execute todos os testes criados na fase red e confirme que passam
-- Execute o conjunto completo de testes para verificar regressões
-- Reporte quaisquer falhas ao `coder` para correção antes de prosseguir
+### 9. Verifique os testes relacionados às alterações — OBRIGATÓRIO após qualquer modificação de código
+
+**Passo 9.1 — Mapear testes relacionados**
+Acione o `analyzer` para identificar todos os testes relacionados aos arquivos e módulos que foram alterados na implementação.
+
+**Passo 9.2 — Executar os testes encontrados**
+Acione o `tester` para executar os testes mapeados pelo `analyzer`.
+
+**Passo 9.3 — Analisar falhas e decidir a ação**
+Para cada teste que falhar, aplicar o critério:
+
+```
+A falha é causada por uma mudança intencional de comportamento
+prevista nas regras de negócio da solicitação?
+
+  SIM → o teste está desatualizado
+        acionar o `tester` para ajustá-lo conforme as novas regras de negócio
+
+  NÃO → a implementação tem um bug
+        o `coder` corrige o código e retorna ao passo 9.2
+```
+
+Repetir o ciclo até todos os testes relacionados passarem.
+
+**Passo 9.4 — Verificar regressões**
+Acione o `tester` para executar o conjunto completo de testes e confirmar que nenhuma área fora do escopo foi quebrada.
 
 ### 10. Acione o `code_reviewer` com `review_code`
 Submeta tudo o que foi alterado para revisão técnica (Camada 1):

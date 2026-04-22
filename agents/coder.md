@@ -76,11 +76,17 @@ Toda solicitação deve seguir esta sequência sem exceções:
    - Respeitar arquitetura, padrões e convenções do projeto
    - Limitar o escopo: alterar apenas o necessário para atender a solicitação
 
-10. **Acionar `tester` com a skill `test_code` — fase green**
-    - O `tester` executa todos os testes após a implementação
-    - Confirmar que os testes criados na fase red agora passam
-    - Verificar regressões no conjunto completo de testes
-    - Se houver falhas: reportar ao `coder` para correção antes de prosseguir
+10. **Verificar testes relacionados às alterações — OBRIGATÓRIO após qualquer modificação de código**
+    - Acionar o `analyzer` para mapear todos os testes relacionados aos arquivos e módulos alterados
+    - Acionar o `tester` para executar esses testes
+    - Para cada falha encontrada, aplicar o seguinte critério de decisão:
+
+      **A falha é causada por uma mudança intencional de comportamento prevista nas regras de negócio da solicitação?**
+      - **Sim** → o teste está desatualizado: acionar o `tester` para ajustá-lo conforme as novas regras
+      - **Não** → a implementação tem um bug: o `coder` corrige o código e repete este passo
+
+    - Repetir o ciclo até que todos os testes relacionados passem
+    - Após isso, executar o conjunto completo de testes para verificar regressões fora da área alterada
 
 11. **Acionar `code_reviewer` com a skill `review_code`**
     - Revisar qualidade técnica, aderência aos padrões do projeto e cobertura de testes

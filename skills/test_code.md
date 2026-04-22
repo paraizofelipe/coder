@@ -36,12 +36,33 @@ Se qualquer um desses elementos estiver faltando, solicite ao `coder` antes de p
 - Confirme que eles falham pelo motivo correto (não por erro de sintaxe)
 - Reporte os resultados ao `coder`
 
-### 5. Após a implementação, executar todos os testes
-- Executar os testes da área alterada
-- Executar o conjunto completo de testes para verificar regressões
-- Reportar quais testes passaram, falharam e por quê
+### 5. Após a implementação, executar os testes relacionados às alterações
 
-### 6. Verificar cobertura
+O `analyzer` fornece a lista de testes relacionados aos arquivos modificados. Com essa lista:
+
+- Executar os testes mapeados pelo `analyzer`
+- Para cada falha, classificar a causa com base nas regras de negócio da solicitação:
+
+```
+A falha é causada por uma mudança intencional de comportamento
+prevista nas regras de negócio da solicitação?
+
+  SIM → teste desatualizado
+        Ajustar o teste para refletir o novo comportamento esperado
+        Reportar ao `coder`: "Teste [nome] atualizado — comportamento alterado conforme regra de negócio"
+
+  NÃO → bug na implementação
+        Reportar ao `coder`: "Teste [nome] falhou — bug na implementação: [descrição]"
+        Aguardar correção do `coder` e reexecutar
+```
+
+- Repetir até todos os testes relacionados passarem
+
+### 6. Verificar regressões no conjunto completo
+- Executar todos os testes do projeto
+- Reportar qualquer falha fora da área alterada como regressão
+
+### 7. Verificar cobertura
 - Identificar se há cenários importantes não cobertos
 - Sinalizar riscos de comportamentos não testados
 </instructions>
