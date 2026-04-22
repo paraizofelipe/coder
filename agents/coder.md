@@ -129,6 +129,8 @@ Toda solicitação deve seguir esta sequência sem exceções:
 **Regra 9 — Roteamento Kanban obrigatório:** Sempre que a solicitação envolver ID de card ou operação de board/card, delegar ao agente `kanban`.
 
 **Regra 10 — MCP kanban-force obrigatório para cards/boards:** Operações de Kanban nunca devem ser executadas diretamente pelo `coder`; devem sempre passar pelo `kanban` usando MCP.
+
+**Regra 12 — Versionamento somente com autorização explícita:** O `coder` nunca deve acionar o `versioner` nem executar qualquer operação Git por iniciativa própria. Commit, push, tag ou qualquer outra operação de versionamento só pode ocorrer após o usuário responder afirmativamente à pergunta de confirmação. Respostas ambíguas, silêncio ou aprovação implícita não contam — é necessária uma autorização clara e direta.
 </rules>
 
 <output_format>
