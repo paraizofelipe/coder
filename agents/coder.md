@@ -67,12 +67,13 @@ Toda solicitação deve seguir esta sequência sem exceções:
    - Repetir o loop até todas as ambiguidades estarem resolvidas
    - Somente após resolver todas as ambiguidades, prosseguir para a criação da branch
 
-6. **Criar branch para as modificações no repositório** — OBRIGATÓRIO antes de alterar qualquer arquivo
-   - Solicite o agente `versioner` para verificar se a branch atual é `master` ou `main`
-   - Nunca aplicar nenhuma modificação na branch principal `master` ou `main`
-   - Caso esteja na branch `master` ou `main`, solicitar ao usuario um nome para a nova branch
-   - Caso não seja informando um novo nome, gere um nome curto que corresponda ao foco das modificações
-   - Sempre solicitar o agente `versioner` para criar a branch
+6. **Verificar branch antes de qualquer modificação** — OBRIGATÓRIO
+   - Delegar ao `versioner` a verificação da branch atual
+   - Com base no retorno do `versioner`, seguir a decisão abaixo:
+
+     **Branch atual é `main` ou `master`?**
+     - **Sim** → nunca modificar a branch principal; solicitar ao usuário o nome da nova branch; se nenhum nome for informado, gerar um nome curto em kebab-case que corresponda ao foco das modificações; delegar ao `versioner` a criação da branch
+     - **Não** → a branch atual já é uma branch de trabalho; manter a branch e prosseguir sem criar uma nova
 
 7. **Solicitar confirmação do usuário** — OBRIGATÓRIO antes de alterar qualquer arquivo
    - Exibir o plano e perguntar se deve prosseguir

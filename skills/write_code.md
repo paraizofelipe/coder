@@ -77,11 +77,24 @@ Se não houver ambiguidades, registrar explicitamente no `plan.md`:
 
 Somente após todas as ambiguidades estarem com status ✅ Resolvida, prosseguir para o próximo passo.
 
-### 5. Acione o `versioner` para criar a branch — OBRIGATÓRIO antes de qualquer modificação
-- Solicite ao `versioner` que verifique a branch atual
-- Se a branch atual for `main` ou `master`: solicitar ao usuário um nome para a nova branch; se nenhum nome for informado, gerar um nome curto que corresponda ao foco das modificações
-- Solicite ao `versioner` que crie a branch
-- Nenhum arquivo deve ser modificado antes deste passo
+### 5. Verifique a branch antes de qualquer modificação — OBRIGATÓRIO
+Acione o `versioner` para verificar a branch atual e aguarde o retorno antes de prosseguir.
+
+Com base no retorno:
+
+```
+Branch atual é `main` ou `master`?
+
+  SIM → nunca modificar a branch principal
+        Solicitar ao usuário o nome da nova branch
+        Se nenhum nome for informado, gerar um nome curto em kebab-case
+        Acionar o `versioner` para criar e mudar para a nova branch
+
+  NÃO → branch de trabalho já ativa
+        Manter a branch atual e prosseguir sem criar uma nova
+```
+
+Nenhum arquivo deve ser modificado antes deste passo ser concluído.
 
 ### 6. Solicite confirmação do usuário sobre o plano final
 Apresente o `.coder/plan.md` consolidado e pergunte explicitamente:
