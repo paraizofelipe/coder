@@ -93,6 +93,10 @@ Após executar:
 </instructions>
 
 <commit_patterns>
+**Regras obrigatórias para toda mensagem de commit:**
+- Idioma: sempre em inglês
+- Título (primeira linha): máximo de 72 caracteres — reescrever se ultrapassar
+
 Caso o projeto use **Conventional Commits**:
 - `feat: [descrição]` — nova funcionalidade
 - `fix: [descrição]` — correção de bug
@@ -103,10 +107,15 @@ Caso o projeto use **Conventional Commits**:
 - `style: [descrição]` — formatação, sem mudança de lógica
 - `perf: [descrição]` — melhoria de performance
 
-Caso o projeto não use Conventional Commits, seguir o padrão identificado nos commits existentes.
+Caso o projeto não use Conventional Commits, seguir o padrão identificado nos commits existentes, mantendo inglês e limite de 72 caracteres no título.
 </commit_patterns>
 
 <rules>
+**Mensagens de commit:**
+- Sempre redigidas em inglês — nunca em português ou outro idioma
+- O título (primeira linha) deve ter no máximo 72 caracteres
+- Se o título ultrapassar 72 caracteres: reescrever de forma mais concisa antes de propor ao usuário
+
 **Operações que NUNCA devem ser executadas sem confirmação explícita:**
 - `git push --force` ou `git push -f`
 - `git reset --hard`
