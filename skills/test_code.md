@@ -31,17 +31,32 @@ Se qualquer um desses elementos estiver faltando, solicite ao `coder` antes de p
 - Reutilizar helpers e utilitários de teste já existentes
 - Nunca criar estrutura de testes incompatível com a codebase
 
-### 4. Executar os testes para confirmar a falha esperada
-- Antes da implementação, execute os testes criados
-- Confirme que eles falham pelo motivo correto (não por erro de sintaxe)
-- Reporte os resultados ao `coder`
+### 4. Executar SOMENTE os testes criados/alterados — confirmar falha esperada
 
-### 5. Após a implementação, executar os testes relacionados às alterações
+Após criar ou ajustar testes, executar **apenas os arquivos de teste criados ou modificados nesta etapa** — nunca o conjunto completo.
 
-O `analyzer` fornece a lista de testes relacionados aos arquivos modificados. Com essa lista:
+```
+Executar: <comando para rodar somente os arquivos alterados>
+Exemplo: pytest path/to/test_file.py
+         go test ./pkg/affected/...
+         npm test -- --testPathPattern="affected_file"
+```
 
-- Executar os testes mapeados pelo `analyzer`
-- Para cada falha, classificar a causa com base nas regras de negócio da solicitação:
+- Confirmar que os testes falham pelo motivo correto (comportamento ausente, não erro de sintaxe ou configuração)
+- Se houver erro de sintaxe ou setup: corrigir o teste antes de reportar ao `coder`
+- Reportar ao `coder` somente após confirmar que a falha é a esperada
+
+### 5. Após a implementação — executar em dois estágios
+
+#### Estágio 1 — testes alterados e relacionados (escopo mínimo)
+
+Executar **somente** os testes criados/modificados na fase red mais os testes mapeados pelo `analyzer` como relacionados às mudanças:
+
+```
+Executar: <comando para rodar somente os arquivos afetados>
+```
+
+Para cada falha encontrada, classificar:
 
 ```
 A falha é causada por uma mudança intencional de comportamento
@@ -49,20 +64,34 @@ prevista nas regras de negócio da solicitação?
 
   SIM → teste desatualizado
         Ajustar o teste para refletir o novo comportamento esperado
+        Executar novamente somente esse teste para confirmar que passa
         Reportar ao `coder`: "Teste [nome] atualizado — comportamento alterado conforme regra de negócio"
 
   NÃO → bug na implementação
         Reportar ao `coder`: "Teste [nome] falhou — bug na implementação: [descrição]"
-        Aguardar correção do `coder` e reexecutar
+        Aguardar correção do `coder`, executar somente esse teste para confirmar, depois continuar
 ```
 
-- Repetir até todos os testes relacionados passarem
+Repetir o ciclo até todos os testes do escopo mínimo passarem.
+Somente então avançar para o Estágio 2.
 
-### 6. Verificar regressões no conjunto completo
-- Executar todos os testes do projeto
-- Reportar qualquer falha fora da área alterada como regressão
+#### Estágio 2 — conjunto completo (validação de regressões)
 
-### 7. Verificar cobertura
+Com todos os testes do escopo mínimo passando, executar o conjunto completo de testes do projeto:
+
+```
+Executar: make test  (ou o comando equivalente identificado pelo `analyzer`)
+```
+
+- Se **todos passarem**: reportar sucesso ao `coder` e encerrar
+- Se **algum falhar fora da área alterada**:
+  1. Identificar o teste e a causa da regressão
+  2. Classificar (regra de negócio vs bug na implementação) usando o mesmo critério do Estágio 1
+  3. Aplicar o fix (ajustar teste ou reportar bug ao `coder`)
+  4. Executar somente o teste corrigido para confirmar que passa
+  5. Repetir o Estágio 2 completo até `make test` passar sem falhas
+
+### 6. Verificar cobertura
 - Identificar se há cenários importantes não cobertos
 - Sinalizar riscos de comportamentos não testados
 </instructions>
