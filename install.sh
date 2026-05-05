@@ -5,7 +5,7 @@ set -euo pipefail
 # coder — OpenCode agents & skills installer
 # ─────────────────────────────────────────────
 
-REPO_URL="https://raw.githubusercontent.com/paraizofelipe/coder/main"
+REPO_GIT_URL="https://github.com/paraizofelipe/coder.git"
 OPENCODE_DIR="${OPENCODE_DIR:-$HOME/.opencode}"
 AGENTS_DST="$OPENCODE_DIR/agents"
 SKILLS_DST="$OPENCODE_DIR/skills"
@@ -24,15 +24,15 @@ AGENTS=(
 )
 
 SKILLS=(
-  "skills/analyse_code.md"
-  "skills/document_plan.md"
-  "skills/get_plan.md"
-  "skills/kanban_force.md"
-  "skills/query_argocd.md"
-  "skills/review_code.md"
-  "skills/test_code.md"
-  "skills/version_code.md"
-  "skills/write_code.md"
+  "skills/analyse-code"
+  "skills/document-plan"
+  "skills/get-plan"
+  "skills/kanban-force"
+  "skills/query-argocd"
+  "skills/review-code"
+  "skills/test-code"
+  "skills/version-code"
+  "skills/write-code"
 )
 
 COMMANDS=(
@@ -155,13 +155,9 @@ done
 # ── verificações ─────────────────────────────
 
 if ! $LOCAL; then
-  if command -v curl &>/dev/null; then
-    FETCH_CMD="curl"
-  elif command -v wget &>/dev/null; then
-    FETCH_CMD="wget"
-  else
-    echo -e "${RED}${BOLD}[erro]${RESET} curl ou wget são necessários para a instalação remota."
-    echo "       Use --local para instalar a partir de arquivos locais."
+  if ! command -v git &>/dev/null; then
+    echo -e "${RED}${BOLD}[erro]${RESET} git é necessário para a instalação remota (skills usam subdiretórios)."
+    echo "       Use --local para instalar a partir de arquivos locais ou instale git."
     exit 1
   fi
 fi
@@ -176,6 +172,16 @@ echo ""
 select_vendor
 
 mkdir -p "$AGENTS_DST" "$SKILLS_DST" "$COMMANDS_DST"
+
+# Diretório fonte: local (working copy) ou clone shallow remoto
+if $LOCAL; then
+  SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+  SOURCE_DIR="$(mktemp -d)"
+  trap 'rm -rf "$SOURCE_DIR"' EXIT
+  info "Baixando repositório remoto (clone shallow)…"
+  git clone --depth 1 --quiet "$REPO_GIT_URL" "$SOURCE_DIR"
+fi
 
 is_light_agent() {
   local src="$1"
@@ -194,7 +200,7 @@ patch_model() {
 }
 
 install_file() {
-  local src="$1"       # caminho relativo (ex: agents/analyzer.md)
+  local src="$1"       # caminho relativo a partir de SOURCE_DIR (ex: agents/analyzer.md)
   local dst_dir="$2"   # diretório de destino
   local model="${3:-}" # modelo a substituir (vazio = sem substituição)
   local filename
@@ -213,21 +219,36 @@ install_file() {
     fi
   fi
 
-  if $LOCAL; then
-    local script_dir
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    cp "$script_dir/$src" "$dst"
-  else
-    if [[ "$FETCH_CMD" == "curl" ]]; then
-      curl -fsSL "$REPO_URL/$src" -o "$dst"
-    else
-      wget -qO "$dst" "$REPO_URL/$src"
-    fi
-  fi
+  cp "$SOURCE_DIR/$src" "$dst"
 
   if [[ -n "$model" ]]; then
     patch_model "$dst" "$model"
   fi
+
+  install
+}
+
+install_skill_dir() {
+  local src="$1"        # caminho relativo a partir de SOURCE_DIR (ex: skills/analyse-code)
+  local dst_parent="$2" # diretório pai de destino (ex: $SKILLS_DST)
+  local skill_name
+  skill_name="$(basename "$src")"
+  local dst="$dst_parent/$skill_name"
+
+  echo -e "  ${BOLD}$skill_name/${RESET}"
+
+  if [[ -d "$dst" ]]; then
+    warn "Já existe: $dst"
+    if ! $FORCE; then
+      if ! confirm "Substituir $skill_name (diretório completo)?"; then
+        skip
+        return
+      fi
+    fi
+    rm -rf "$dst"
+  fi
+
+  cp -R "$SOURCE_DIR/$src" "$dst_parent/"
 
   install
 }
@@ -245,11 +266,11 @@ done
 
 echo ""
 
-# skills
+# skills (cada skill é um diretório com SKILL.md + opcional references/)
 info "Instalando skills em $SKILLS_DST"
 echo ""
 for skill in "${SKILLS[@]}"; do
-  install_file "$skill" "$SKILLS_DST"
+  install_skill_dir "$skill" "$SKILLS_DST"
 done
 
 echo ""
@@ -274,7 +295,7 @@ done
 echo ""
 echo "  Skills disponíveis:"
 for skill in "${SKILLS[@]}"; do
-  echo "    • $(basename "$skill" .md)"
+  echo "    • $(basename "$skill")"
 done
 echo ""
 echo "  Commands disponíveis:"

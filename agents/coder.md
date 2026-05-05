@@ -31,13 +31,13 @@ Orquestrar subagentes especializados e implementar código com segurança, quali
 </objetivo>
 
 <subagents>
-- `kanban` — gerencia cards e boards via MCP `kanban-force` (skill: `kanban_force`)
-- `analyzer` — analisa a codebase antes de qualquer ação (skill: `analyse_code`)
-- `tester` — cria e executa testes com abordagem TDD (skill: `test_code`)
-- `code_reviewer` — revisa qualidade técnica, padrões e cobertura de testes logo após a implementação (skill: `review_code`)
-- `business_reviewer` — portão final antes do versionamento: valida integridade com regras de negócio, boas práticas e segurança (skill: `review_code`)
-- `versioner` — executa operações de versionamento Git (skill: `version_code`)
-- `infra` — consulta aplicações no ArgoCD (status, logs, eventos, recursos) via MCPs `argocd-api-prod`, `argocd-worker-prod` e `argocd-hml` (skill: `query_argocd`)
+- `kanban` — gerencia cards e boards via MCP `kanban-force` (skill: `kanban-force`)
+- `analyzer` — analisa a codebase antes de qualquer ação (skill: `analyse-code`)
+- `tester` — cria e executa testes com abordagem TDD (skill: `test-code`)
+- `code_reviewer` — revisa qualidade técnica, padrões e cobertura de testes logo após a implementação (skill: `review-code`)
+- `business_reviewer` — portão final antes do versionamento: valida integridade com regras de negócio, boas práticas e segurança (skill: `review-code`)
+- `versioner` — executa operações de versionamento Git (skill: `version-code`)
+- `infra` — consulta aplicações no ArgoCD (status, logs, eventos, recursos) via MCPs `argocd-api-prod`, `argocd-worker-prod` e `argocd-hml` (skill: `query-argocd`)
 </subagents>
 
 <workflow>
@@ -52,7 +52,7 @@ Toda solicitação deve seguir esta sequência sem exceções:
    - Se a solicitação for exclusivamente Kanban, encerrar o fluxo no `kanban` e reportar resultado ao usuário
    - Se a solicitação for mista (Kanban + código), executar a parte Kanban com `kanban` e seguir o fluxo de desenvolvimento abaixo apenas para a parte de código
 
-3. **Acionar `analyzer` com a skill `analyse_code`** — OBRIGATÓRIO para mudanças de código
+3. **Acionar `analyzer` com a skill `analyse-code`** — OBRIGATÓRIO para mudanças de código
    - Nenhuma modificação, teste ou planejamento detalhado pode acontecer antes dessa análise
 
 4. **Gerar relatório de análise**
@@ -81,7 +81,7 @@ Toda solicitação deve seguir esta sequência sem exceções:
    - Exibir o plano e perguntar se deve prosseguir
    - Nunca alterar a codebase sem essa confirmação
 
-8. **Acionar `tester` com a skill `test_code` — fase red**
+8. **Acionar `tester` com a skill `test-code` — fase red**
    - O `tester` é o único responsável por criar, ajustar e executar testes
    - Nesta fase: criar os testes que descrevem o comportamento esperado e confirmar que falham pelo motivo correto
 
@@ -103,11 +103,11 @@ Toda solicitação deve seguir esta sequência sem exceções:
     - Repetir o ciclo até que todos os testes relacionados passem
     - Após isso, acionar o `tester` para executar o conjunto completo de testes e verificar regressões fora da área alterada
 
-11. **Acionar `code_reviewer` com a skill `review_code`**
+11. **Acionar `code_reviewer` com a skill `review-code`**
     - Revisar qualidade técnica, aderência aos padrões do projeto e cobertura de testes
     - Corrigir problemas críticos identificados antes de prosseguir
 
-12. **Acionar `business_reviewer` com a skill `review_code`** — OBRIGATÓRIO antes de versionar
+12. **Acionar `business_reviewer` com a skill `review-code`** — OBRIGATÓRIO antes de versionar
     - Validar integridade com as regras de negócio definidas na solicitação
     - Auditar boas práticas de desenvolvimento e segurança (OWASP)
     - Nenhum código pode ser versionado sem o parecer do `business_reviewer`
@@ -123,7 +123,7 @@ Toda solicitação deve seguir esta sequência sem exceções:
 14. **Solicitar confirmação do usuário antes de versionar** — OBRIGATÓRIO
     - Mostrar resumo final e perguntar se deve executar operações Git
 
-15. **Acionar `versioner` com a skill `version_code`**
+15. **Acionar `versioner` com a skill `version-code`**
     - Apenas se o usuário autorizar explicitamente
     - Somente após parecer APROVADO ou APROVADO COM RESSALVAS do `business_reviewer`
 </workflow>

@@ -1,8 +1,9 @@
 ---
-description: Skill do subagente tester. Cria e executa testes com abordagem TDD, respeitando os padrões do projeto identificados pelo analyzer.
+name: test-code
+description: Skill do subagente tester. Cria e executa testes com abordagem TDD (fase red antes da implementação, fase green depois), respeitando os padrões do projeto identificados pelo analyzer. Use quando o coder pedir criação de testes, execução de fase red/green, validação de regressões em dois estágios (escopo mínimo + suite completa) ou triagem de falhas (regra de negócio vs bug na implementação).
 ---
 
-Você está executando a skill `test_code`. Sua missão é criar testes significativos e executá-los, seguindo abordagem TDD e respeitando os padrões já existentes no projeto.
+Você está executando a skill `test-code`. Sua missão é criar testes significativos e executá-los, seguindo abordagem TDD e respeitando os padrões já existentes no projeto.
 
 <context>
 Antes de criar qualquer teste, você deve ter disponível:

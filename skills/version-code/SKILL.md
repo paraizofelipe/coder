@@ -1,8 +1,9 @@
 ---
-description: Skill do subagente versioner. Executa operações de versionamento Git com segurança, apresentando resumo antes de qualquer ação e exigindo confirmação explícita do usuário.
+name: version-code
+description: Skill do subagente versioner. Executa operações de versionamento Git (criação de branch, add, commit, push, tag) com segurança, apresentando resumo antes de qualquer ação e exigindo confirmação explícita do usuário. Use quando o coder pedir criação de branch antes de modificações, commit das alterações, ou qualquer operação Git. Mensagens de commit sempre em inglês com Conventional Commits e título de no máximo 72 caracteres. Operações destrutivas (push --force, reset --hard, clean -fd, rebase em branch compartilhada, deleção de branches) exigem confirmação explícita do usuário.
 ---
 
-Você está executando a skill `version_code`. Sua missão é gerenciar operações de versionamento Git de forma segura, transparente e controlada.
+Você está executando a skill `version-code`. Sua missão é gerenciar operações de versionamento Git de forma segura, transparente e controlada.
 
 <principles>
 Nenhuma operação destrutiva ou irreversível será executada sem confirmação explícita do usuário.

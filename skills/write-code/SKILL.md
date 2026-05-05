@@ -1,8 +1,9 @@
 ---
-description: Skill principal do agente coder. Coordena todo o fluxo de desenvolvimento: análise, planejamento, testes, implementação, revisão e versionamento.
+name: write-code
+description: Skill principal do agente coder. Coordena todo o fluxo de desenvolvimento — triagem Kanban, análise pelo analyzer, planejamento com .coder/plan.md, resolução de ambiguidades, criação de branch, TDD (red+green), implementação, verificação de regressões, revisões em duas camadas (code_reviewer + business_reviewer) e versionamento. Use quando o coder receber uma solicitação de mudança de código. Delega tudo o que não é implementação direta aos subagentes especializados; nunca executa análise, testes, Git ou revisões diretamente.
 ---
 
-Você está executando a skill `write_code`. Seu papel é coordenar o fluxo completo de desenvolvimento seguindo a disciplina de engenharia definida pelo agente `coder`.
+Você está executando a skill `write-code`. Seu papel é coordenar o fluxo completo de desenvolvimento seguindo a disciplina de engenharia definida pelo agente `coder`.
 
 <instructions>
 ### 0. Triar solicitações Kanban antes do fluxo de código
@@ -13,12 +14,12 @@ Sinais de intenção Kanban:
 - Pedidos como: criar card, mover card, atualizar card, comentar card, bloquear/desbloquear, arquivar, descartar, deletar card, transferir card, listar cards/board
 
 Ação obrigatória:
-- Delegar essas operações ao agente `kanban` (skill `kanban_force`)
+- Delegar essas operações ao agente `kanban` (skill `kanban-force`)
 - O `kanban` deve operar exclusivamente via MCP `kanban-force`
 - Se a solicitação for somente Kanban: concluir via `kanban` e reportar resultado ao usuário
 - Se a solicitação for mista (Kanban + código): executar primeiro a parte Kanban com `kanban` e depois seguir este fluxo para a parte de código
 
-### 1. Delegue ao `analyzer` a execução de `analyse_code`
+### 1. Delegue ao `analyzer` a execução de `analyse-code`
 Antes de qualquer ação, o `analyzer` deve inspecionar a codebase e retornar o relatório completo. Nenhuma linha de código pode ser escrita antes disso.
 
 ### 2. Consolide o relatório de análise
@@ -30,30 +31,7 @@ Com base no retorno do `analyzer`, compile:
 - Áreas que serão impactadas pela mudança
 
 ### 3. Monte o plano de implementação e crie `.coder/plan.md`
-Com base no relatório do `analyzer`, crie o arquivo `.coder/plan.md` no diretório raiz do projeto com o seguinte conteúdo:
-
-```markdown
-# Plano de Implementação
-
-## Solicitação original
-[texto exato da solicitação do usuário]
-
-## Resumo da análise
-[estrutura do projeto, padrões relevantes, áreas impactadas]
-
-## Ambiguidades identificadas
-| # | Questão | Status | Decisão |
-|---|---------|--------|---------|
-| 1 | [descrição] | ⏳ Pendente | — |
-
-## Plano de ação
-- [ ] [o que será feito e por quê]
-
-## Riscos e pontos de atenção
-- [lista]
-```
-
-Se o arquivo `.coder/plan.md` já existir, atualizá-lo em vez de substituir.
+Criar o arquivo `.coder/plan.md` no diretório raiz do projeto seguindo o template em `references/plan-md-template.md`. Se o arquivo já existir, atualizá-lo em vez de substituir.
 
 ### 4. Resolva ambiguidades com o usuário — loop obrigatório antes de prosseguir
 Para cada ambiguidade identificada pelo `analyzer` (seção "Ambiguidades identificadas" do relatório):
@@ -102,7 +80,7 @@ Apresente o `.coder/plan.md` consolidado e pergunte explicitamente:
 
 Não escreva nenhum código antes da confirmação.
 
-### 7. Acione o `tester` com `test_code` — fase red
+### 7. Acione o `tester` com `test-code` — fase red
 O `tester` é o único responsável por criar, ajustar e executar testes.
 Nesta fase, solicite ao `tester` que:
 - Crie os testes que descrevem o comportamento esperado
@@ -145,12 +123,12 @@ Repetir o ciclo até todos os testes relacionados passarem.
 **Passo 9.4 — Verificar regressões**
 Acione o `tester` para executar o conjunto completo de testes e confirmar que nenhuma área fora do escopo foi quebrada.
 
-### 10. Acione o `code_reviewer` com `review_code`
+### 10. Acione o `code_reviewer` com `review-code`
 Submeta tudo o que foi alterado para revisão técnica (Camada 1):
 - Aguarde o resultado antes de prosseguir
 - Corrija os problemas críticos identificados antes de continuar
 
-### 11. Acione o `business_reviewer` com `review_code` — OBRIGATÓRIO antes de versionar
+### 11. Acione o `business_reviewer` com `review-code` — OBRIGATÓRIO antes de versionar
 Submeta para revisão de negócio e segurança (Camada 2):
 - Aguarde o parecer antes de prosseguir
 - Se **REPROVADO**: corrigir os problemas apontados e submeter para nova revisão antes de continuar
@@ -167,7 +145,7 @@ Inclua:
 ### 13. Solicite confirmação antes de versionar
 > "Deseja que eu execute o commit das alterações? Posso acionar o `versioner`?"
 
-### 14. Acione o `versioner` com `version_code`
+### 14. Acione o `versioner` com `version-code`
 Somente após confirmação explícita do usuário e parecer APROVADO ou APROVADO COM RESSALVAS do `business_reviewer`.
 </instructions>
 

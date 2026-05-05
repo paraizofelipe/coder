@@ -1,8 +1,9 @@
 ---
-description: Skill do agente infra. Executa consultas a aplicações no ArgoCD via MCPs argocd-api-prod, argocd-worker-prod e argocd-hml, selecionando o MCP correto conforme ambiente e tipo de aplicação.
+name: query-argocd
+description: Skill do agente infra. Consulta aplicações no ArgoCD (status, logs, eventos, recursos, histórico, saúde) via MCPs argocd-api-prod, argocd-worker-prod e argocd-hml, selecionando o MCP correto conforme ambiente e tipo de aplicação. Use quando o usuário mencionar ArgoCD, status/logs/eventos de aplicação, sync, health, deploys, rollback, restart ou ambientes HML/sandbox/homologação/staging vs PROD. Em PROD, exige distinguir API (argocd-api-prod) de worker/cron/poller (argocd-worker-prod). Leitura por padrão; mutações exigem confirmação explícita.
 ---
 
-Você está executando a skill `query_argocd`. Sua missão é consultar aplicações no ArgoCD através dos MCPs `argocd-api-prod`, `argocd-worker-prod` e `argocd-hml`, escolhendo sempre o MCP adequado ao ambiente e ao tipo de aplicação.
+Você está executando a skill `query-argocd`. Sua missão é consultar aplicações no ArgoCD através dos MCPs `argocd-api-prod`, `argocd-worker-prod` e `argocd-hml`, escolhendo sempre o MCP adequado ao ambiente e ao tipo de aplicação.
 
 <context>
 Os três MCPs expõem ferramentas equivalentes para inspecionar aplicações ArgoCD em diferentes contextos:

@@ -1,8 +1,9 @@
 ---
-description: Skill compartilhada pelos subagentes code_reviewer e business_reviewer. Cobre duas camadas de revisão: (1) qualidade técnica, padrões e testes (code_reviewer) e (2) integridade com regras de negócio, boas práticas e segurança (business_reviewer). Nenhum código é versionado sem passar por ambas.
+name: review-code
+description: Skill compartilhada pelos subagentes code_reviewer e business_reviewer. Cobre duas camadas de revisão — (1) qualidade técnica, padrões e testes (code_reviewer, logo após implementação) e (2) integridade com regras de negócio, boas práticas e segurança OWASP (business_reviewer, portão final antes do versionamento). Use quando o coder pedir revisão técnica ou revisão de negócio/segurança. Nenhum código é versionado sem passar por ambas. Devolve parecer APROVADO, APROVADO COM RESSALVAS ou REPROVADO.
 ---
 
-Você está executando a skill `review_code`. Esta skill é usada em dois momentos distintos do fluxo:
+Você está executando a skill `review-code`. Esta skill é usada em dois momentos distintos do fluxo:
 
 - Pelo `code_reviewer`: revisão de qualidade técnica, padrões do projeto e cobertura de testes — logo após a implementação
 - Pelo `business_reviewer`: revisão de integridade com regras de negócio, boas práticas e segurança — portão final antes do versionamento
@@ -20,7 +21,7 @@ Para realizar uma revisão completa, você deve ter:
 
 ---
 
-## Camada 1 — Revisão técnica (viewer)
+## Camada 1 — Revisão técnica (code_reviewer)
 
 Execute esta camada quando acionado pelo `code_reviewer`, logo após a implementação.
 
@@ -66,47 +67,11 @@ Execute esta camada quando acionado pelo `code_reviewer`, logo após a implement
 
 ---
 
-## Camada 2 — Revisão de negócio, boas práticas e segurança (reviewer)
+## Camada 2 — Revisão de negócio, boas práticas e segurança (business_reviewer)
 
 Execute esta camada quando acionado pelo `business_reviewer`, como portão final antes do versionamento.
 
-<checklist id="camada-2">
-**Integridade com as regras de negócio**
-- [ ] O comportamento implementado corresponde exatamente ao que foi solicitado?
-- [ ] Todas as regras de negócio descritas na solicitação foram respeitadas?
-- [ ] Há lógica que contradiz ou ignora alguma regra de negócio?
-- [ ] Casos excepcionais previstos nas regras foram tratados?
-- [ ] O fluxo de dados respeita as restrições de negócio (validações, limites, permissões)?
-- [ ] Há efeitos colaterais que impactam outros processos de negócio?
-
-**Boas práticas de desenvolvimento**
-- [ ] O código segue o princípio de menor privilégio?
-- [ ] Há separação adequada entre lógica de negócio e infraestrutura?
-- [ ] Erros e exceções são tratados e comunicados corretamente?
-- [ ] Não há lógica crítica de negócio duplicada em múltiplos lugares?
-- [ ] Operações com efeitos colaterais são adequadamente isoladas e controladas?
-- [ ] Configurações sensíveis não estão hardcoded?
-- [ ] Logs não expõem informações sensíveis (dados pessoais, credenciais, tokens)?
-
-**Segurança — OWASP Top 10 e práticas essenciais**
-- [ ] **Injeção:** Risco de SQL injection, command injection ou similar?
-- [ ] **Autenticação:** Mecanismos de autenticação e sessão sem bypass?
-- [ ] **Exposição de dados:** Dados pessoais, financeiros ou confidenciais protegidos?
-- [ ] **Controle de acesso:** Verificação de autorização antes de operações protegidas?
-- [ ] **Configuração insegura:** Permissões excessivas, modo debug ou valores padrão inseguros?
-- [ ] **XSS:** Entradas do usuário sanitizadas antes de serem renderizadas?
-- [ ] **Deserialização insegura:** Dados externos validados antes de deserialização?
-- [ ] **Componentes vulneráveis:** Uso de bibliotecas desatualizadas ou com CVEs conhecidos?
-- [ ] **Logging insuficiente:** Eventos críticos de segurança são registrados?
-- [ ] **SSRF:** Chamadas a URLs externas construídas com input do usuário?
-- [ ] Tokens, chaves e segredos ausentes no código e nos logs?
-
-**Preparação para produção**
-- [ ] O código funcionaria corretamente em produção (não apenas em desenvolvimento)?
-- [ ] Há dependências de variáveis de ambiente documentadas?
-- [ ] Operações de migração têm plano de rollback?
-- [ ] O impacto em performance foi considerado para volumes reais?
-</checklist>
+O checklist completo (regras de negócio, boas práticas, OWASP Top 10 e preparação para produção) está em `references/owasp-checklist.md`. Carregue esse arquivo ao iniciar a Camada 2 e marque cada item antes de emitir o parecer.
 
 <criteria>
 **APROVADO:** Nenhum problema crítico ou importante identificado. Pode prosseguir para a próxima etapa.
