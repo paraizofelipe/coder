@@ -19,6 +19,7 @@ AGENTS=(
   "agents/documenter.md"
   "agents/infra.md"
   "agents/kanban.md"
+  "agents/mr_reviewer.md"
   "agents/tester.md"
   "agents/versioner.md"
 )
@@ -30,6 +31,7 @@ SKILLS=(
   "skills/kanban_force.md"
   "skills/query_argocd.md"
   "skills/review_code.md"
+  "skills/review_mr.md"
   "skills/test_code.md"
   "skills/version_code.md"
   "skills/write_code.md"
@@ -39,6 +41,7 @@ COMMANDS=(
   "commands/doc_plan.md"
   "commands/get_plan.md"
   "commands/kanban_card.md"
+  "commands/mr_review.md"
 )
 
 # agentes que usam modelo light (tarefas simples)
