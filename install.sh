@@ -64,7 +64,7 @@ declare -A MODEL_MAIN=(
   [google]="google/gemini-2.5-pro"
   [groq]="groq/llama-3.3-70b-versatile"
   [amazon-bedrock]="amazon-bedrock/amazon.nova-pro-v1:0"
-  [github-copilot]="github-copilot/claude-sonnet-4.6"
+  [github-copilot]="github-copilot/claude-opus-4.6"
 )
 
 declare -A MODEL_LIGHT=(
@@ -73,7 +73,7 @@ declare -A MODEL_LIGHT=(
   [google]="google/gemini-2.5-flash"
   [groq]="groq/llama-3.1-8b-instant"
   [amazon-bedrock]="amazon-bedrock/amazon.nova-lite-v1:0"
-  [github-copilot]="github-copilot/gpt-4.1"
+  [github-copilot]="github-copilot/claude-opus-4.6"
 )
 
 # ── helpers ──────────────────────────────────
