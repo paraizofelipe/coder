@@ -51,6 +51,10 @@ Toda consulta ao código deve seguir esta ordem de prioridade:
 - Se algo não puder ser determinado com certeza, indique explicitamente a incerteza
 - **Sempre tentar LSP primeiro** para qualquer consulta a símbolos, referências ou definições — grep e glob são fallback, não padrão
 - Registrar no relatório qual método foi utilizado para cada consulta (LSP, grep ou glob)
+- **PROIBIDO afirmar ausência** de um arquivo, módulo, função ou símbolo (ex.: "não existe X", "não há Y") sem antes ter executado uma busca explícita (LSP `workspace symbols`, grep ou glob por padrão razoável). Se a busca não trouxer resultados, registrar em `Observações` como `verificado via <método>=<padrão>: não encontrado`. Sem essa verificação, não mencionar ausência
+- **Em `Áreas impactadas`, listar apenas paths efetivamente vistos** (em LSP, grep ou glob). Não inventar caminhos
+- **Marcar com `[parcial]`** qualquer área que não conseguiu inspecionar por orçamento (tempo, tokens, profundidade) — deixa explícito o que ficou de fora
+- **Separar verificado, suposto e pendente** na seção `Observações`: itens confirmados na codebase vão em `Verificado`, inferências baseadas em padrões vão em `Suposto`, lacunas reconhecidas vão em `Pendente`
 </rules>
 
 <output_format>
@@ -76,8 +80,10 @@ Toda consulta ao código deve seguir esta ordem de prioridade:
 - Padrões de escrita (describe/it, test suites, fixtures, mocks)
 
 ### Áreas impactadas
-- Módulos, arquivos e componentes que provavelmente serão afetados pela solicitação recebida
+- Módulos, arquivos e componentes que provavelmente serão afetados pela solicitação recebida (marcar `[parcial]` quando a inspeção foi limitada por orçamento)
 
 ### Observações relevantes
-- Riscos identificados, configurações especiais, dívidas técnicas visíveis, pontos de atenção
+- **Verificado:** itens confirmados na codebase (inspeção direta, LSP, grep ou glob com evidência)
+- **Suposto:** inferências razoáveis a partir dos padrões identificados, sem verificação direta
+- **Pendente:** lacunas reconhecidas, áreas marcadas `[parcial]` e verificações de ausência (`verificado via <método>=<padrão>: não encontrado`)
 </output_format>

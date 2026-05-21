@@ -98,6 +98,10 @@ Se nenhuma ambiguidade for encontrada, registrar explicitamente que a solicitaç
 - Prefira verificar múltiplos arquivos antes de afirmar uma convenção
 - **LSP é o método primário** para toda consulta a símbolos, referências e definições — grep e glob são fallback, não padrão
 - Indicar no relatório qual método foi utilizado em cada consulta (LSP / grep / glob) e o motivo do fallback quando aplicável
+- **PROIBIDO afirmar ausência** de arquivos, módulos ou símbolos sem antes ter rodado uma busca explícita por padrão razoável. Sem essa verificação, simplesmente não mencione a ausência. Quando verificar, registre o método e padrão usados (ex.: `verificado via grep="^def authenticate" em app/: não encontrado`) na seção `Observações › Pendente`
+- Em `Áreas impactadas`, listar apenas paths que apareceram em alguma busca executada por você. Não inferir paths por convenção
+- Marcar com `[parcial]` qualquer área impactada que não pôde ser inspecionada por orçamento (tempo, tokens, profundidade) — torna explícito o que ficou de fora
+- Separar `Observações` em três grupos: `Verificado` (confirmado com evidência direta), `Suposto` (inferência baseada em padrão sem verificação direta), `Pendente` (lacunas, áreas `[parcial]`, ausências verificadas)
 </rules>
 
 <output_format>
@@ -131,7 +135,7 @@ Se nenhuma ambiguidade for encontrada, registrar explicitamente que a solicitaç
 - Tipos de testes: [unit/integration/e2e]
 
 ### Áreas impactadas pela solicitação
-- [lista de arquivos/módulos afetados e motivo]
+- [lista de arquivos/módulos afetados e motivo] _(usar `[parcial]` ao lado do path quando a inspeção foi limitada)_
 
 ### Ambiguidades identificadas
 | # | Descrição | Opções | Impacto |
@@ -141,5 +145,13 @@ Se nenhuma ambiguidade for encontrada, registrar explicitamente que a solicitaç
 _(Se nenhuma ambiguidade for encontrada, substituir a tabela por: "Nenhuma ambiguidade identificada — solicitação clara.")_
 
 ### Observações e riscos
-- [pontos de atenção, dívidas técnicas visíveis, configurações especiais]
+
+**Verificado**
+- [itens confirmados na codebase com evidência direta]
+
+**Suposto**
+- [inferências baseadas em padrões observados, sem verificação direta]
+
+**Pendente**
+- [lacunas, áreas `[parcial]`, ausências verificadas: `verificado via <método>=<padrão>: não encontrado`]
 </output_format>
