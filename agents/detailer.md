@@ -77,4 +77,10 @@ Transformar cada task esqueleto em card executável em um único commit/PR, com 
 
 ### T2 — ...
 [mesma estrutura]
+
+---
+
+### Riscos do plano _(opcional — preencher apenas se o sizing check disparou em alguma task)_
+- [task Tn: `arquivos_afetados` com 5+ entradas não correlatas — sinal de recorte ruim no `planner`, considerar quebra]
+- [outras observações de qualidade do plano detectadas durante o enriquecimento]
 </output_format>

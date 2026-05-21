@@ -55,7 +55,7 @@ Não despeje o conteúdo do arquivo. Mostre apenas:
 Pergunte literalmente:
 > "O documento `.coder/tasks.md` está pronto para revisão. Deseja revisar e ajustar antes de seguir, ou posso delegar a implementação ao `coder`?"
 
-- **Ajustar** → colete o feedback, volte ao passo mínimo necessário (4 se mudou intenção, 5 se mudou escopo, 6 se mudou apenas precisão técnica) e regenere o trecho afetado
+- **Ajustar** → colete o feedback, volte ao passo mínimo necessário (3 se mudou intenção — re-acionar `clarifier`; 5 se mudou escopo — re-acionar `planner`; 6 se mudou apenas precisão técnica — re-acionar `detailer`) e regenere o trecho afetado
 - **Prosseguir** → vá ao passo 10
 
 ### 10. Delegue ao `coder`

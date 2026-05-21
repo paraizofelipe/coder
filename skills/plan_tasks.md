@@ -7,11 +7,11 @@ Você está executando a skill `plan_tasks`. Recebe a solicitação esclarecida 
 <instructions>
 ### 1. Consolide contexto e objetivo
 - Releia a solicitação + decisões registradas
-- Use `Estrutura do projeto`, `Áreas impactadas` e `Comandos disponíveis` do `analyzer` como base — não re-inspecione
+- Use `Estrutura do projeto`, `Áreas impactadas` e `Comandos disponíveis` do `analyzer` como **base canônica** — não revalide nem re-inspecione esses itens
 
 ### 2. Liste arquivos afetados
-- Comece pelo conjunto da seção `Áreas impactadas` do `analyzer`
-- Adicione apenas paths que você confirmar via LSP/grep/glob
+- Comece pelo conjunto da seção `Áreas impactadas` do `analyzer` — esses paths são aceitos sem revalidação
+- Só adicione paths **novos**, fora do relatório do `analyzer`, quando houver lacuna concreta identificada durante o planejamento; nesses casos sim, confirme via LSP/grep/glob antes de incluir
 - Mantenha a marcação `[parcial]` quando o analyzer marcou assim
 
 ### 3. Quebre em tasks
