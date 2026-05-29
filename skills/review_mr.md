@@ -1,14 +1,16 @@
 ---
-description: Skill do agente mr_reviewer. Executa a revisão de Merge Requests do GitLab via CLI glab — lê metadados, diff e comentários, prepara o pacote de avaliação para o analyzer, posta respostas, resolve threads, aprova/revoga e abre MRs sob confirmação explícita.
+description: Skill do agente mr_reviewer. Executa a revisão de Merge Requests do GitLab via CLI glab — lê metadados, diff e comentários, posiciona o repositório na branch do MR, aciona o analyzer para revisar proativamente as modificações (bugs, riscos, aderência à descrição) e para julgar cada comentário, posta respostas, resolve threads, aprova/revoga e abre MRs sob confirmação explícita.
 ---
 
-Você está executando a skill `review_mr`. Esta skill cobre todas as operações sobre Merge Requests do GitLab via CLI `glab`. A avaliação técnica de cada comentário é delegada ao `analyzer`; esta skill lida com captura, consolidação e postagem.
+Você está executando a skill `review_mr`. Esta skill cobre todas as operações sobre Merge Requests do GitLab via CLI `glab`. A avaliação técnica — tanto da revisão proativa das modificações quanto de cada comentário — é delegada ao `analyzer`; esta skill lida com captura, posicionamento do repositório, consolidação e postagem.
 
 <context>
 Pré-requisitos:
 - CLI `glab` instalado e autenticado (`glab auth status` deve retornar sucesso)
 - Repositório local clonado e correspondente ao projeto do MR (mesmo `origin`)
-- O `analyzer` disponível para receber pacotes de avaliação por thread
+- Working tree limpo (sem alterações não commitadas) — a revisão exige checkout da branch source do MR
+- `git` disponível para fetch/checkout/pull da branch do MR
+- O `analyzer` disponível para receber pacotes de avaliação
 
 Conceitos-chave do GitLab:
 - **MR (Merge Request)** — identificado pelo IID dentro do projeto (ex.: `123` ou `!123`)
@@ -16,6 +18,8 @@ Conceitos-chave do GitLab:
 - **note** — cada mensagem dentro de uma thread; tem `id` e `body`
 - **position** — quando presente em uma `discussion`, indica que a thread é inline; contém `new_path`, `new_line`, `old_path`, `old_line`, `base_sha`, `start_sha`, `head_sha`
 - **resolved** — flag de resolução da thread
+- **diff_refs** — objeto retornado pelo `glab mr view` com `base_sha`, `start_sha` e `head_sha` (SHA do topo da branch no MR)
+- **source_branch / target_branch** — branch de origem e destino do MR
 </context>
 
 <instructions>
@@ -46,15 +50,75 @@ Comandos por operação:
 
 Recomendação:
 - Para listagens, sempre usar `-F json` para parseamento determinístico
-- Para visualizar um MR específico, usar `glab mr view <iid> --comments -F json` — isso traz `discussions[]` com todas as threads, inclusive resolvidas
+- Para visualizar um MR específico, usar `glab mr view <iid> --comments -F json` — isso traz `discussions[]` com todas as threads (inclusive resolvidas), `description`, `source_branch`, `target_branch` e `diff_refs.head_sha`
 
-Após a captura, separar `discussions[]` em duas listas:
+Capturar e guardar para os próximos passos: `title`, `description`, `source_branch`, `target_branch`, `diff_refs.head_sha`, `web_url` e a lista de `discussions[]`.
+
+Separar `discussions[]` em duas listas:
 - **Inline:** `discussion.notes[0].position != null` — thread atrelada a uma linha; usar `new_path` + `new_line` (ou `old_path` + `old_line` se a linha foi removida)
 - **Geral:** `discussion.notes[0].position == null` — comentário no MR como um todo
 
-Para o passo de avaliação, considerar apenas threads com `resolved == false` (threads resolvidas são informativas, mas não exigem nova avaliação).
+Para o passo de avaliação de comentários, considerar apenas threads com `resolved == false` (threads resolvidas são informativas, mas não exigem nova avaliação).
 
-## Passo 3 — Pacote de avaliação para o `analyzer`
+## Passo 3 — Sincronização da branch do MR (OBRIGATÓRIO antes de qualquer avaliação)
+
+A avaliação técnica (tanto a análise das modificações quanto o julgamento dos comentários) é feita pelo `analyzer` lendo o código real via LSP/grep no working tree. Por isso o repositório DEVE estar posicionado na branch source do MR e atualizado com o remoto — caso contrário o `analyzer` julga contra o código errado (ex.: a `main` ou uma versão antiga da branch).
+
+1. **Verificar working tree limpo:**
+   - `git status --porcelain`
+   - Se houver qualquer alteração não commitada, NÃO trocar de branch. Abortar com:
+     > "O working tree tem alterações não commitadas. Faça commit ou `git stash` antes de revisar o MR, pois a revisão exige checkout da branch `<source_branch>`."
+
+2. **Buscar e posicionar na branch source:**
+   - `git fetch origin <source_branch>`
+   - `git checkout <source_branch>`
+   - `git pull --ff-only origin <source_branch>`
+   - Se o `pull --ff-only` falhar (a branch local divergiu do remoto), NÃO forçar. Alertar e pedir orientação ao usuário:
+     > "A branch local `<source_branch>` divergiu do remoto e não pode ser atualizada por fast-forward. Resolva manualmente (rebase/reset) antes de prosseguir."
+
+3. **Confirmar que o HEAD local corresponde ao MR:**
+   - Comparar `git rev-parse HEAD` com o `diff_refs.head_sha` do MR (Passo 2)
+   - Se divergir, alertar e não prosseguir:
+     > "O HEAD local (`<sha-local>`) não corresponde ao topo do MR (`<head_sha>`). O MR pode ter recebido novos commits ou o fetch não trouxe tudo. Resolva antes de prosseguir."
+
+4. **Reportar ao usuário** a branch em checkout e o SHA, confirmando que a revisão será feita sobre o estado mais atual do MR.
+
+Só prosseguir para os Passos 4 e 5 após o HEAD local bater com o `head_sha` do MR.
+
+## Passo 4 — Análise das modificações do MR (revisão proativa)
+
+Além de avaliar comentários já abertos, o `mr_reviewer` deve revisar ativamente as mudanças do MR. Acionar o `analyzer` (skill `analyse_code`) com o diff completo e a descrição do MR para produzir um parecer crítico contra o código real (já em checkout pelo Passo 3).
+
+Pacote para o `analyzer`:
+
+```
+Solicitação: revisão proativa do MR !<iid> — <título>
+Branch em checkout: <source_branch> @ <head_sha>
+
+Descrição do MR:
+> <description completa do MR>
+
+Diff completo do MR:
+​```diff
+<saída de `glab mr diff <iid>`>
+​```
+
+Tarefa: revisar criticamente as modificações deste MR contra o código real (LSP > grep > glob). Avaliar:
+1. Bugs e defeitos — erros de lógica, casos de borda não tratados, regressões potenciais, condições de corrida, null/índice fora de faixa, tratamento de erro ausente.
+2. Qualidade e riscos — code smells, duplicação, acoplamento problemático, segurança, efeitos colaterais, performance.
+3. Aderência à descrição — as mudanças entregam exatamente o que a descrição do MR promete? Há algo descrito que não foi implementado? Há mudanças fora do escopo descrito?
+```
+
+O `analyzer` deve devolver:
+- **Achados**, cada um com:
+  - **Severidade:** `Crítico` | `Importante` | `Sugestão`
+  - **Localização:** `path:linha`
+  - **Descrição do problema** e, quando aplicável, **correção** no formato `path > linha > atual > sugerido > motivo`
+- **Veredito de aderência à descrição:** `Condiz` | `Condiz parcialmente` | `Diverge` — com justificativa objetiva (o que foi prometido vs. o que foi entregue; itens faltantes ou fora de escopo).
+
+Esses achados são **proativos** (gerados pelo reviewer, não por terceiros). Eles entram no relatório ao usuário (Passo 7) e só viram comentários/respostas no GitLab sob confirmação explícita (mesma disciplina do Passo 5). Mudanças de código continuam encaminhadas ao `coder`.
+
+## Passo 5 — Pacote de avaliação dos comentários abertos para o `analyzer`
 
 Para cada thread não resolvida, montar o seguinte pacote e acionar o `analyzer` com a skill `analyse_code`:
 
@@ -66,9 +130,9 @@ Thread: <discussion_id> (autor: @<username>)
 Localização: <new_path>:<new_line>   (ou "comentário geral")
 
 Trecho do diff (hunk relevante):
-```diff
+​```diff
 <linhas extraídas do output de `glab mr diff <iid>`, com 5 linhas de contexto antes e depois>
-```
+​```
 
 Comentário do revisor:
 > <corpo completo do comentário, sem truncamento>
@@ -82,7 +146,7 @@ O `analyzer` deve devolver:
 - **Resposta sugerida:** texto curto em Markdown, pronto para postar (1-3 parágrafos)
 - **Correção sugerida (opcional):** bloco no formato `path > linha > atual > sugerido > motivo` quando o parecer for `PROCEDE` e a correção for objetiva
 
-## Passo 4 — Detecção de idioma e redação da resposta
+## Passo 6 — Detecção de idioma e redação da resposta
 
 Antes de redigir respostas:
 - Inspecionar `title` e `description` do MR
@@ -95,21 +159,23 @@ Diretrizes de redação:
 - Se `PROCEDE`: agradecer, confirmar o ajuste e descrever o que será feito (ou foi feito)
 - Se `NÃO PROCEDE`: explicar com base no código atual por que o apontamento não se sustenta, com link mental para `path:linha`
 - Se `PARCIAL`: pedir esclarecimento específico ao revisor; nunca afirmar mérito sem base
+- Para achados proativos (Passo 4): redigir o comentário objetivamente, citando `path:linha` e a severidade
 
-## Passo 5 — Apresentação ao usuário e confirmação
+## Passo 7 — Apresentação ao usuário e confirmação
 
 Antes de qualquer escrita no GitLab, apresentar:
-1. Tabela consolidada (`#`, `discussion_id`, `path:linha`, autor, parecer, ação proposta)
-2. Para cada thread, detalhamento com bloco de comentário, parecer, resposta sugerida e o **comando exato** que seria executado
-3. Lista numerada de ações pendentes de confirmação, com opções por thread:
-   - postar resposta sugerida
+1. **Análise das modificações** (Passo 4): tabela de achados (`#`, severidade, `path:linha`, descrição) e o veredito de aderência à descrição
+2. **Threads não resolvidas** (Passo 5): tabela consolidada (`#`, `discussion_id`, `path:linha`, autor, parecer, ação proposta)
+3. Para cada item (achado proativo ou thread), detalhamento com bloco de comentário/parecer, resposta sugerida e o **comando exato** que seria executado
+4. Lista numerada de ações pendentes de confirmação, com opções por item:
+   - postar como comentário no MR (geral ou inline, conforme o caso)
    - postar resposta editada (pedir o texto ao usuário)
-   - marcar como resolvida (após postar ou sem postar)
-   - ignorar (não postar nada nesta thread)
+   - marcar como resolvida (para threads existentes)
+   - ignorar (não postar nada)
 
-Aguardar resposta explícita por thread (ou aprovação em bloco — "todas com a sugerida"). Silêncio, "ok", "veja o que acha" não contam como confirmação.
+Aguardar resposta explícita por item (ou aprovação em bloco — "todas com a sugerida"). Silêncio, "ok", "veja o que acha" não contam como confirmação.
 
-## Passo 6 — Postagem das respostas
+## Passo 8 — Postagem das respostas
 
 Comandos:
 
@@ -121,6 +187,7 @@ Comandos:
 | Reabrir thread | `glab api -X PUT projects/:id/merge_requests/<iid>/discussions/<discussion_id> -f resolved=false` |
 
 Notas:
+- Achados proativos (Passo 4) normalmente viram comentários gerais (`glab mr note`) ou, quando houver `path:linha`, podem ser postados como nova discussion inline via `glab api -X POST projects/:id/merge_requests/<iid>/discussions` informando o `position` (com `base_sha`, `start_sha`, `head_sha` do `diff_refs` e `new_path`/`new_line`)
 - `:id` no `glab api` é o ID/encoded path do projeto. Se o `glab` estiver no diretório do projeto, ele resolve automaticamente; em caso de dúvida, usar a versão URL-encoded do path do grupo/repo, ex.: `grupo%2Fprojeto`
 - `glab mr note` não responde a uma `discussion_id` específica — por isso o fallback `glab api` é obrigatório para respostas inline
 - O `body` aceita Markdown; usar `\n` ou aspas multilinhas conforme o shell
@@ -130,7 +197,7 @@ Para cada postagem, registrar:
 - Status retornado (sucesso/falha)
 - `note_id` retornado pelo GitLab (extrair do JSON de resposta)
 
-## Passo 7 — Aprovação e revogação (somente sob solicitação explícita)
+## Passo 9 — Aprovação e revogação (somente sob solicitação explícita)
 
 | Operação | Comando |
 |---|---|
@@ -139,7 +206,7 @@ Para cada postagem, registrar:
 
 Apresentar o comando exato, aguardar "sim" explícito e só então executar. Reportar o status final do MR (`approvals_required`, `approvals_left`) após a operação.
 
-## Passo 8 — Abertura de novo MR (somente sob solicitação explícita)
+## Passo 10 — Abertura de novo MR (somente sob solicitação explícita)
 
 Comando:
 
@@ -149,7 +216,7 @@ glab mr create --title "<t>" --description "<d>" --target-branch <branch> [--sou
 
 Antes de executar:
 1. Confirmar com o usuário: título, descrição (Markdown), branch alvo, assignees, labels
-2. Se a branch source ainda não existe no remoto, orientar o usuário a primeiro acionar o `versioner` para fazer o push (este agente não opera Git local)
+2. Se a branch source ainda não existe no remoto, orientar o usuário a primeiro acionar o `versioner` para fazer o push (este agente não faz commits nem push)
 3. Apresentar o comando exato e aguardar confirmação
 
 Após criar, reportar IID, URL e estado inicial.
@@ -157,21 +224,50 @@ Após criar, reportar IID, URL e estado inicial.
 </instructions>
 
 <rules>
-- Nunca executar `glab mr approve`, `glab mr revoke`, `glab mr note`, `glab mr create`, `glab api -X POST/PUT/DELETE` sem confirmação explícita do usuário
-- Sempre indicar o comando exato antes de executá-lo
-- Ao postar respostas, citar `discussion_id` e `path:linha` (quando inline) no relatório de resultado
-- Se um comentário não tiver `position`, tratá-lo como thread geral e usar `glab mr note`
-- Truncar bodies de comentários longos no relatório ao usuário (limite ~500 caracteres por comentário com indicação de truncamento), mas nunca no envio para o `analyzer`
-- Nunca alterar código local — encaminhar pendências de implementação ao `coder`
-- Se `glab auth status` falhar, abortar com mensagem clara antes de qualquer outro comando
-- Não inventar `discussion_id`, `note_id` ou linhas — sempre extrair do output do `glab`
-- Verificar correspondência entre repositório local e MR antes de acionar o `analyzer`
+- Antes de qualquer avaliação, posicionar o repositório na branch source do MR via fetch/checkout/pull (Passo 3) e confirmar que o HEAD local corresponde ao `diff_refs.head_sha`. Nunca acionar o `analyzer` com o repositório em outra branch ou desatualizado.
+- Nunca trocar de branch com working tree sujo — abortar e orientar commit/stash.
+- Operações Git permitidas a este agente: `git status`, `git fetch`, `git checkout`, `git pull --ff-only`, `git rev-parse`. Qualquer outra operação Git (commit, branch nova, merge, reset, push) é do `versioner`.
+- Sempre revisar proativamente as modificações do MR (Passo 4), não apenas os comentários abertos — incluindo bugs, riscos e aderência à descrição do MR.
+- Nunca executar `glab mr approve`, `glab mr revoke`, `glab mr note`, `glab mr create`, `glab api -X POST/PUT/DELETE` sem confirmação explícita do usuário.
+- Sempre indicar o comando exato antes de executá-lo.
+- Ao postar respostas, citar `discussion_id` e `path:linha` (quando inline) no relatório de resultado.
+- Se um comentário não tiver `position`, tratá-lo como thread geral e usar `glab mr note`.
+- Truncar bodies de comentários longos no relatório ao usuário (limite ~500 caracteres por comentário com indicação de truncamento), mas nunca no envio para o `analyzer`.
+- Nunca alterar código local — encaminhar pendências de implementação ao `coder`.
+- Se `glab auth status` falhar, abortar com mensagem clara antes de qualquer outro comando.
+- Não inventar `discussion_id`, `note_id`, linhas ou achados — sempre extrair do output do `glab` e do parecer do `analyzer`.
+- Verificar correspondência entre repositório local e MR antes de acionar o `analyzer`.
 </rules>
 
 <output_format>
 
 ### MR identificado
-- IID, título, autor, status, branches, `web_url`
+- IID, título, autor, status, branches (source → target), `web_url`
+- Branch em checkout e HEAD local — confirmação de que bate com o `head_sha` do MR
+
+### Análise das modificações (revisão proativa)
+
+**Aderência à descrição:** Condiz / Condiz parcialmente / Diverge — [justificativa]
+
+Tabela de achados:
+
+| # | severidade | path:linha | descrição |
+|---|---|---|---|
+
+Para cada achado relevante:
+
+```
+📍 <path> — linha <N>   (severidade: Crítico / Importante / Sugestão)
+
+**Problema:**
+[descrição objetiva do bug/risco contra o código atual]
+
+**Correção sugerida:**
+path > linha > atual > sugerido > motivo
+
+**Comentário sugerido para o MR:**
+[texto pronto para postar — pt-BR ou en]
+```
 
 ### Threads não resolvidas
 
@@ -205,11 +301,12 @@ path > linha > atual > sugerido > motivo
 ```
 
 ### Ações pendentes de confirmação
-1. Thread `<discussion_id>` em `<path:linha>` — opções: [postar sugerida] [editar] [resolver] [ignorar]
-2. ...
+1. Achado #N em `<path:linha>` — opções: [postar comentário] [editar] [ignorar]
+2. Thread `<discussion_id>` em `<path:linha>` — opções: [postar sugerida] [editar] [resolver] [ignorar]
+3. ...
 
 ### Resultado das ações executadas
-- Thread `<discussion_id>`: comando, status, `note_id`
+- Achado / Thread `<id>`: comando, status, `note_id`
 - ...
 
 ### Aprovação / Novo MR
