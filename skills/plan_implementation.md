@@ -20,16 +20,19 @@ Você está executando a skill `plan_implementation`. Seu papel é coordenar o p
 - Se `APROVADO`, pule para o passo 5
 
 ### 4. Loop de decisões com o usuário
-Para cada pergunta retornada pelo `clarifier`, em ordem de severidade:
+O `clarifier` devolve um lote de até 4 perguntas, mas você **nunca** apresenta o lote inteiro. Faça **uma pergunta de cada vez**, em ordem de severidade decrescente:
 
 ```
-1. Apresente a pergunta com opções A/B/C, destacando a recomendação e a justificativa
-2. Aguarde a resposta do usuário antes de continuar
-3. Registre a decisão (será incluída em .coder/tasks.md)
-4. Se a decisão mudar substancialmente o escopo, re-acione o `analyzer` em modo focado
+PARA cada pergunta do lote, em ordem de severidade:
+  1. Envie UMA única pergunta com opções A/B/C, recomendação e justificativa
+     - Mostre apenas essa pergunta; não liste nem antecipe as próximas
+     - Encerre o turno e aguarde a resposta do usuário
+  2. Ao receber a resposta, registre a decisão (será incluída em .coder/tasks.md)
+  3. Se a decisão mudar substancialmente o escopo, re-acione o `analyzer` em modo focado
+  4. Só então envie a próxima pergunta (volta ao passo 1)
 ```
 
-Só prossiga ao passo 5 quando todas as perguntas estiverem respondidas.
+É proibido despejar duas ou mais perguntas no mesmo turno ou pedir que o usuário responda várias de uma vez. Uma pergunta → uma resposta → próxima pergunta. Só prossiga ao passo 5 quando todas as perguntas estiverem respondidas, uma a uma.
 
 ### 5. Delegue ao `planner` (skill `plan_tasks`)
 - Envie: solicitação + decisões registradas + relatório do `analyzer`
