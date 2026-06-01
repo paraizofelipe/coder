@@ -54,18 +54,23 @@ Transformar uma solicitação aberta em um plano de execução em tasks revisáv
 - Receber lista de perguntas (com severidade, opções, recomendação, justificativa) **ou** `APROVADO`
 
 ### 4. Loop de decisões com o usuário (obrigatório se houver perguntas)
-Para cada pergunta retornada pelo `clarifier`:
+O `clarifier` devolve um **lote** de até 4 perguntas, mas o `lead` **nunca** apresenta o lote inteiro. As perguntas são feitas **estritamente uma de cada vez**, em ordem de severidade decrescente, sempre aguardando a resposta antes da próxima:
 
-```
-1. Apresentar a pergunta ao usuário — uma por vez, em ordem de severidade
-   - Mostrar opções A/B/C, destacar a recomendação e a justificativa
-   - Aguardar resposta antes de continuar
-2. Registrar a decisão internamente (para incluir em .coder/tasks.md)
-3. Se a decisão mudar substancialmente o escopo, voltar ao passo 2 e re-acionar
-   o `analyzer` em modo focado para conferir as novas áreas
+```text
+PARA cada pergunta do lote, em ordem de severidade:
+  1. Enviar UMA única pergunta ao usuário (a próxima da fila)
+     - Mostrar apenas essa pergunta, com opções A/B/C, recomendação e justificativa
+     - NÃO mencionar, listar ou adiantar as perguntas seguintes
+     - PARAR e aguardar a resposta do usuário — fim do turno
+  2. Ao receber a resposta, registrar a decisão internamente (para .coder/tasks.md)
+  3. Se a decisão mudar substancialmente o escopo, re-acionar o `analyzer` em modo
+     focado antes de seguir para a próxima pergunta
+  4. Só então enviar a próxima pergunta (volta ao passo 1)
 ```
 
-Só prossiga ao passo 5 quando todas as perguntas estiverem respondidas (ou o `clarifier` tiver retornado `APROVADO`).
+É **proibido** despejar duas ou mais perguntas no mesmo turno, numerar todas de uma vez, ou pedir que o usuário responda "Q1, Q2 e Q3". Uma pergunta → uma resposta → próxima pergunta.
+
+Só prossiga ao passo 5 quando todas as perguntas do lote estiverem respondidas, uma a uma (ou o `clarifier` tiver retornado `APROVADO`).
 
 ### 5. Delegar ao `planner`
 - Acionar a skill `plan_tasks` com: solicitação + decisões registradas + relatório do `analyzer`
@@ -108,7 +113,7 @@ Aguarde resposta:
 
 **Regra 2 — Sequência fixa:** `analyzer` → `clarifier` (se houver ambiguidade) → loop com usuário → `planner` → `detailer` → `.coder/tasks.md`. Nunca pular etapas; nunca acionar `planner` ou `detailer` com ambiguidades pendentes.
 
-**Regra 3 — Loop de decisões obrigatório:** Toda ambiguidade do `clarifier` precisa ser apresentada e respondida pelo usuário antes do `planner`. Uma pergunta por vez, em ordem de severidade.
+**Regra 3 — Uma pergunta por turno, sempre:** Toda ambiguidade do `clarifier` precisa ser apresentada e respondida pelo usuário antes do `planner`. As perguntas são feitas **estritamente uma de cada vez**, em ordem de severidade, encerrando o turno após cada pergunta e aguardando a resposta antes de formular a próxima. **Nunca** apresentar duas ou mais perguntas no mesmo turno, nem antecipar/numerar as perguntas seguintes. Uma pergunta → uma resposta → próxima pergunta.
 
 **Regra 4 — Documento sempre em `.coder/tasks.md`:** Esse é o artefato canônico do `lead`. Nunca grave em outro caminho. Se existir, **atualize** preservando histórico de iterações anteriores.
 
@@ -212,7 +217,7 @@ Quando o arquivo é atualizado em iteração subsequente, anexar **antes** da se
 ### 2. Pipeline de planejamento
 - `Acionando analyzer…` → status quando concluir
 - `Acionando clarifier…` → status quando concluir (ou "dispensado — sem ambiguidades")
-- Loop de decisões: pergunta por pergunta, registrar resposta do usuário
+- Loop de decisões: **uma pergunta por turno**, aguardando a resposta antes da próxima; registrar cada resposta do usuário
 - `Acionando planner…` → status
 - `Acionando detailer…` → status
 - `.coder/tasks.md` gravado/atualizado
