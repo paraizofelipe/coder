@@ -56,7 +56,7 @@ Transformar uma solicitação aberta em um plano de execução em tasks revisáv
 ### 4. Loop de decisões com o usuário (obrigatório se houver perguntas)
 O `clarifier` devolve um **lote** de até 4 perguntas, mas o `lead` **nunca** apresenta o lote inteiro. As perguntas são feitas **estritamente uma de cada vez**, em ordem de severidade decrescente, sempre aguardando a resposta antes da próxima:
 
-```
+```text
 PARA cada pergunta do lote, em ordem de severidade:
   1. Enviar UMA única pergunta ao usuário (a próxima da fila)
      - Mostrar apenas essa pergunta, com opções A/B/C, recomendação e justificativa

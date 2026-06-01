@@ -22,7 +22,7 @@ Você está executando a skill `plan_implementation`. Seu papel é coordenar o p
 ### 4. Loop de decisões com o usuário
 O `clarifier` devolve um lote de até 4 perguntas, mas você **nunca** apresenta o lote inteiro. Faça **uma pergunta de cada vez**, em ordem de severidade decrescente:
 
-```
+```text
 PARA cada pergunta do lote, em ordem de severidade:
   1. Envie UMA única pergunta com opções A/B/C, recomendação e justificativa
      - Mostre apenas essa pergunta; não liste nem antecipe as próximas
