@@ -1,6 +1,6 @@
 # coder
 
-Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa um fluxo disciplinado de desenvolvimento de software com análise prévia, TDD, revisão técnica, revisão de segurança e versionamento controlado.
+Conjunto de agentes e skills para [OpenCode](https://opencode.ai), [Claude Code](https://claude.ai/code) e [Codex](https://github.com/openai/codex) que implementa um fluxo disciplinado de desenvolvimento de software com análise prévia, TDD, revisão técnica, revisão de segurança e versionamento controlado.
 
 ## Commands
 
@@ -102,12 +102,41 @@ cd coder
 ./install.sh --local
 ```
 
-## Seleção de vendor
+Ao executar o instalador, a primeira etapa é **selecionar o(s) harness(es)** de destino (OpenCode, Claude Code, Codex ou todos). Em seguida, se OpenCode estiver entre os selecionados, há a opção de escolher o vendor de modelos. Ambas as etapas podem ser ignoradas fornecendo as flags `--harness` e `--vendor` diretamente.
 
-Ao iniciar, o instalador exibe um menu interativo para escolher o vendor de IA. A escolha define os modelos usados em todos os agentes:
+## Seleção de harness
+
+No início da instalação, o instalador exibe um menu interativo para escolher para qual(is) harness(es) instalar:
 
 ```
-[info]  Selecione o vendor de modelos:
+[info]  Selecione o(s) harness(es) de destino:
+        1) opencode
+        2) claude
+        3) codex
+        4) todos
+
+[?]    Números separados por espaço (ex.: 1 2):
+```
+
+Escolha um ou mais números. Para instalar em todos os harnesses de uma vez, selecione `4`. Para pular o menu, use a flag `--harness`:
+
+```bash
+# instalar apenas no Claude Code
+./install.sh --local --harness claude
+
+# instalar no OpenCode e no Claude Code
+./install.sh --local --harness opencode,claude
+
+# instalar em todos
+./install.sh --local --harness all
+```
+
+## Seleção de vendor
+
+A seleção de vendor é **opcional** e **relevante apenas para o OpenCode**. Quando o OpenCode está entre os harnesses selecionados, o instalador pergunta o vendor desejado (ou aceita Enter para manter o padrão):
+
+```
+[info]  Vendor do OpenCode (Enter para usar o default openai/gpt-5.5):
 
         1) anthropic        main: anthropic/claude-sonnet-4-6
         2) openai           main: openai/gpt-5.5
@@ -116,25 +145,65 @@ Ao iniciar, o instalador exibe um menu interativo para escolher o vendor de IA. 
         5) amazon-bedrock   main: amazon-bedrock/amazon.nova-pro-v1:0
         6) github-copilot   main: github-copilot/claude-sonnet-4.6
 
-[?]    Número do vendor [1-6]:
+[?]    Número do vendor [1-6] (Enter = padrão):
 ```
 
-O modelo **main** é aplicado a todos os agentes **primários** (`coder`, `lead`, `documenter`, `kanban`, `infra`, `mr_reviewer`). Agentes **subagentes** (`analyzer`, `clarifier`, `planner`, `detailer`, `tester`, `code_reviewer`, `business_reviewer`, `versioner`) não recebem `model` no frontmatter e herdam o modelo do agente que os aciona.
+O vendor define o modelo **main** aplicado aos agentes **primários** (`coder`, `lead`, `documenter`, `kanban`, `infra`, `mr_reviewer`) no OpenCode. O padrão é `openai/gpt-5.5`.
 
-> Para verificar os modelos disponíveis no seu ambiente: `opencode models <vendor>`
-
-## Opções do instalador
-
-| Flag | Descrição |
-|---|---|
-| `--force`, `-f` | Substitui todos os arquivos sem perguntar |
-| `--local`, `-l` | Instala a partir dos arquivos locais do repositório clonado |
-| `--help`, `-h` | Exibe a ajuda |
-
-### Exemplo: forçar substituição
+Para pular o menu, use a flag `--vendor`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash -s -- --force
+./install.sh --local --harness opencode --vendor anthropic
+```
+
+**Claude Code** usa `sonnet` como modelo dos primários, independentemente de vendor. **Codex** não recebe `model` por agente — herda o modelo da sessão.
+
+> Para verificar os modelos disponíveis no seu ambiente OpenCode: `opencode models <vendor>`
+
+## Diretórios de instalação
+
+Os artefatos são instalados nos diretórios nativos de cada harness:
+
+### OpenCode
+
+| Tipo | Destino padrão |
+|---|---|
+| Agentes | `~/.config/opencode/agents/<nome>.md` (arquivo montado com frontmatter) |
+| Skills | `~/.config/opencode/skills/<nome>/` (pasta com `SKILL.md`) |
+| Commands | `~/.config/opencode/commands/<nome>.md` (arquivo montado com frontmatter) |
+
+Override: `OPENCODE_DIR` (padrão: `~/.config/opencode`)
+
+### Claude Code
+
+| Tipo | Destino padrão |
+|---|---|
+| Agentes | `~/.claude/agents/<nome>.md` (arquivo montado com frontmatter) |
+| Skills | `~/.claude/skills/<nome>/` (pasta com `SKILL.md`) |
+| Commands | `~/.claude/commands/<nome>.md` (arquivo montado com frontmatter) |
+
+Override: `CLAUDE_DIR` (padrão: `~/.claude`)
+
+### Codex
+
+| Tipo | Destino padrão |
+|---|---|
+| Skills | `~/.agents/skills/<nome>/` (pasta com `SKILL.md`) |
+| Prompts (commands) | `~/.codex/prompts/<nome>.md` (apenas o corpo, sem frontmatter) |
+| `AGENTS.md` | `~/.codex/AGENTS.md` (arquivo de orquestração) |
+
+O Codex **não** recebe arquivos de agente — a orquestração é feita via `AGENTS.md`. Os commands são instalados como prompts body-only (sem frontmatter de `agent:`).
+
+Overrides: `CODEX_DIR` (padrão: `~/.codex`) e `CODEX_SKILLS_DIR` (padrão: `~/.agents/skills`)
+
+> **Atenção (Codex, modo remoto):** o `AGENTS.md` é gitignored e não está disponível no GitHub. Em instalação via `curl | bash` o arquivo será pulado com um aviso. Para instalar o `AGENTS.md`, use `--local`.
+
+### Sobrescrevendo diretórios via variável de ambiente
+
+```bash
+OPENCODE_DIR=/caminho/customizado ./install.sh --local --harness opencode
+CLAUDE_DIR=/outro/caminho ./install.sh --local --harness claude
+CODEX_DIR=~/.meu-codex CODEX_SKILLS_DIR=~/.meu-codex/skills ./install.sh --local --harness codex
 ```
 
 ## Checagem antes de instalar
@@ -142,48 +211,63 @@ curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh
 O instalador verifica, para cada agente e skill, se já existe um arquivo com o mesmo nome no diretório de destino. Quando encontra um conflito, exibe um aviso e pergunta se deve substituir:
 
 ```
-[warn]  Já existe: /home/user/.config/opencode/agents/coder.md
+[warn]  Já existe: /home/user/.claude/agents/coder.md
 [?]    Substituir coder.md? [s/N]
 ```
 
 Responda `s` para substituir ou pressione Enter para pular.
 
-## Diretórios de instalação
+## Opções do instalador
 
-Por padrão, os arquivos são instalados em:
+| Flag | Descrição |
+|---|---|
+| `--harness <lista>` | Harness(es) a instalar sem menu interativo. Valores: `opencode`, `claude`, `codex`, `all` (separados por vírgula ou espaço, ex.: `opencode,claude`) |
+| `--vendor <nome>` | Vendor para o OpenCode sem menu interativo. Valores: `anthropic`, `openai`, `google`, `groq`, `amazon-bedrock`, `github-copilot`. Inválido → erro + exit 1. Ignorado se OpenCode não estiver nos harnesses selecionados |
+| `--force`, `-f` | Substitui todos os arquivos sem perguntar |
+| `--local`, `-l` | Instala a partir dos arquivos locais do repositório clonado |
+| `--help`, `-h` | Exibe a ajuda |
 
-```
-~/.config/opencode/agents/    ← agentes (um arquivo <nome>.md montado por agente)
-~/.config/opencode/skills/    ← skills (um subdiretório <nome>/ com SKILL.md por skill)
-~/.config/opencode/commands/  ← commands (um arquivo <nome>.md montado por command)
-```
-
-Para instalar em outro diretório, defina a variável `OPENCODE_DIR` antes de executar:
+### Exemplos
 
 ```bash
-OPENCODE_DIR=/caminho/personalizado curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash
+# instalação interativa (recomendado para primeira vez)
+curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash
+
+# forçar reinstalação sem confirmações, todos os harnesses, vendor openai
+./install.sh --local --force --harness all --vendor openai
+
+# instalar apenas no OpenCode e Claude Code, vendor anthropic
+./install.sh --local --harness opencode,claude --vendor anthropic
+
+# instalar apenas no Codex (sem vendor)
+./install.sh --local --harness codex
+
+# forçar substituição em modo remoto
+curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh | bash -s -- --force --harness claude
 ```
 
 ## Requisitos
 
-- [OpenCode](https://opencode.ai) instalado
+- Um ou mais harnesses instalados: [OpenCode](https://opencode.ai), [Claude Code](https://claude.ai/code) e/ou [Codex](https://github.com/openai/codex)
 - `curl` ou `wget` (para instalação remota)
 - `bash` >= 4.0
 - MCP `kanban-force` configurado (necessário para operações de board/card com o agente `kanban`)
 
 ## Modelos configurados
 
-Os modelos são definidos durante a instalação conforme o vendor escolhido. Apenas os agentes **primários** recebem `model` no frontmatter. Os **subagentes** não têm `model` definido e herdam o modelo do agente que os aciona.
+Os modelos são definidos durante a instalação conforme o harness e o vendor escolhido. Apenas os agentes **primários** recebem `model` no frontmatter. Os **subagentes** não têm `model` definido e herdam o modelo do agente que os aciona.
 
 **Agentes primários:** `coder`, `lead`, `documenter`, `kanban`, `infra`, `mr_reviewer`
 
 **Subagentes (herdam):** `analyzer`, `clarifier`, `planner`, `detailer`, `tester`, `code_reviewer`, `business_reviewer`, `versioner`
 
-| Vendor | main (primários) |
-|---|---|
-| `anthropic` | `anthropic/claude-sonnet-4-6` |
-| `openai` | `openai/gpt-5.5` |
-| `google` | `google/gemini-2.5-pro` |
-| `groq` | `groq/llama-3.3-70b-versatile` |
-| `amazon-bedrock` | `amazon-bedrock/amazon.nova-pro-v1:0` |
-| `github-copilot` | `github-copilot/claude-sonnet-4.6` |
+| Harness | Vendor | Modelo dos primários |
+|---|---|---|
+| OpenCode | `anthropic` | `anthropic/claude-sonnet-4-6` |
+| OpenCode | `openai` (padrão) | `openai/gpt-5.5` |
+| OpenCode | `google` | `google/gemini-2.5-pro` |
+| OpenCode | `groq` | `groq/llama-3.3-70b-versatile` |
+| OpenCode | `amazon-bedrock` | `amazon-bedrock/amazon.nova-pro-v1:0` |
+| OpenCode | `github-copilot` | `github-copilot/claude-sonnet-4.6` |
+| Claude Code | — | `sonnet` |
+| Codex | — | herdado da sessão |
