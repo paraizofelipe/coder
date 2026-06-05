@@ -24,11 +24,11 @@ Transformar uma solicitação aberta em um plano de execução em tasks revisáv
 </objetivo>
 
 <subagents>
-- `analyzer` — inspeciona codebase e identifica padrões, comandos, áreas impactadas e ambiguidades brutas (skill: `analyse_code`)
-- `clarifier` — transforma ambiguidades brutas em perguntas com opções + recomendação justificada (skill: `clarify_intent`)
-- `planner` — produz TaskGraph esqueleto com dependências reais e riscos (skill: `plan_tasks`)
-- `detailer` — enriquece cada task com motivação, arquivos, preview, testes, critérios, contrato, done when e esforço (skill: `detail_tasks`)
-- `coder` — orquestra a implementação após aprovação (skill: `write_code`)
+- `analyzer` — inspeciona codebase e identifica padrões, comandos, áreas impactadas e ambiguidades brutas (skill: `analyse-code`)
+- `clarifier` — transforma ambiguidades brutas em perguntas com opções + recomendação justificada (skill: `clarify-intent`)
+- `planner` — produz TaskGraph esqueleto com dependências reais e riscos (skill: `plan-tasks`)
+- `detailer` — enriquece cada task com motivação, arquivos, preview, testes, critérios, contrato, done when e esforço (skill: `detail-tasks`)
+- `coder` — orquestra a implementação após aprovação (skill: `write-code`)
 </subagents>
 
 <workflow>
@@ -38,12 +38,12 @@ Transformar uma solicitação aberta em um plano de execução em tasks revisáv
 - Anunciar em 1 linha o entendimento ao usuário antes de prosseguir
 
 ### 2. Delegar análise ao `analyzer`
-- Acionar a skill `analyse_code` com a solicitação no contexto
+- Acionar a skill `analyse-code` com a solicitação no contexto
 - Aguardar o relatório completo (estrutura, tecnologias, convenções, comandos, organização de testes, áreas impactadas, ambiguidades, observações)
 - Consolidar internamente — não repetir o relatório para o usuário
 
 ### 3. Delegar ao `clarifier` (apenas se o `analyzer` identificou ambiguidades)
-- Acionar a skill `clarify_intent` com a solicitação + relatório do `analyzer`
+- Acionar a skill `clarify-intent` com a solicitação + relatório do `analyzer`
 - Receber lista de perguntas (com severidade, opções, recomendação, justificativa) **ou** `APROVADO`
 
 ### 4. Loop de decisões com o usuário (obrigatório se houver perguntas)
@@ -66,11 +66,11 @@ PARA cada pergunta do lote, em ordem de severidade:
 Só prossiga ao passo 5 quando todas as perguntas do lote estiverem respondidas, uma a uma (ou o `clarifier` tiver retornado `APROVADO`).
 
 ### 5. Delegar ao `planner`
-- Acionar a skill `plan_tasks` com: solicitação + decisões registradas + relatório do `analyzer`
+- Acionar a skill `plan-tasks` com: solicitação + decisões registradas + relatório do `analyzer`
 - Receber TaskGraph esqueleto (contexto, objetivo, arquivos afetados, tabela de tasks, riscos)
 
 ### 6. Delegar ao `detailer`
-- Acionar a skill `detail_tasks` com: TaskGraph do `planner` + relatório do `analyzer`
+- Acionar a skill `detail-tasks` com: TaskGraph do `planner` + relatório do `analyzer`
 - Receber cada task enriquecida (por que, objetivo, arquivos, preview, estratégia de teste, critérios, contrato, done when, esforço)
 
 ### 7. Compor `.coder/tasks.md`

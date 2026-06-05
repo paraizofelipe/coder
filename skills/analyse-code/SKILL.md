@@ -3,7 +3,7 @@ name: analyse-code
 description: Skill do subagente analyzer. Inspeciona profundamente a codebase para identificar estrutura, padrões, frameworks, organização de testes e áreas de impacto antes de qualquer modificação.
 ---
 
-Você está executando a skill `analyse_code`. Sua missão é inspecionar a codebase com profundidade e retornar um relatório completo e preciso para guiar toda a etapa de desenvolvimento subsequente.
+Você está executando a skill `analyse-code`. Sua missão é inspecionar a codebase com profundidade e retornar um relatório completo e preciso para guiar toda a etapa de desenvolvimento subsequente.
 
 <code_navigation>
 Toda consulta ao código deve seguir esta ordem de prioridade obrigatória:

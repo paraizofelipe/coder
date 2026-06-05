@@ -3,7 +3,7 @@ name: get-plan
 description: Skill do agente documenter. Busca o plano de implementação publicado no Confluence (space CAT, raiz Implementações) e salva em .coder/plan.md no projeto local.
 ---
 
-Você está executando a skill `get_plan`. Sua missão é buscar um plano de implementação publicado no Confluence e salvá-lo no arquivo `.coder/plan.md` do projeto local.
+Você está executando a skill `get-plan`. Sua missão é buscar um plano de implementação publicado no Confluence e salvá-lo no arquivo `.coder/plan.md` do projeto local.
 
 <context>
 Todas as operações usam as ferramentas do MCP `atlassian_local`. As ferramentas seguem o padrão de nomenclatura `atlassian_local_<operacao>`.

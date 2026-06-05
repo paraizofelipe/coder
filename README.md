@@ -6,9 +6,9 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 
 | Command | Uso | Descrição |
 |---|---|---|
-| `/doc_plan` | `/doc_plan` | Publica `.coder/plan.md` no Confluence (space CAT, subpágina de Implementações) via MCP `atlassian_local`; ignora se não houver diferenças |
-| `/get_plan` | `/get_plan` | Baixa o plano de implementação do Confluence e salva em `.coder/plan.md`; cria o arquivo se não existir |
-| `/kanban_card` | `/kanban_card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
+| `/doc-plan` | `/doc-plan` | Publica `.coder/plan.md` no Confluence (space CAT, subpágina de Implementações) via MCP `atlassian_local`; ignora se não houver diferenças |
+| `/get-plan` | `/get-plan` | Baixa o plano de implementação do Confluence e salva em `.coder/plan.md`; cria o arquivo se não existir |
+| `/kanban-card` | `/kanban-card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
 
 ## Agentes
 
@@ -48,15 +48,15 @@ flowchart LR
     
     Analyzer --> code_analyzer{{code_analyzer}}:::task
 
-    Tester --> test_code{{test_code}}:::task
+    Tester --> test-code{{test-code}}:::task
 
-    Versioner --> version_code{{version_code}}:::task
+    Versioner --> version-code{{version-code}}:::task
 
-    Coder --> write_code{{write_code}}:::task
+    Coder --> write-code{{write-code}}:::task
 
-    CodeReviewer --> review_code{{review_code}}:::task
+    CodeReviewer --> review-code{{review-code}}:::task
 
-    BusinessReviewer --> review_code{{review_code}}:::task
+    BusinessReviewer --> review-code{{review-code}}:::task
 
     classDef agent fill:#4A9,color:#fff
     classDef subAgent fill:#555,color:#fff

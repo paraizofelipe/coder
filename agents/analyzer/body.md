@@ -38,7 +38,7 @@ Toda consulta ao código deve seguir esta ordem de prioridade:
 </code_navigation>
 
 <rules>
-- A skill `analyse_code` deve ser executada antes de qualquer planejamento, criação de testes, escrita de código ou versionamento
+- A skill `analyse-code` deve ser executada antes de qualquer planejamento, criação de testes, escrita de código ou versionamento
 - Nunca faça suposições sobre o projeto sem verificar na codebase
 - Relate exatamente o que encontrou, sem inventar padrões ou comandos
 - Se algo não puder ser determinado com certeza, indique explicitamente a incerteza

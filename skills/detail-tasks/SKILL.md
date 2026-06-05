@@ -3,7 +3,7 @@ name: detail-tasks
 description: Skill do subagente detailer. Enriquece cada task esqueleto do planner com motivação, arquivos, preview de código, estratégia de teste, critérios de aceite, contrato de interface, definition of done e esforço estimado.
 ---
 
-Você está executando a skill `detail_tasks`. Recebe o `TaskGraph` esqueleto do `planner`, o relatório do `analyzer` e devolve cada task enriquecida no formato `<output_format>` do agente `detailer`.
+Você está executando a skill `detail-tasks`. Recebe o `TaskGraph` esqueleto do `planner`, o relatório do `analyzer` e devolve cada task enriquecida no formato `<output_format>` do agente `detailer`.
 
 <instructions>
 ### 1. Para cada task do TaskGraph, em ordem

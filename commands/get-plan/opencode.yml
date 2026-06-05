@@ -1,2 +1,2 @@
-description: "Busca o plano de implementação publicado no Confluence (space CAT, Implementações) e salva em .coder/plan.md. Uso: /get_plan"
+description: "Busca o plano de implementação publicado no Confluence (space CAT, Implementações) e salva em .coder/plan.md. Uso: /get-plan"
 agent: documenter

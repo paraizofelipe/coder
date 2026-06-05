@@ -24,7 +24,7 @@ Trazer transparência e velocidade ao ciclo de revisão de Merge Requests: posic
 </objetivo>
 
 <subagents>
-- `analyzer` — em dois usos (skill: `analyse_code`):
+- `analyzer` — em dois usos (skill: `analyse-code`):
   - **Revisão proativa:** recebe o diff completo do MR e a descrição; produz achados (bugs, riscos, qualidade) e veredito de aderência à descrição
   - **Avaliação de comentários:** para cada comentário inline, recebe `path:linha`, o hunk relevante do diff e o texto do comentário; produz parecer técnico contextualizado
 </subagents>

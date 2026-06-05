@@ -3,7 +3,7 @@ name: document-plan
 description: Skill do agente documenter. Lê .coder/plan.md, extrai o título da implementação e publica uma subpágina no Confluence (space CAT, raiz Implementações) via MCP atlassian_local.
 ---
 
-Você está executando a skill `document_plan`. Sua missão é publicar o conteúdo de `.coder/plan.md` no Confluence como subpágina de `Implementações` no space `CAT`.
+Você está executando a skill `document-plan`. Sua missão é publicar o conteúdo de `.coder/plan.md` no Confluence como subpágina de `Implementações` no space `CAT`.
 
 <context>
 Todas as operações usam as ferramentas do MCP `atlassian_local`. As ferramentas seguem o padrão de nomenclatura `atlassian_local_<operacao>`.

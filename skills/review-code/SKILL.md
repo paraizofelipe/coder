@@ -3,7 +3,7 @@ name: review-code
 description: "Skill compartilhada pelos subagentes code_reviewer e business_reviewer. Cobre duas camadas de revisão: (1) qualidade técnica, padrões e testes (code_reviewer) e (2) integridade com regras de negócio, boas práticas e segurança (business_reviewer). Nenhum código é versionado sem passar por ambas."
 ---
 
-Você está executando a skill `review_code`. Esta skill é usada em dois momentos distintos do fluxo:
+Você está executando a skill `review-code`. Esta skill é usada em dois momentos distintos do fluxo:
 
 - Pelo `code_reviewer`: revisão de qualidade técnica, padrões do projeto e cobertura de testes — logo após a implementação
 - Pelo `business_reviewer`: revisão de integridade com regras de negócio, boas práticas e segurança — portão final antes do versionamento

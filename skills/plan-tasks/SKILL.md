@@ -3,7 +3,7 @@ name: plan-tasks
 description: Skill do subagente planner. Transforma intenção esclarecida + relatório do analyzer em um TaskGraph executável com tasks dimensionadas, dependências reais e riscos.
 ---
 
-Você está executando a skill `plan_tasks`. Recebe a solicitação esclarecida (com decisões já tomadas pelo usuário via `lead`), o relatório do `analyzer` e devolve o esqueleto do plano técnico no formato `<output_format>` do agente `planner`.
+Você está executando a skill `plan-tasks`. Recebe a solicitação esclarecida (com decisões já tomadas pelo usuário via `lead`), o relatório do `analyzer` e devolve o esqueleto do plano técnico no formato `<output_format>` do agente `planner`.
 
 <instructions>
 ### 1. Consolide contexto e objetivo

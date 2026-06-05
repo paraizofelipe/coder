@@ -1,2 +1,2 @@
-description: "Documenta o plano de implementação (.coder/plan.md) no Confluence, space CAT, subpágina de Implementações. Uso: /doc_plan"
+description: "Documenta o plano de implementação (.coder/plan.md) no Confluence, space CAT, subpágina de Implementações. Uso: /doc-plan"
 agent: documenter

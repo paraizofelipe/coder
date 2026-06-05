@@ -3,7 +3,7 @@ name: review-mr
 description: Skill do agente mr_reviewer. Executa a revisão de Merge Requests do GitLab via CLI glab — lê metadados, diff e comentários, posiciona o repositório na branch do MR, aciona o analyzer para revisar proativamente as modificações (bugs, riscos, aderência à descrição) e para julgar cada comentário, posta respostas, resolve threads, aprova/revoga e abre MRs sob confirmação explícita.
 ---
 
-Você está executando a skill `review_mr`. Esta skill cobre todas as operações sobre Merge Requests do GitLab via CLI `glab`. A avaliação técnica — tanto da revisão proativa das modificações quanto de cada comentário — é delegada ao `analyzer`; esta skill lida com captura, posicionamento do repositório, consolidação e postagem.
+Você está executando a skill `review-mr`. Esta skill cobre todas as operações sobre Merge Requests do GitLab via CLI `glab`. A avaliação técnica — tanto da revisão proativa das modificações quanto de cada comentário — é delegada ao `analyzer`; esta skill lida com captura, posicionamento do repositório, consolidação e postagem.
 
 <context>
 Pré-requisitos:
@@ -88,7 +88,7 @@ Só prosseguir para os Passos 4 e 5 após o HEAD local bater com o `head_sha` do
 
 ## Passo 4 — Análise das modificações do MR (revisão proativa)
 
-Além de avaliar comentários já abertos, o `mr_reviewer` deve revisar ativamente as mudanças do MR. Acionar o `analyzer` (skill `analyse_code`) com o diff completo e a descrição do MR para produzir um parecer crítico contra o código real (já em checkout pelo Passo 3).
+Além de avaliar comentários já abertos, o `mr_reviewer` deve revisar ativamente as mudanças do MR. Acionar o `analyzer` (skill `analyse-code`) com o diff completo e a descrição do MR para produzir um parecer crítico contra o código real (já em checkout pelo Passo 3).
 
 Pacote para o `analyzer`:
 
@@ -121,7 +121,7 @@ Esses achados são **proativos** (gerados pelo reviewer, não por terceiros). El
 
 ## Passo 5 — Pacote de avaliação dos comentários abertos para o `analyzer`
 
-Para cada thread não resolvida, montar o seguinte pacote e acionar o `analyzer` com a skill `analyse_code`:
+Para cada thread não resolvida, montar o seguinte pacote e acionar o `analyzer` com a skill `analyse-code`:
 
 ```
 Solicitação original do usuário: <texto da solicitação>

@@ -3,7 +3,7 @@ name: test-code
 description: Skill do subagente tester. Cria e executa testes com abordagem TDD, respeitando os padrões do projeto identificados pelo analyzer.
 ---
 
-Você está executando a skill `test_code`. Sua missão é criar testes significativos e executá-los, seguindo abordagem TDD e respeitando os padrões já existentes no projeto.
+Você está executando a skill `test-code`. Sua missão é criar testes significativos e executá-los, seguindo abordagem TDD e respeitando os padrões já existentes no projeto.
 
 <context>
 Antes de criar qualquer teste, você deve ter disponível:

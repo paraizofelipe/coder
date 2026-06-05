@@ -1,4 +1,4 @@
-Acione o agente `mr_reviewer` com a skill `review_mr` para revisar o Merge Request identificado por `$ARGUMENTS`.
+Acione o agente `mr_reviewer` com a skill `review-mr` para revisar o Merge Request identificado por `$ARGUMENTS`.
 
 ## Passos
 
@@ -23,7 +23,7 @@ Garantir que a revisão seja feita sobre o código mais atual do MR:
 
 ### 4. Revisar proativamente as modificações acionando o `analyzer`
 
-Enviar ao `analyzer` (skill `analyse_code`) a descrição do MR + o diff completo. Receber achados (severidade `Crítico`/`Importante`/`Sugestão` + `path:linha` + correção) e veredito de aderência à descrição (**Condiz / Condiz parcialmente / Diverge**) — bugs, riscos e o que foi prometido vs. entregue.
+Enviar ao `analyzer` (skill `analyse-code`) a descrição do MR + o diff completo. Receber achados (severidade `Crítico`/`Importante`/`Sugestão` + `path:linha` + correção) e veredito de aderência à descrição (**Condiz / Condiz parcialmente / Diverge**) — bugs, riscos e o que foi prometido vs. entregue.
 
 ### 5. Avaliar cada thread não resolvida acionando o `analyzer`
 

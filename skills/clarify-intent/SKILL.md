@@ -3,7 +3,7 @@ name: clarify-intent
 description: Skill do subagente clarifier. Transforma ambiguidades brutas do analyzer em perguntas com opções concretas e recomendação justificada por evidências do codebase.
 ---
 
-Você está executando a skill `clarify_intent`. Recebe a solicitação do usuário e o relatório do `analyzer`, e devolve uma lista de perguntas executáveis (ou `APROVADO`) para o agente `lead` apresentar ao usuário.
+Você está executando a skill `clarify-intent`. Recebe a solicitação do usuário e o relatório do `analyzer`, e devolve uma lista de perguntas executáveis (ou `APROVADO`) para o agente `lead` apresentar ao usuário.
 
 <instructions>
 ### 1. Leia a solicitação e o relatório do analyzer
