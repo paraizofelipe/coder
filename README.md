@@ -9,19 +9,26 @@ Conjunto de agentes e skills para [OpenCode](https://opencode.ai) que implementa
 | `/doc-plan` | `/doc-plan` | Publica `.coder/plan.md` no Confluence (space CAT, subpágina de Implementações) via MCP `atlassian_local`; ignora se não houver diferenças |
 | `/get-plan` | `/get-plan` | Baixa o plano de implementação do Confluence e salva em `.coder/plan.md`; cria o arquivo se não existir |
 | `/kanban-card` | `/kanban-card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega todas as informações no contexto (ignora cards arquivados) |
+| `/mr-review` | `/mr-review` | Aciona o `mr_reviewer` para revisar o Merge Request aberto na branch atual via `glab` |
 
 ## Agentes
 
-| Agente | Função |
-|---|---|
-| `coder` | Orquestrador principal — coordena subagentes de desenvolvimento e delega operações de card/board ao `kanban` |
-| `documenter` | Agente primary para publicar planos de implementação no Confluence via MCP `atlassian_local` |
-| `kanban` | Agente primary para gerenciamento de cards e boards via MCP `kanban-force` |
-| `analyzer` | Inspeciona a codebase antes de qualquer modificação |
-| `tester` | Cria e executa testes com abordagem TDD |
-| `code_reviewer` | Revisão técnica de código logo após a implementação |
-| `business_reviewer` | Portão final de negócio e segurança antes do commit |
-| `versioner` | Executa operações Git com confirmação explícita |
+| Agente | Mode | Função |
+|---|---|---|
+| `coder` | primary | Orquestrador principal — coordena subagentes de desenvolvimento e delega operações de card/board ao `kanban` |
+| `lead` | primary | Orquestrador de planejamento — gera `.coder/tasks.md` e delega implementação ao `coder` após aprovação |
+| `documenter` | primary | Publica planos de implementação no Confluence via MCP `atlassian_local` |
+| `kanban` | primary | Gerenciamento de cards e boards via MCP `kanban-force` |
+| `infra` | primary | Consulta aplicações no ArgoCD |
+| `mr_reviewer` | primary | Revisa Merge Requests do GitLab via CLI `glab` |
+| `analyzer` | subagent | Inspeciona a codebase antes de qualquer modificação |
+| `clarifier` | subagent | Formata perguntas de ambiguidade com opções e recomendação |
+| `planner` | subagent | Produz o TaskGraph esqueleto a partir da intenção esclarecida |
+| `detailer` | subagent | Enriquece cada task com preview, testes, critérios e contrato |
+| `tester` | subagent | Cria e executa testes com abordagem TDD |
+| `code_reviewer` | subagent | Revisão técnica de código — Camada 1 |
+| `business_reviewer` | subagent | Revisão de negócio e segurança — Camada 2 |
+| `versioner` | subagent | Executa operações Git com confirmação explícita |
 
 ## Fluxo de desenvolvimento
 
@@ -43,10 +50,10 @@ flowchart LR
     Coder --> CodeReviewer
     Coder --> BusinessReviewer
 
-    Kanban --> kanba_force{{kanba_force}}:::task
-    kanba_force --> MCP[(mcp-kanba-force)]:::mcp
+    Kanban --> kanban-force{{kanban-force}}:::task
+    kanban-force --> MCP[(mcp-kanban-force)]:::mcp
     
-    Analyzer --> code_analyzer{{code_analyzer}}:::task
+    Analyzer --> analyse-code{{analyse-code}}:::task
 
     Tester --> test-code{{test-code}}:::task
 
@@ -102,17 +109,17 @@ Ao iniciar, o instalador exibe um menu interativo para escolher o vendor de IA. 
 ```
 [info]  Selecione o vendor de modelos:
 
-        1) anthropic        main: anthropic/claude-sonnet-4-6        light: anthropic/claude-haiku-4-5
-        2) openai           main: openai/gpt-4o                      light: openai/gpt-4o-mini
-        3) google           main: google/gemini-2.5-pro              light: google/gemini-2.5-flash
-        4) groq             main: groq/llama-3.3-70b-versatile       light: groq/llama-3.1-8b-instant
-        5) amazon-bedrock   main: amazon-bedrock/amazon.nova-pro-v1:0  light: amazon-bedrock/amazon.nova-lite-v1:0
-        6) github-copilot   main: github-copilot/claude-sonnet-4.6   light: github-copilot/gpt-4.1
+        1) anthropic        main: anthropic/claude-sonnet-4-6
+        2) openai           main: openai/gpt-5.5
+        3) google           main: google/gemini-2.5-pro
+        4) groq             main: groq/llama-3.3-70b-versatile
+        5) amazon-bedrock   main: amazon-bedrock/amazon.nova-pro-v1:0
+        6) github-copilot   main: github-copilot/claude-sonnet-4.6
 
 [?]    Número do vendor [1-6]:
 ```
 
-O modelo **main** é aplicado aos agentes de análise, desenvolvimento e revisão. O modelo **light** é aplicado ao `versioner`, que executa apenas operações Git simples.
+O modelo **main** é aplicado a todos os agentes **primários** (`coder`, `lead`, `documenter`, `kanban`, `infra`, `mr_reviewer`). Agentes **subagentes** (`analyzer`, `clarifier`, `planner`, `detailer`, `tester`, `code_reviewer`, `business_reviewer`, `versioner`) não recebem `model` no frontmatter e herdam o modelo do agente que os aciona.
 
 > Para verificar os modelos disponíveis no seu ambiente: `opencode models <vendor>`
 
@@ -135,7 +142,7 @@ curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/main/install.sh
 O instalador verifica, para cada agente e skill, se já existe um arquivo com o mesmo nome no diretório de destino. Quando encontra um conflito, exibe um aviso e pergunta se deve substituir:
 
 ```
-[warn]  Já existe: /home/user/.opencode/agents/coder.md
+[warn]  Já existe: /home/user/.config/opencode/agents/coder.md
 [?]    Substituir coder.md? [s/N]
 ```
 
@@ -146,9 +153,9 @@ Responda `s` para substituir ou pressione Enter para pular.
 Por padrão, os arquivos são instalados em:
 
 ```
-~/.opencode/agents/    ← agentes
-~/.opencode/skills/    ← skills
-~/.opencode/commands/  ← commands
+~/.config/opencode/agents/    ← agentes (um arquivo <nome>.md montado por agente)
+~/.config/opencode/skills/    ← skills (um subdiretório <nome>/ com SKILL.md por skill)
+~/.config/opencode/commands/  ← commands (um arquivo <nome>.md montado por command)
 ```
 
 Para instalar em outro diretório, defina a variável `OPENCODE_DIR` antes de executar:
@@ -166,18 +173,17 @@ OPENCODE_DIR=/caminho/personalizado curl -fsSL https://raw.githubusercontent.com
 
 ## Modelos configurados
 
-Os modelos são definidos durante a instalação conforme o vendor escolhido. Os agentes são divididos em dois grupos:
+Os modelos são definidos durante a instalação conforme o vendor escolhido. Apenas os agentes **primários** recebem `model` no frontmatter. Os **subagentes** não têm `model` definido e herdam o modelo do agente que os aciona.
 
-| Grupo | Agentes | Motivo |
-|---|---|---|
-| **main** | `coder`, `kanban`, `analyzer`, `tester`, `code_reviewer`, `business_reviewer` | Tarefas complexas de orquestração, análise, desenvolvimento e operações Kanban |
-| **light** | `versioner` | Operações Git simples |
+**Agentes primários:** `coder`, `lead`, `documenter`, `kanban`, `infra`, `mr_reviewer`
 
-| Vendor | main | light |
-|---|---|---|
-| `anthropic` | `anthropic/claude-sonnet-4-6` | `anthropic/claude-haiku-4-5` |
-| `openai` | `openai/gpt-4o` | `openai/gpt-4o-mini` |
-| `google` | `google/gemini-2.5-pro` | `google/gemini-2.5-flash` |
-| `groq` | `groq/llama-3.3-70b-versatile` | `groq/llama-3.1-8b-instant` |
-| `amazon-bedrock` | `amazon-bedrock/amazon.nova-pro-v1:0` | `amazon-bedrock/amazon.nova-lite-v1:0` |
-| `github-copilot` | `github-copilot/claude-sonnet-4.6` | `github-copilot/gpt-4.1` |
+**Subagentes (herdam):** `analyzer`, `clarifier`, `planner`, `detailer`, `tester`, `code_reviewer`, `business_reviewer`, `versioner`
+
+| Vendor | main (primários) |
+|---|---|
+| `anthropic` | `anthropic/claude-sonnet-4-6` |
+| `openai` | `openai/gpt-5.5` |
+| `google` | `google/gemini-2.5-pro` |
+| `groq` | `groq/llama-3.3-70b-versatile` |
+| `amazon-bedrock` | `amazon-bedrock/amazon.nova-pro-v1:0` |
+| `github-copilot` | `github-copilot/claude-sonnet-4.6` |
