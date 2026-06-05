@@ -6,7 +6,7 @@ Markdown-only: definicoes de agentes e skills para OpenCode, Claude Code e Codex
 
 ## Estrutura
 
-```
+```text
 agents/    14 subdiretorios — cada agente tem body.md + opencode.yml + claude.yml
 skills/    14 subdiretorios — cada skill tem SKILL.md + references/ (opcional)
 commands/  4 subdiretorios  — cada command tem body.md + opencode.yml + claude.yml
@@ -74,7 +74,7 @@ Conventional Commits em ingles: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`,
 | `kanban-card/` | `/kanban-card <friendlyID>` | Consulta um card pelo friendlyID via MCP kanban-force e carrega no contexto |
 | `mr-review/` | `/mr-review` | Aciona o `mr_reviewer` para revisar o MR aberto na branch atual via `glab` |
 
-Cada command e um subdiretorio com `body.md` (instrucoes) + `opencode.yml` (frontmatter). O nome do diretorio vira o slash command. Argumentos sao acessados via `$ARGUMENTS` (todos) ou `$1`, `$2`... (posicionais).
+Cada command e um subdiretorio com `body.md` (instrucoes) + frontmatter por harness (`opencode.yml` e `claude.yml`). O nome do diretorio vira o slash command. Argumentos sao acessados via `$ARGUMENTS` (todos) ou `$1`, `$2`... (posicionais).
 
 Instalados em `$OPENCODE_DIR/commands/` (padrao: `~/.config/opencode/commands/`).
 
