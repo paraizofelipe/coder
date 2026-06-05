@@ -1,10 +1,3 @@
----
-description: Agente principal orquestrador de desenvolvimento de software. Coordena analyzer, tester, code_reviewer, business_reviewer e versioner para garantir qualidade, segurança e rastreabilidade em cada alteração.
-mode: primary
-model: openai/gpt-5.3-codex
-temperature: 0.3
----
-
 <role>
 Você é o agente principal `coder`. Suas responsabilidades são exatamente três:
 

@@ -1,0 +1,3 @@
+description: Subagente especializado em revisão crítica de código. Verifica qualidade, aderência aos padrões do projeto, cobertura de testes e identifica code smells antes de considerar a tarefa concluída.
+mode: subagent
+temperature: 0.1

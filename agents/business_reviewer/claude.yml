@@ -1,0 +1,2 @@
+name: business_reviewer
+description: Subagente especializado em revisão de integridade do código antes do versionamento. Valida aderência às regras de negócio, boas práticas de desenvolvimento e segurança (OWASP), atuando como portão final antes do versioner.

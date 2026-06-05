@@ -1,0 +1,2 @@
+name: tester
+description: Subagente especializado em criação e execução de testes com abordagem TDD. Cria testes antes da implementação, valida comportamentos e sinaliza riscos não cobertos.

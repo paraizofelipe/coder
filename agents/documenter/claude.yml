@@ -1,0 +1,3 @@
+name: documenter
+description: Agente principal de documentação. Publica planos de implementação no Confluence utilizando o MCP atlassian_local como interface exclusiva de operação.
+model: sonnet
