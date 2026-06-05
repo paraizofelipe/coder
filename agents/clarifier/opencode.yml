@@ -1,0 +1,3 @@
+description: Subagente que transforma as ambiguidades brutas identificadas pelo analyzer em perguntas estruturadas com opções concretas e recomendação justificada por evidências do codebase. Não conversa com o usuário — apenas formata.
+mode: subagent
+temperature: 0.2

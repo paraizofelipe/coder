@@ -1,0 +1,2 @@
+name: planner
+description: Subagente que transforma intenção esclarecida e relatório do analyzer em um TaskGraph executável (lista de tasks com id, título, descrição, dependências e riscos), respeitando boas práticas de tamanho e revisão.

@@ -1,0 +1,3 @@
+name: coder
+description: Agente principal orquestrador de desenvolvimento de software. Coordena analyzer, tester, code_reviewer, business_reviewer e versioner para garantir qualidade, segurança e rastreabilidade em cada alteração.
+model: sonnet

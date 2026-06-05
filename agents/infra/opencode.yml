@@ -1,0 +1,4 @@
+description: Agente principal de infraestrutura. Consulta aplicações via ArgoCD (status, logs, sincronizações, eventos) utilizando os MCPs argocd-api-prod, argocd-worker-prod e argocd-hml conforme o ambiente e o tipo de aplicação.
+mode: primary
+model: __OPENCODE_MAIN__
+temperature: 0.2

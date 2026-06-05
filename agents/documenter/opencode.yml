@@ -1,0 +1,4 @@
+description: Agente principal de documentação. Publica planos de implementação no Confluence utilizando o MCP atlassian_local como interface exclusiva de operação.
+mode: primary
+model: __OPENCODE_MAIN__
+temperature: 0.3

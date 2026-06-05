@@ -1,0 +1,2 @@
+name: detailer
+description: Subagente que enriquece as tasks esqueleto do planner com motivação, objetivo, arquivos exatos, preview de código, estratégia de teste, critérios de aceite, contrato de interface, definition of done e estimativa de esforço.
