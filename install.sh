@@ -3,59 +3,65 @@ set -euo pipefail
 
 # ─────────────────────────────────────────────
 # coder — OpenCode agents & skills installer
+# (instala a partir do layout híbrido:
+#   agents/<name>/{opencode.yml,body.md}
+#   commands/<name>/{opencode.yml,body.md}
+#   skills/<name>/SKILL.md[, references/])
 # ─────────────────────────────────────────────
 
 REPO_URL="https://raw.githubusercontent.com/paraizofelipe/coder/main"
-OPENCODE_DIR="${OPENCODE_DIR:-$HOME/.opencode}"
+
+OPENCODE_DIR="${OPENCODE_DIR:-$HOME/.config/opencode}"
 AGENTS_DST="$OPENCODE_DIR/agents"
 SKILLS_DST="$OPENCODE_DIR/skills"
 COMMANDS_DST="$OPENCODE_DIR/commands"
 
-AGENTS=(
-  "agents/analyzer.md"
-  "agents/business_reviewer.md"
-  "agents/clarifier.md"
-  "agents/coder.md"
-  "agents/code_reviewer.md"
-  "agents/detailer.md"
-  "agents/documenter.md"
-  "agents/infra.md"
-  "agents/kanban.md"
-  "agents/lead.md"
-  "agents/mr_reviewer.md"
-  "agents/planner.md"
-  "agents/tester.md"
-  "agents/versioner.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ── listas de nomes (não caminhos) ────────────
+
+AGENT_NAMES=(
+  analyzer
+  business_reviewer
+  clarifier
+  code_reviewer
+  coder
+  detailer
+  documenter
+  infra
+  kanban
+  lead
+  mr_reviewer
+  planner
+  tester
+  versioner
 )
 
-SKILLS=(
-  "skills/analyse_code.md"
-  "skills/clarify_intent.md"
-  "skills/detail_tasks.md"
-  "skills/document_plan.md"
-  "skills/get_plan.md"
-  "skills/kanban_force.md"
-  "skills/plan_implementation.md"
-  "skills/plan_tasks.md"
-  "skills/query_argocd.md"
-  "skills/review_code.md"
-  "skills/review_mr.md"
-  "skills/test_code.md"
-  "skills/version_code.md"
-  "skills/write_code.md"
+SKILL_NAMES=(
+  analyse-code
+  clarify-intent
+  detail-tasks
+  document-plan
+  get-plan
+  kanban-force
+  plan-implementation
+  plan-tasks
+  query-argocd
+  review-code
+  review-mr
+  test-code
+  version-code
+  write-code
 )
 
-COMMANDS=(
-  "commands/doc_plan.md"
-  "commands/get_plan.md"
-  "commands/kanban_card.md"
-  "commands/mr_review.md"
+COMMAND_NAMES=(
+  doc-plan
+  get-plan
+  kanban-card
+  mr-review
 )
 
-# agentes que usam modelo light (tarefas simples)
-LIGHT_AGENTS=("agents/versioner.md")
-
-# ── mapa de vendors e modelos ─────────────────
+# ── mapa de vendors e modelo principal ────────
 
 VENDOR_NAMES=(
   "anthropic"
@@ -68,21 +74,15 @@ VENDOR_NAMES=(
 
 declare -A MODEL_MAIN=(
   [anthropic]="anthropic/claude-sonnet-4-6"
-  [openai]="openai/gpt-4o"
+  [openai]="openai/gpt-5.5"
   [google]="google/gemini-2.5-pro"
   [groq]="groq/llama-3.3-70b-versatile"
   [amazon-bedrock]="amazon-bedrock/amazon.nova-pro-v1:0"
-  [github-copilot]="github-copilot/claude-opus-4.6"
+  [github-copilot]="github-copilot/claude-sonnet-4.6"
 )
 
-declare -A MODEL_LIGHT=(
-  [anthropic]="anthropic/claude-haiku-4-5"
-  [openai]="openai/gpt-4o-mini"
-  [google]="google/gemini-2.5-flash"
-  [groq]="groq/llama-3.1-8b-instant"
-  [amazon-bedrock]="amazon-bedrock/amazon.nova-lite-v1:0"
-  [github-copilot]="github-copilot/claude-opus-4.6"
-)
+# modelo principal do OpenCode (default quando nenhum vendor é escolhido)
+OPENCODE_MAIN="openai/gpt-5.5"
 
 # ── helpers ──────────────────────────────────
 
@@ -106,37 +106,89 @@ confirm() {
   [[ "$answer" =~ ^[sSyY]$ ]]
 }
 
+# ── montagem (agentes e commands) ─────────────
+#
+# Monta o arquivo final `.md` no formato:
+#   ---
+#   <conteúdo de <harness>.yml>
+#   ---
+#   <linha em branco>
+#   <conteúdo de body.md>
+#
+assemble() {
+  local dir="$1"       # diretório fonte (ex: agents/coder)
+  local harness="$2"   # opencode
+  local dst="$3"       # caminho final do .md
+  {
+    echo "---"
+    cat "$dir/${harness}.yml"
+    echo "---"
+    echo ""
+    cat "$dir/body.md"
+  } > "$dst"
+}
+
+# substitui o token do modelo principal do OpenCode.
+# agentes subagentes não carregam o token → no-op.
+resolve_opencode_model() {
+  local file="$1"
+  local model="$2"
+  sed -i "s|__OPENCODE_MAIN__|$model|g" "$file"
+}
+
+# verifica conflito + confirmação antes de sobrescrever.
+# retorna 0 = pode prosseguir, 1 = pular.
+check_overwrite() {
+  local dst="$1"
+  local label="$2"
+  if [[ -e "$dst" ]]; then
+    warn "Já existe: $dst"
+    if ! $FORCE; then
+      if ! confirm "Substituir $label?"; then
+        skip
+        return 1
+      fi
+    fi
+  fi
+  return 0
+}
+
 # ── seleção de vendor ─────────────────────────
 
 VENDOR=""
 
 select_vendor() {
-  info "Selecione o vendor de modelos:"
+  info "Selecione o vendor de modelos (Enter para manter o padrão: $OPENCODE_MAIN):"
   echo ""
 
   local i=1
   for vendor in "${VENDOR_NAMES[@]}"; do
-    printf "        ${BOLD}%d)${RESET} %-18s  main: %-42s  light: %s\n" \
-      "$i" "$vendor" "${MODEL_MAIN[$vendor]}" "${MODEL_LIGHT[$vendor]}"
+    printf "        ${BOLD}%d)${RESET} %-18s  main: %s\n" \
+      "$i" "$vendor" "${MODEL_MAIN[$vendor]}"
     i=$((i + 1))
   done
 
   echo ""
 
   local choice
-  while true; do
-    read -r -p "$(echo -e "${YELLOW}${BOLD}[?]${RESET}    Número do vendor [1-${#VENDOR_NAMES[@]}]: ")" choice </dev/tty
-    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#VENDOR_NAMES[@]} )); then
-      VENDOR="${VENDOR_NAMES[$((choice - 1))]}"
-      break
+  # lê uma única vez; stdin fechado/EOF/entrada vazia → mantém o default.
+  if ! read -r -p "$(echo -e "${YELLOW}${BOLD}[?]${RESET}    Número do vendor [1-${#VENDOR_NAMES[@]}] (Enter = padrão): ")" choice; then
+    choice=""
+  fi
+
+  if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#VENDOR_NAMES[@]} )); then
+    VENDOR="${VENDOR_NAMES[$((choice - 1))]}"
+    OPENCODE_MAIN="${MODEL_MAIN[$VENDOR]}"
+  else
+    if [[ -n "$choice" ]]; then
+      warn "Opção inválida; mantendo o padrão."
     fi
-    echo -e "        ${RED}Opção inválida. Digite um número entre 1 e ${#VENDOR_NAMES[@]}.${RESET}"
-  done
+    VENDOR="(padrão)"
+  fi
 
   echo ""
   ok "Vendor selecionado: ${BOLD}$VENDOR${RESET}"
-  ok "  modelo principal : ${MODEL_MAIN[$VENDOR]}"
-  ok "  modelo versioner : ${MODEL_LIGHT[$VENDOR]}"
+  ok "  modelo principal : $OPENCODE_MAIN"
   echo ""
 }
 
@@ -144,6 +196,7 @@ select_vendor() {
 
 FORCE=false
 LOCAL=false
+FETCH_CMD=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -177,6 +230,46 @@ if ! $LOCAL; then
   fi
 fi
 
+# baixa um arquivo remoto para o destino indicado.
+fetch_remote() {
+  local rel="$1"   # caminho relativo no repositório (ex: agents/coder/body.md)
+  local dst="$2"
+  if [[ "$FETCH_CMD" == "curl" ]]; then
+    curl -fsSL "$REPO_URL/$rel" -o "$dst" || { echo "[erro] Falha ao baixar: $REPO_URL/$rel"; return 1; }
+  else
+    wget -qO "$dst" "$REPO_URL/$rel" || { echo "[erro] Falha ao baixar: $REPO_URL/$rel"; return 1; }
+  fi
+}
+
+# ── resolução de diretório fonte por tipo ─────
+#
+# Em modo local, a fonte é o próprio repositório.
+# Em modo remoto, baixamos os arquivos por diretório para um temp e
+# devolvemos esse temp como diretório fonte.
+
+REMOTE_TMP=""
+cleanup() {
+  [[ -n "$REMOTE_TMP" && -d "$REMOTE_TMP" ]] && rm -rf "$REMOTE_TMP"
+  return 0
+}
+trap cleanup EXIT
+
+# prepara o diretório fonte de um agente/command (contém opencode.yml + body.md)
+# uso: src_dir=$(prepare_assembled_src agents coder)
+prepare_assembled_src() {
+  local kind="$1"   # agents | commands
+  local name="$2"
+  if $LOCAL; then
+    echo "$SCRIPT_DIR/$kind/$name"
+    return
+  fi
+  local tmp="$REMOTE_TMP/$kind/$name"
+  mkdir -p "$tmp"
+  fetch_remote "$kind/$name/opencode.yml" "$tmp/opencode.yml"
+  fetch_remote "$kind/$name/body.md" "$tmp/body.md"
+  echo "$tmp"
+}
+
 # ── instalação ───────────────────────────────
 
 echo ""
@@ -188,79 +281,46 @@ select_vendor
 
 mkdir -p "$AGENTS_DST" "$SKILLS_DST" "$COMMANDS_DST"
 
-is_light_agent() {
-  local src="$1"
-  for light in "${LIGHT_AGENTS[@]}"; do
-    [[ "$src" == "$light" ]] && return 0
-  done
-  return 1
-}
-
-patch_model() {
-  local file="$1"
-  local model="$2"
-  local tmp
-  tmp=$(mktemp)
-  sed "s|^model:.*|model: $model|" "$file" > "$tmp" && mv "$tmp" "$file"
-}
-
-install_file() {
-  local src="$1"       # caminho relativo (ex: agents/analyzer.md)
-  local dst_dir="$2"   # diretório de destino
-  local model="${3:-}" # modelo a substituir (vazio = sem substituição)
-  local filename
-  filename="$(basename "$src")"
-  local dst="$dst_dir/$filename"
-
-  echo -e "  ${BOLD}$filename${RESET}"
-
-  if [[ -f "$dst" ]]; then
-    warn "Já existe: $dst"
-    if ! $FORCE; then
-      if ! confirm "Substituir $filename?"; then
-        skip
-        return
-      fi
-    fi
-  fi
-
-  if $LOCAL; then
-    local script_dir
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    cp "$script_dir/$src" "$dst"
-  else
-    if [[ "$FETCH_CMD" == "curl" ]]; then
-      curl -fsSL "$REPO_URL/$src" -o "$dst"
-    else
-      wget -qO "$dst" "$REPO_URL/$src"
-    fi
-  fi
-
-  if [[ -n "$model" ]]; then
-    patch_model "$dst" "$model"
-  fi
-
-  install
-}
+if ! $LOCAL; then
+  REMOTE_TMP="$(mktemp -d)"
+fi
 
 # agentes
 info "Instalando agentes em $AGENTS_DST"
 echo ""
-for agent in "${AGENTS[@]}"; do
-  if is_light_agent "$agent"; then
-    install_file "$agent" "$AGENTS_DST" "${MODEL_LIGHT[$VENDOR]}"
-  else
-    install_file "$agent" "$AGENTS_DST" "${MODEL_MAIN[$VENDOR]}"
+for name in "${AGENT_NAMES[@]}"; do
+  echo -e "  ${BOLD}$name${RESET}"
+  dst="$AGENTS_DST/$name.md"
+  if ! check_overwrite "$dst" "$name"; then
+    continue
   fi
+  src_dir="$(prepare_assembled_src agents "$name")"
+  assemble "$src_dir" opencode "$dst"
+  resolve_opencode_model "$dst" "$OPENCODE_MAIN"
+  install
 done
 
 echo ""
 
-# skills
+# skills (copia a pasta inteira)
 info "Instalando skills em $SKILLS_DST"
 echo ""
-for skill in "${SKILLS[@]}"; do
-  install_file "$skill" "$SKILLS_DST"
+for name in "${SKILL_NAMES[@]}"; do
+  echo -e "  ${BOLD}$name${RESET}"
+  dst="$SKILLS_DST/$name"
+  if ! check_overwrite "$dst" "$name"; then
+    continue
+  fi
+  rm -rf "$dst"
+  mkdir -p "$dst"
+  if $LOCAL; then
+    cp -R "$SCRIPT_DIR/skills/$name/." "$dst/"
+  else
+    # Fase 1: baixamos apenas SKILL.md. Skills com references/ não são
+    # suportadas no modo remoto desta fase.
+    fetch_remote "skills/$name/SKILL.md" "$dst/SKILL.md"
+  fi
+  install
 done
 
 echo ""
@@ -268,29 +328,37 @@ echo ""
 # commands
 info "Instalando commands em $COMMANDS_DST"
 echo ""
-for command in "${COMMANDS[@]}"; do
-  install_file "$command" "$COMMANDS_DST"
+for name in "${COMMAND_NAMES[@]}"; do
+  echo -e "  ${BOLD}$name${RESET}"
+  dst="$COMMANDS_DST/$name.md"
+  if ! check_overwrite "$dst" "$name"; then
+    continue
+  fi
+  src_dir="$(prepare_assembled_src commands "$name")"
+  assemble "$src_dir" opencode "$dst"
+  resolve_opencode_model "$dst" "$OPENCODE_MAIN"
+  install
 done
 
 echo ""
 ok "Instalação concluída."
 echo ""
-echo "  Vendor : ${BOLD}$VENDOR${RESET}"
-echo "  Modelos: ${MODEL_MAIN[$VENDOR]} / ${MODEL_LIGHT[$VENDOR]}"
+echo -e "  Vendor : ${BOLD}$VENDOR${RESET}"
+echo "  Modelo : $OPENCODE_MAIN"
 echo ""
 echo "  Agentes disponíveis:"
-for agent in "${AGENTS[@]}"; do
-  echo "    • $(basename "$agent" .md)"
+for name in "${AGENT_NAMES[@]}"; do
+  echo "    • $name"
 done
 echo ""
 echo "  Skills disponíveis:"
-for skill in "${SKILLS[@]}"; do
-  echo "    • $(basename "$skill" .md)"
+for name in "${SKILL_NAMES[@]}"; do
+  echo "    • $name"
 done
 echo ""
 echo "  Commands disponíveis:"
-for command in "${COMMANDS[@]}"; do
-  echo "    • /$(basename "$command" .md)"
+for name in "${COMMAND_NAMES[@]}"; do
+  echo "    • /$name"
 done
 echo ""
 echo -e "  Reinicie o OpenCode para carregar os novos agentes e skills."
