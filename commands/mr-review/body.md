@@ -1,8 +1,3 @@
----
-description: Revisa um Merge Request do GitLab — faz checkout da branch do MR, lê metadados/diff/comentários via glab, aciona o analyzer para revisar proativamente as modificações (bugs, riscos, aderência à descrição) e para julgar cada apontamento na linha indicada, e prepara respostas/aprovação sob confirmação. Uso: /mr_review 123  ou  /mr_review https://gitlab.com/grupo/projeto/-/merge_requests/123
-agent: mr_reviewer
----
-
 Acione o agente `mr_reviewer` com a skill `review_mr` para revisar o Merge Request identificado por `$ARGUMENTS`.
 
 ## Passos
