@@ -134,7 +134,7 @@ assemble() {
 apply_model() {
   local file="$1" harness="$2"
   case "$harness" in
-    opencode) sed -i "s|__OPENCODE_MAIN__|$OPENCODE_MAIN|g" "$file" ;;
+    opencode) sed -i.bak "s|__OPENCODE_MAIN__|$OPENCODE_MAIN|g" "$file" && rm -f "$file.bak" ;;
     claude)   : ;;
     codex)    : ;;
   esac

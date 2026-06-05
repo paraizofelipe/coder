@@ -108,7 +108,7 @@ Ao executar o instalador, a primeira etapa é **selecionar o(s) harness(es)** de
 
 No início da instalação, o instalador exibe um menu interativo para escolher para qual(is) harness(es) instalar:
 
-```
+```text
 [info]  Selecione o(s) harness(es) de destino:
         1) opencode
         2) claude

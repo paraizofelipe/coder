@@ -16,9 +16,13 @@ install.sh                  — monta e copia tudo para ~/.config/opencode/
 ## Convencoes obrigatorias
 
 - **Idioma:** todo conteudo em portugues do Brasil
-- **Frontmatter YAML** separado por harness (`opencode.yml`, `claude.yml`):
-  - Agentes primarios: `description`, `mode: primary`, `model` (definido pelo vendor), `temperature`
-  - Agentes subagentes: `description`, `mode: subagent` — sem `model` (herdam do chamador)
+- **Frontmatter YAML** separado por harness — cada harness usa os campos que entende:
+  - `opencode.yml` (OpenCode usa `mode` e `temperature`):
+    - Primario: `description`, `mode: primary`, `model` (token `__OPENCODE_MAIN__`, resolvido na instalacao), `temperature`
+    - Subagente: `description`, `mode: subagent`, `temperature` — sem `model`
+  - `claude.yml` (Claude Code **nao** usa `mode` nem `temperature`):
+    - Primario: `name`, `description`, `model: sonnet`
+    - Subagente: `name`, `description` — sem `model`
   - Skills (`SKILL.md`): `name` (kebab-case), `description`
 - **XML tags** para estruturar conteudo: `<role>`, `<responsibilities>`, `<rules>`, `<workflow>`, `<instructions>`, `<output_format>`, `<checklist>`, `<principles>`, `<criteria>`, `<context>`, `<code_navigation>`
 - **Listas de verificacao** (`- [ ]`) nas skills de revisao e nos agentes reviewer

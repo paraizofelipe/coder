@@ -31,7 +31,7 @@ Dois desalinhamentos com o standard:
 
 - **Codex passou a suportar subagentes** (custom agents com modelo próprio, ligados por padrão). Logo, não fica restrito a "só skills + AGENTS.md" — pode receber agentes nativos numa fase posterior.
 - Diretórios reais (global):
-  - OpenCode: `~/.config/opencode/skills/<n>/SKILL.md`, `~/.config/opencode/agent/`, `~/.config/opencode/command/` (também lê `~/.claude/skills/` e `~/.agents/skills/` por compatibilidade).
+  - OpenCode: `~/.config/opencode/skills/<n>/SKILL.md`, `~/.config/opencode/agents/`, `~/.config/opencode/commands/` (também lê `~/.claude/skills/` e `~/.agents/skills/` por compatibilidade).
   - Claude Code: `~/.claude/skills/`, `~/.claude/agents/`, `~/.claude/commands/`.
   - Codex: skills em `~/.agents/skills/`; prompts em `~/.codex/prompts/`.
 
