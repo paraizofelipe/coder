@@ -1,4 +1,5 @@
 ---
+name: version-code
 description: Skill do subagente versioner. Executa operações de versionamento Git com segurança, apresentando resumo antes de qualquer ação e exigindo confirmação explícita do usuário.
 ---
 

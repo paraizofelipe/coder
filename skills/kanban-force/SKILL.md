@@ -1,4 +1,5 @@
 ---
+name: kanban-force
 description: Skill do agente kanban. Executa operacoes de gerenciamento de cards e boards via MCP kanban-force, incluindo criacao, movimentacao, atualizacao, consulta e operacoes destrutivas.
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: document-plan
 description: Skill do agente documenter. Lê .coder/plan.md, extrai o título da implementação e publica uma subpágina no Confluence (space CAT, raiz Implementações) via MCP atlassian_local.
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: query-argocd
 description: Skill do agente infra. Executa consultas a aplicações no ArgoCD via MCPs argocd-api-prod, argocd-worker-prod e argocd-hml, selecionando o MCP correto conforme ambiente e tipo de aplicação.
 ---
 

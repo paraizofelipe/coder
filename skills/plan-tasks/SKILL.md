@@ -1,4 +1,5 @@
 ---
+name: plan-tasks
 description: Skill do subagente planner. Transforma intenção esclarecida + relatório do analyzer em um TaskGraph executável com tasks dimensionadas, dependências reais e riscos.
 ---
 

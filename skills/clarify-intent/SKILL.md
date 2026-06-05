@@ -1,4 +1,5 @@
 ---
+name: clarify-intent
 description: Skill do subagente clarifier. Transforma ambiguidades brutas do analyzer em perguntas com opções concretas e recomendação justificada por evidências do codebase.
 ---
 

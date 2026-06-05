@@ -1,4 +1,5 @@
 ---
+name: get-plan
 description: Skill do agente documenter. Busca o plano de implementação publicado no Confluence (space CAT, raiz Implementações) e salva em .coder/plan.md no projeto local.
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: test-code
 description: Skill do subagente tester. Cria e executa testes com abordagem TDD, respeitando os padrões do projeto identificados pelo analyzer.
 ---
 

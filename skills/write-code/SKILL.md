@@ -1,5 +1,6 @@
 ---
-description: Skill principal do agente coder. Coordena todo o fluxo de desenvolvimento: análise, planejamento, testes, implementação, revisão e versionamento.
+name: write-code
+description: "Skill principal do agente coder. Coordena todo o fluxo de desenvolvimento: análise, planejamento, testes, implementação, revisão e versionamento."
 ---
 
 Você está executando a skill `write_code`. Seu papel é coordenar o fluxo completo de desenvolvimento seguindo a disciplina de engenharia definida pelo agente `coder`.

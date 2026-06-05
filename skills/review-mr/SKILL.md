@@ -1,4 +1,5 @@
 ---
+name: review-mr
 description: Skill do agente mr_reviewer. Executa a revisão de Merge Requests do GitLab via CLI glab — lê metadados, diff e comentários, posiciona o repositório na branch do MR, aciona o analyzer para revisar proativamente as modificações (bugs, riscos, aderência à descrição) e para julgar cada comentário, posta respostas, resolve threads, aprova/revoga e abre MRs sob confirmação explícita.
 ---
 

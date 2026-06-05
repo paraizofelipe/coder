@@ -1,4 +1,5 @@
 ---
+name: plan-implementation
 description: Skill principal do agente lead. Orquestra o pipeline analyzer → clarifier → loop de decisões → planner → detailer e produz .coder/tasks.md, solicitando revisão do usuário antes de delegar a implementação ao coder.
 ---
 
