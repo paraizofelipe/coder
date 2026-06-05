@@ -1,4 +1,4 @@
-# Fase 2 — Instalação multi-harness — Implementation Plan
+# Fase 2 — Instalação multi-harness — Plano de Implementação
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

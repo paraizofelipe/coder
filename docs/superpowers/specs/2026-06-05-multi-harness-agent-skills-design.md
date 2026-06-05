@@ -1,4 +1,4 @@
-# Design — Migração para Agent Skills + instalação multi-harness
+# Projeto técnico — Migração para Agent Skills + instalação multi-harness
 
 - **Data:** 2026-06-05
 - **Repositório:** `coder` (coleção de agentes/skills/commands em Markdown + `install.sh`)
