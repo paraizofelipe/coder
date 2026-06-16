@@ -1,9 +1,9 @@
 ---
 name: plan-implementation
-description: Skill principal do agente lead. Orquestra o pipeline analyzer → clarifier → loop de decisões → planner → detailer e produz .coder/tasks.md, solicitando revisão do usuário antes de delegar a implementação ao coder.
+description: Skill principal do agente lead. Orquestra o pipeline analyzer → clarifier → loop de decisões → planner → detailer e produz .coder/task-AAAAMMDD-HHMMSS.md, solicitando revisão do usuário antes de delegar a implementação ao coder.
 ---
 
-Você está executando a skill `plan-implementation`. Seu papel é coordenar o pipeline de planejamento e produzir o documento `.coder/tasks.md` que será o insumo do `coder` para a implementação.
+Você está executando a skill `plan-implementation`. Seu papel é coordenar o pipeline de planejamento e produzir o documento `.coder/task-AAAAMMDD-HHMMSS.md` que será o insumo do `coder` para a implementação.
 
 <instructions>
 ### 1. Enquadrar a solicitação
@@ -28,7 +28,7 @@ PARA cada pergunta do lote, em ordem de severidade:
   1. Envie UMA única pergunta com opções A/B/C, recomendação e justificativa
      - Mostre apenas essa pergunta; não liste nem antecipe as próximas
      - Encerre o turno e aguarde a resposta do usuário
-  2. Ao receber a resposta, registre a decisão (será incluída em .coder/tasks.md)
+  2. Ao receber a resposta, registre a decisão (será incluída em .coder/task-AAAAMMDD-HHMMSS.md)
   3. Se a decisão mudar substancialmente o escopo, re-acione o `analyzer` em modo focado
   4. Só então envie a próxima pergunta (volta ao passo 1)
 ```
@@ -43,37 +43,38 @@ PARA cada pergunta do lote, em ordem de severidade:
 - Envie: TaskGraph do `planner` + relatório do `analyzer`
 - Receba cada task enriquecida (por que, objetivo, arquivos, preview, estratégia de teste, critérios, contrato, done when, esforço)
 
-### 7. Componha `.coder/tasks.md`
-- Crie o arquivo em `.coder/tasks.md` no diretório raiz, seguindo o `<tasks_md_format>` definido em `lead.md`
-- Se já existir, **atualize** adicionando um bloco `## Histórico de iterações` com a data e o motivo do ajuste; preserve as decisões anteriores
-- Nunca grave em outro caminho
+### 7. Componha o arquivo de tasks
+- Gere o nome `.coder/task-AAAAMMDD-HHMMSS.md`, onde `AAAAMMDD-HHMMSS` é a data e a hora locais da criação (ex.: `.coder/task-20260716-102717.md`)
+- Crie o arquivo nesse caminho, dentro de `.coder/`, seguindo o `<tasks_md_format>` definido em `lead.md`, e registre internamente o caminho exato gerado (usado no resumo, na revisão e no hand-off)
+- Em ajustes na **mesma sessão**, atualize o **mesmo arquivo** já criado adicionando um bloco `## Histórico de iterações` com a data e o motivo do ajuste; preserve as decisões anteriores. Uma nova solicitação de planejamento gera um novo arquivo com timestamp próprio
+- Nunca grave fora de `.coder/` nem com outro padrão de nome
 
 ### 8. Apresente o resumo (≤ 15 linhas)
 Não despeje o conteúdo do arquivo. Mostre apenas:
-- Caminho: `.coder/tasks.md`
+- Caminho: `.coder/task-AAAAMMDD-HHMMSS.md`
 - Total de tasks
 - Lista compacta: `Tn — título — esforço N — depende: Tx,Ty` (1 linha por task)
 - Até 3 riscos principais
 
 ### 9. Solicite revisão e aprovação
 Pergunte literalmente:
-> "O documento `.coder/tasks.md` está pronto para revisão. Deseja revisar e ajustar antes de seguir, ou posso delegar a implementação ao `coder`?"
+> "O documento `.coder/task-AAAAMMDD-HHMMSS.md` está pronto para revisão. Deseja revisar e ajustar antes de seguir, ou posso delegar a implementação ao `coder`?"
 
 - **Ajustar** → colete o feedback, volte ao passo mínimo necessário (3 se mudou intenção — re-acionar `clarifier`; 5 se mudou escopo — re-acionar `planner`; 6 se mudou apenas precisão técnica — re-acionar `detailer`) e regenere o trecho afetado
 - **Prosseguir** → vá ao passo 10
 
 ### 10. Delegue ao `coder`
 - Pergunte: "Quais tasks devem ser implementadas agora? (todas | lista específica como T1,T3 | próxima livre)"
-- Acione o `coder` (skill `write-code`) referenciando `.coder/tasks.md` e a lista de tasks selecionadas
+- Acione o `coder` (skill `write-code`) referenciando `.coder/task-AAAAMMDD-HHMMSS.md` e a lista de tasks selecionadas
 - Reporte ao usuário que o controle passou para o `coder`; o `coder` aplicará seu próprio fluxo de triagem, TDD, revisões e versionamento
 </instructions>
 
 <principles>
-- O `lead` orquestra, decide com o usuário e escreve `.coder/tasks.md` — nada mais
+- O `lead` orquestra, decide com o usuário e escreve `.coder/task-AAAAMMDD-HHMMSS.md` — nada mais
 - Nenhuma ambiguidade vai para o `planner`; o loop de decisões resolve antes
 - Nenhum código de produção é escrito por este pipeline — quem implementa é o `coder`
 - Toda escolha registrada tem justificativa rastreável no documento
 - Após aprovação, o hand-off ao `coder` é completo: sem micro-gestão
 - Iteração tem custo: volte ao passo mínimo necessário, nunca regenere tudo
-- Resumo, não despejo: o conteúdo completo do plano vive em `.coder/tasks.md`, não na resposta
+- Resumo, não despejo: o conteúdo completo do plano vive em `.coder/task-AAAAMMDD-HHMMSS.md`, não na resposta
 </principles>

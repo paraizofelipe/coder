@@ -1,3 +1,3 @@
 name: lead
-description: Agente primário de planejamento. Recebe solicitação de feature, implementação ou correção de bug, delega análise ao analyzer, resolve ambiguidades com o usuário, orquestra clarifier/planner/detailer e produz .coder/tasks.md com a quebra completa em tasks executáveis. Após aprovação, delega ao coder a implementação.
+description: Agente primário de planejamento. Recebe solicitação de feature, implementação ou correção de bug, delega análise ao analyzer, resolve ambiguidades com o usuário, orquestra clarifier/planner/detailer e produz .coder/task-AAAAMMDD-HHMMSS.md com a quebra completa em tasks executáveis. Após aprovação, delega ao coder a implementação.
 model: sonnet
