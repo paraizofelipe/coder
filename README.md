@@ -58,7 +58,7 @@ O `install.sh` **monta** o arquivo final de cada agente/command juntando `<harne
 | Agente | Mode | Skill | Papel |
 |---|---|---|---|
 | `coder` | primary | `write-code` | Orquestrador principal de implementação — tria o impacto, aciona os subagentes de desenvolvimento e escreve o código de produção |
-| `lead` | primary | `plan-implementation` | Orquestrador de planejamento — recebe feature/bug, quebra em tasks revisáveis (`.coder/tasks.md`) e delega a implementação ao `coder` após aprovação |
+| `lead` | primary | `plan-implementation` | Orquestrador de planejamento — recebe feature/bug, quebra em tasks revisáveis (`.coder/task-AAAAMMDD-HHMMSS.md`) e delega a implementação ao `coder` após aprovação |
 | `documenter` | primary | `document-plan`, `get-plan` | Publica e sincroniza planos de implementação com o Confluence via MCP `atlassian_local` |
 | `kanban` | primary | `kanban-force` | Cria, move, atualiza e organiza cards em boards via MCP `kanban-force` |
 | `infra` | primary | `query-argocd` | Consulta aplicações no ArgoCD (status, logs, sincronizações, eventos) via MCPs `argocd-*` |
@@ -79,7 +79,7 @@ A skill `review-code` é **compartilhada** pelo `code_reviewer` e pelo `business
 | Skill | Agente(s) | O que faz |
 |---|---|---|
 | `write-code` | `coder` | Coordena o fluxo completo de desenvolvimento: análise, plano, TDD, implementação, revisão e versionamento |
-| `plan-implementation` | `lead` | Orquestra análise, clarificação, planejamento e detalhamento até produzir `.coder/tasks.md` |
+| `plan-implementation` | `lead` | Orquestra análise, clarificação, planejamento e detalhamento até produzir `.coder/task-AAAAMMDD-HHMMSS.md` |
 | `analyse-code` | `analyzer` | Inspeciona estrutura, frameworks, convenções, comandos e áreas impactadas; identifica ambiguidades |
 | `clarify-intent` | `clarifier` | Formata ambiguidades em perguntas com opções concretas e recomendação baseada em evidências |
 | `plan-tasks` | `planner` | Gera o TaskGraph executável (id, título, descrição, dependências, riscos) |
@@ -188,7 +188,7 @@ lead
  ├─ <loop de decisões>            uma pergunta por vez, decisão registrada
  ├─ planner   (plan-tasks)        TaskGraph esqueleto (tasks + dependências + riscos)
  ├─ detailer  (detail-tasks)      enriquece cada task (preview, testes, critérios, contrato)
- ├─ grava .coder/tasks.md         documento canônico
+ ├─ grava .coder/task-*.md        documento canônico
  ├─ apresenta RESUMO (≤15 linhas)
  └─ aprovação explícita → delega ao coder
 ```
@@ -376,7 +376,7 @@ Apenas os agentes **primários** recebem `model` no frontmatter. Os **subagentes
 | Arquivo | Gerado por | Conteúdo |
 |---|---|---|
 | `.coder/plan.md` | `coder` (nível Grande) | Solicitação original, resumo da análise, tabela de ambiguidades com decisões, plano de ação e riscos |
-| `.coder/tasks.md` | `lead` | Solicitação original, contexto técnico, decisões tomadas, riscos e tasks detalhadas |
+| `.coder/task-AAAAMMDD-HHMMSS.md` | `lead` | Solicitação original, contexto técnico, decisões tomadas, riscos e tasks detalhadas |
 
 Esses artefatos podem ser publicados/sincronizados com o Confluence pelos commands `/doc-plan` e `/get-plan`.
 
