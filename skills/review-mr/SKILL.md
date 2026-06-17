@@ -9,9 +9,9 @@ Você está executando a skill `review-mr`. Esta skill cobre todas as operaçõe
 Pré-requisitos:
 - CLI `glab` instalado e autenticado (`glab auth status` deve retornar sucesso)
 - Repositório local clonado e correspondente ao projeto do MR (mesmo `origin`)
-- Working tree limpo (sem alterações não commitadas) — a revisão exige checkout da branch source do MR
-- `git` disponível para fetch/checkout/pull da branch do MR
-- O `analyzer` disponível para receber pacotes de avaliação
+- `git` com suporte a `worktree` (Git ≥ 2.5) — a revisão acontece em uma worktree isolada da branch source do MR
+- A revisão **não** exige working tree limpo no repositório principal: como roda em uma worktree dedicada, o trabalho em andamento do usuário fica intocado
+- O `analyzer` disponível para receber pacotes de avaliação (operando dentro do diretório da worktree)
 
 Conceitos-chave do GitLab:
 - **MR (Merge Request)** — identificado pelo IID dentro do projeto (ex.: `123` ou `!123`)
@@ -61,30 +61,41 @@ Separar `discussions[]` em duas listas:
 
 Para o passo de avaliação de comentários, considerar apenas threads com `resolved == false` (threads resolvidas são informativas, mas não exigem nova avaliação).
 
-## Passo 3 — Sincronização da branch do MR (OBRIGATÓRIO antes de qualquer avaliação)
+## Passo 3 — Worktree isolada da branch do MR (OBRIGATÓRIO antes de qualquer avaliação)
 
-A avaliação técnica (tanto a análise das modificações quanto o julgamento dos comentários) é feita pelo `analyzer` lendo o código real via LSP/grep no working tree. Por isso o repositório DEVE estar posicionado na branch source do MR e atualizado com o remoto — caso contrário o `analyzer` julga contra o código errado (ex.: a `main` ou uma versão antiga da branch).
+A avaliação técnica (tanto a análise das modificações quanto o julgamento dos comentários) é feita pelo `analyzer` lendo o código real via LSP/grep no working tree. Para isolar essa leitura do trabalho em andamento do usuário, a revisão acontece em uma **git worktree dedicada** à branch source do MR — nunca trocando a branch atual do repositório principal.
 
-1. **Verificar working tree limpo:**
-   - `git status --porcelain`
-   - Se houver qualquer alteração não commitada, NÃO trocar de branch. Abortar com:
-     > "O working tree tem alterações não commitadas. Faça commit ou `git stash` antes de revisar o MR, pois a revisão exige checkout da branch `<source_branch>`."
-
-2. **Buscar e posicionar na branch source:**
+1. **Atualizar as refs remotas:**
    - `git fetch origin <source_branch>`
-   - `git checkout <source_branch>`
-   - `git pull --ff-only origin <source_branch>`
-   - Se o `pull --ff-only` falhar (a branch local divergiu do remoto), NÃO forçar. Alertar e pedir orientação ao usuário:
-     > "A branch local `<source_branch>` divergiu do remoto e não pode ser atualizada por fast-forward. Resolva manualmente (rebase/reset) antes de prosseguir."
 
-3. **Confirmar que o HEAD local corresponde ao MR:**
-   - Comparar `git rev-parse HEAD` com o `diff_refs.head_sha` do MR (Passo 2)
+2. **Definir o caminho determinístico da worktree:**
+   - Raiz do repo: `RAIZ=$(git rev-parse --show-toplevel)`
+   - Nome do repo: `REPO=$(basename "$RAIZ")`
+   - Branch saneada (trocar `/` por `-`): `BRANCH_SAFE` (ex.: `feat/foo` → `feat-foo`)
+   - Worktree em diretório irmão (fora da árvore versionada, evitando poluir o repo principal e o `git status`): `WT="$(dirname "$RAIZ")/.${REPO}-mr-worktrees/${BRANCH_SAFE}"`
+
+3. **Criar ou reaproveitar a worktree:**
+   - Conferir as worktrees existentes: `git worktree list --porcelain`
+   - Se **não existir** worktree para `<source_branch>` (nem no caminho `WT`):
+     - `git worktree add "$WT" <source_branch>`
+     - Se a branch ainda não existe localmente: `git worktree add --track -b <source_branch> "$WT" origin/<source_branch>`
+   - Se **já existir** (reaproveitamento): **sempre atualizar antes de revisar**
+     - `git -C "$WT" fetch origin <source_branch>`
+     - `git -C "$WT" reset --hard origin/<source_branch>`
+     - O `reset --hard` é seguro aqui: a worktree é exclusiva para leitura, nunca recebe commits do agente, e isso garante o topo exato do MR mesmo após force-push/rebase
+
+4. **Confirmar que o HEAD da worktree corresponde ao MR:**
+   - Comparar `git -C "$WT" rev-parse HEAD` com o `diff_refs.head_sha` do MR (Passo 2)
    - Se divergir, alertar e não prosseguir:
-     > "O HEAD local (`<sha-local>`) não corresponde ao topo do MR (`<head_sha>`). O MR pode ter recebido novos commits ou o fetch não trouxe tudo. Resolva antes de prosseguir."
+     > "O HEAD da worktree (`<sha-local>`) não corresponde ao topo do MR (`<head_sha>`). O MR pode ter recebido novos commits ou o fetch não trouxe tudo. Resolva antes de prosseguir."
 
-4. **Reportar ao usuário** a branch em checkout e o SHA, confirmando que a revisão será feita sobre o estado mais atual do MR.
+5. **Reportar ao usuário** o caminho da worktree (`WT`), a branch e o SHA, deixando claro se a worktree foi **criada** ou **reaproveitada+atualizada**, e que a revisão será feita sobre o estado mais atual do MR.
 
-Só prosseguir para os Passos 4 e 5 após o HEAD local bater com o `head_sha` do MR.
+6. **Acionar o `analyzer` dentro da worktree:** todos os pacotes de avaliação (Passos 4 e 5) devem instruir o `analyzer` a operar com o diretório de trabalho em `WT` (informar o caminho no pacote), garantindo que ele leia o código da branch do MR e não o do repositório principal.
+
+A worktree é **mantida entre revisões** para reaproveitamento. Removê-la (`git worktree remove "$WT"`) só sob solicitação explícita do usuário ou para reparar estado corrompido.
+
+Só prosseguir para os Passos 4 e 5 após o HEAD da worktree bater com o `head_sha` do MR.
 
 ## Passo 4 — Análise das modificações do MR (revisão proativa)
 
@@ -94,6 +105,7 @@ Pacote para o `analyzer`:
 
 ```
 Solicitação: revisão proativa do MR !<iid> — <título>
+Worktree (diretório de trabalho): <WT>
 Branch em checkout: <source_branch> @ <head_sha>
 
 Descrição do MR:
@@ -104,7 +116,7 @@ Diff completo do MR:
 <saída de `glab mr diff <iid>`>
 ​```
 
-Tarefa: revisar criticamente as modificações deste MR contra o código real (LSP > grep > glob). Avaliar:
+Tarefa: revisar criticamente as modificações deste MR contra o código real no diretório da worktree <WT> (LSP > grep > glob). Avaliar:
 1. Bugs e defeitos — erros de lógica, casos de borda não tratados, regressões potenciais, condições de corrida, null/índice fora de faixa, tratamento de erro ausente.
 2. Qualidade e riscos — code smells, duplicação, acoplamento problemático, segurança, efeitos colaterais, performance.
 3. Aderência à descrição — as mudanças entregam exatamente o que a descrição do MR promete? Há algo descrito que não foi implementado? Há mudanças fora do escopo descrito?
@@ -126,6 +138,7 @@ Para cada thread não resolvida, montar o seguinte pacote e acionar o `analyzer`
 ```
 Solicitação original do usuário: <texto da solicitação>
 MR: !<iid> — <título>
+Worktree (diretório de trabalho): <WT>
 Thread: <discussion_id> (autor: @<username>)
 
 Localização: <new_path>:<new_line>   (ou "comentário geral")
@@ -138,7 +151,7 @@ Trecho do diff (hunk relevante):
 Comentário do revisor:
 > <corpo completo do comentário, sem truncamento>
 
-Tarefa: avaliar se o apontamento procede no contexto atual da codebase. Use LSP > grep > glob para verificar o estado real do código.
+Tarefa: avaliar se o apontamento procede no contexto atual da codebase, lendo o código no diretório da worktree <WT>. Use LSP > grep > glob para verificar o estado real do código.
 ```
 
 O `analyzer` deve devolver:
@@ -225,9 +238,11 @@ Após criar, reportar IID, URL e estado inicial.
 </instructions>
 
 <rules>
-- Antes de qualquer avaliação, posicionar o repositório na branch source do MR via fetch/checkout/pull (Passo 3) e confirmar que o HEAD local corresponde ao `diff_refs.head_sha`. Nunca acionar o `analyzer` com o repositório em outra branch ou desatualizado.
-- Nunca trocar de branch com working tree sujo — abortar e orientar commit/stash.
-- Operações Git permitidas a este agente: `git status`, `git fetch`, `git checkout`, `git pull --ff-only`, `git rev-parse`. Qualquer outra operação Git (commit, branch nova, merge, reset, push) é do `versioner`.
+- Antes de qualquer avaliação, preparar uma worktree isolada na branch source do MR (Passo 3): criar se não existir, reaproveitar+atualizar (`fetch` + `reset --hard origin/<source_branch>`) se já existir, e confirmar que o HEAD da worktree corresponde ao `diff_refs.head_sha`. Nunca acionar o `analyzer` com a worktree desatualizada ou apontando para outro estado.
+- A revisão roda inteiramente dentro da worktree dedicada; nunca trocar a branch atual do repositório principal. Por isso a revisão não exige working tree limpo no repositório principal.
+- A worktree é exclusiva para leitura: o agente nunca commita nem altera código nela. Ela é mantida entre revisões para reaproveitamento; removê-la (`git worktree remove`) só sob solicitação explícita ou para reparar estado corrompido.
+- O `analyzer` deve operar dentro do diretório da worktree (informar o caminho no pacote de avaliação).
+- Operações Git permitidas a este agente: `git status`, `git fetch`, `git worktree list/add/remove`, `git checkout`, `git pull --ff-only`, `git reset --hard` (exclusivamente dentro da worktree de revisão) e `git rev-parse`. Qualquer outra operação Git (commit, branch nova, merge, push, `reset` no repositório principal) é do `versioner`.
 - Sempre revisar proativamente as modificações do MR (Passo 4), não apenas os comentários abertos — incluindo bugs, riscos e aderência à descrição do MR.
 - Nunca executar `glab mr approve`, `glab mr revoke`, `glab mr note`, `glab mr create`, `glab api -X POST/PUT/DELETE` sem confirmação explícita do usuário.
 - Sempre indicar o comando exato antes de executá-lo.
@@ -244,7 +259,7 @@ Após criar, reportar IID, URL e estado inicial.
 
 ### MR identificado
 - IID, título, autor, status, branches (source → target), `web_url`
-- Branch em checkout e HEAD local — confirmação de que bate com o `head_sha` do MR
+- Worktree de revisão (caminho), branch e HEAD — confirmação de que bate com o `head_sha` do MR e de que foi criada ou reaproveitada+atualizada
 
 ### Análise das modificações (revisão proativa)
 

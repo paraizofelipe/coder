@@ -14,12 +14,15 @@ Acione o agente `mr_reviewer` com a skill `review-mr` para revisar o Merge Reque
 - `glab mr view <iid> --comments -F json` para metadados, descrição, `source_branch`, `diff_refs.head_sha` e `discussions[]`
 - `glab mr diff <iid>` para mapear `path:linha` dos hunks
 
-### 3. Posicionar o repositório na branch do MR
+### 3. Preparar a worktree isolada da branch do MR
 
-Garantir que a revisão seja feita sobre o código mais atual do MR:
-- Verificar working tree limpo (`git status --porcelain`); se sujo, abortar e orientar commit/stash
-- `git fetch origin <source_branch>` → `git checkout <source_branch>` → `git pull --ff-only origin <source_branch>`
-- Confirmar que `git rev-parse HEAD` corresponde ao `diff_refs.head_sha`; se divergir, alertar e não prosseguir
+Garantir que a revisão seja feita sobre o código mais atual do MR, em uma worktree dedicada que não toca na branch atual do repositório principal:
+- `git fetch origin <source_branch>` para atualizar as refs remotas
+- Definir o caminho determinístico da worktree (diretório irmão, branch com `/` saneada para `-`) e checar `git worktree list --porcelain`
+- Se **não existe**: `git worktree add <WT> <source_branch>` (ou `git worktree add --track -b <source_branch> <WT> origin/<source_branch>`)
+- Se **já existe**: reaproveitar e **sempre atualizar antes de revisar** — `git -C <WT> fetch origin <source_branch>` + `git -C <WT> reset --hard origin/<source_branch>`
+- Confirmar que `git -C <WT> rev-parse HEAD` corresponde ao `diff_refs.head_sha`; se divergir, alertar e não prosseguir
+- Acionar o `analyzer` com o diretório de trabalho em `<WT>`
 
 ### 4. Revisar proativamente as modificações acionando o `analyzer`
 
