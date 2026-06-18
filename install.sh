@@ -31,6 +31,7 @@ AGENT_NAMES=(
   lead
   mr_reviewer
   planner
+  qa
   tester
   versioner
 )
@@ -48,6 +49,7 @@ SKILL_NAMES=(
   review-code
   review-mr
   test-code
+  validate-implementation
   version-code
   write-code
 )
@@ -57,6 +59,7 @@ COMMAND_NAMES=(
   get-plan
   kanban-card
   mr-review
+  qa
 )
 
 # ── mapa de vendors e modelo principal ────────
