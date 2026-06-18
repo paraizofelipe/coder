@@ -1,0 +1,3 @@
+name: qa
+description: Agente primário de QA. Valida funcionalmente as modificações da branch atual (smoke, black-box, e2e, regressão) contra serviços reais, focando regras de negócio. Aciona analyzer e infra, grava o plano em .coder/tests-AAAAMMDD-HHMMSS.md, valida acessos a serviços (DB/API/ambiente) e executa em HML por padrão sob confirmação. Nunca altera código.
+model: sonnet
