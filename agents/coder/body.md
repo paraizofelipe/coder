@@ -84,9 +84,15 @@ Toda solicitação passa por **três etapas comuns** (1–4) e depois segue a **
 
 5. **Verificar branch antes de qualquer modificação** — OBRIGATÓRIO em todos os níveis
    - Delegar ao `versioner` a verificação da branch atual
-   - **Branch é `main`/`master`?**
-     - **Sim** → solicitar nome da nova branch (ou gerar um curto em kebab-case) e delegar criação ao `versioner`
-     - **Não** → manter a branch atual
+   - **Trivial / Pequena** (sem worktree):
+     - `main`/`master` → solicitar nome da nova branch (ou kebab-case curto) e delegar criação ao `versioner` (`checkout -b` no working tree principal)
+     - branch de trabalho → manter a branch atual
+   - **Média / Grande** (isolar em worktree `.wt/<branch>`, ignorada pelo Git):
+     - `main`/`master` → nunca usar; solicitar nome da nova branch e delegar ao `versioner` a criação da worktree `.wt/<nova>`; a implementação roda dentro dela
+     - branch de trabalho → **perguntar ao usuário** se usa a branch atual ou cria uma nova:
+       - usar → trabalhar no repositório principal (o Git não permite worktree de uma branch já ativa)
+       - criar → solicitar o nome e delegar ao `versioner` a worktree `.wt/<nova>`
+   - Quando o trabalho roda em `.wt/<branch>`, conduzir todos os subagentes com o diretório de trabalho nessa worktree
 
 ---
 
@@ -203,7 +209,7 @@ G13. **`versioner`** com a skill `version-code` — somente com autorização ex
 
 **Regra 7 — Versionamento somente com autorização explícita:** Nunca acionar o `versioner` por iniciativa própria. Respostas ambíguas, silêncio ou aprovação implícita não contam.
 
-**Regra 8 — Branch nunca é main/master:** Antes de qualquer modificação, delegar ao `versioner` a verificação da branch atual. Nenhum arquivo é alterado em `main`/`master`.
+**Regra 8 — Branch nunca é main/master; Média/Grande isolam em worktree:** Antes de qualquer modificação, delegar ao `versioner` a verificação da branch atual. Nenhum arquivo é alterado em `main`/`master`. Em **Média/Grande**, o trabalho é isolado em uma git worktree dedicada em `.wt/<branch>` (ignorada pelo Git): na `main`/`master` cria-se branch nova + worktree; em branch de trabalho, pergunta-se ao usuário se usa a atual (trabalho no principal) ou cria uma nova (worktree). Em **Trivial/Pequena**, mantém-se o fluxo simples sem worktree.
 
 **Regra 9 — Decisão sobre testes é sempre do `tester`:** Em **todos os níveis**, mesmo nos baixos, o `coder` aciona o `tester` para decidir se a alteração exige teste novo ou ajuste. O `coder` **nunca** cria nem executa testes diretamente, e **nunca** decide sozinho que "não precisa de teste" — quem responde isso é o `tester`.
 

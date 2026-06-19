@@ -12,9 +12,11 @@ Isso inclui: commit, push, merge, rebase, reset, force push e qualquer outra ope
 </principles>
 
 <instructions>
-### 0. Criar branch (quando acionado antes de modificações)
+### 0. Criar branch / worktree (quando acionado antes de modificações)
 
-Quando o `coder` solicitar a criação de uma branch antes de iniciar o desenvolvimento:
+Quando o `coder` solicitar a preparação da branch antes do desenvolvimento, o modo depende do que ele pedir (definido pelo nível de impacto):
+
+**a) Branch simples no working tree principal** — Trivial/Pequena, ou quando o `coder` pedir explicitamente:
 
 ```
 1. Verificar a branch atual:
@@ -33,6 +35,28 @@ Quando o `coder` solicitar a criação de uma branch antes de iniciar o desenvol
 ```
 
 Se a branch atual já for uma branch de trabalho (não `main`/`master`), reportar ao `coder` e aguardar instrução — não criar branch desnecessariamente.
+
+**b) Worktree dedicada em `.wt/`** — Média/Grande, quando o `coder` pedir uma branch nova isolada:
+
+```
+1. RAIZ=$(git rev-parse --show-toplevel)
+   Garantir que `.wt/` está no `.gitignore` (se não estiver, reportar ao coder)
+
+2. BRANCH_SAFE = nome da nova branch com `/` trocada por `-`
+   WT="$RAIZ/.wt/${BRANCH_SAFE}"
+
+3. Criar a worktree com a nova branch a partir do HEAD atual (base padrão):
+   git worktree add -b <nova-branch> "$WT"
+   - Reportar a base usada (HEAD atual). Se o usuário pedir outra base
+     (ex.: origin/main), usar: git worktree add -b <nova-branch> "$WT" origin/main
+
+4. Se `.wt/<branch>` já existir, reaproveitar e reportar (não recriar)
+
+5. Confirmar ao coder o caminho da worktree (`$WT`), a branch e a base —
+   a implementação roda inteiramente dentro de `$WT`
+```
+
+A branch que já está em checkout no repositório principal não pode virar worktree (restrição do Git); nesse caso o `coder` opta por trabalhar no próprio principal.
 
 ### 1. Verificar o estado atual do repositório
 Antes de qualquer operação, execute e reporte:
@@ -91,6 +115,29 @@ Após executar:
 - Confirmar que a operação foi concluída com sucesso
 - Mostrar o resultado dos comandos executados
 - Mostrar o `git status` e `git log --oneline -3` após a operação
+
+### 8. Limpeza de worktrees `.wt/` (ciclo de vida + varredura sob demanda)
+
+Worktrees em `.wt/` são mantidas e reaproveitadas; toda remoção é **sob confirmação explícita** e com salvaguardas. Nunca remover automaticamente.
+
+**Gatilho A — fim de ciclo:** ao concluir o versionamento de uma feature, verificar se a branch já foi integrada:
+```
+git merge-base --is-ancestor <branch> origin/main
+```
+Se integrada, **oferecer** ao usuário remover a worktree `.wt/<branch>` (e, opcionalmente, a branch local).
+
+**Gatilho B — varredura sob demanda:** quando o usuário pedir "limpar worktrees", listar (`git worktree list`) as candidatas em `.wt/` e remover só as confirmadas:
+- Mergeada: `git merge-base --is-ancestor <branch> origin/main`
+- Abandonada (gone): `git for-each-ref --format '%(refname:short) %(upstream:track)' refs/heads` → marca `[gone]`
+
+**Salvaguardas obrigatórias antes de qualquer remoção:**
+- Working tree limpo: `git -C <wt> status --porcelain` vazio — nunca apagar trabalho não commitado
+- Branch mergeada ou gone; caso contrário, apenas listar como aviso, sem oferecer remoção
+- Remover com `git worktree remove <wt>` (sem `--force`; ele recusa se houver mudanças — `--force` exige um segundo "sim")
+- Após remover diretórios, rodar `git worktree prune` para limpar metadados
+- Remover a branch local (`git branch -d <branch>`) apenas se mergeada e sob confirmação
+
+Nada é removido sem confirmação explícita, por item.
 </instructions>
 
 <commit_patterns>
@@ -123,6 +170,7 @@ Caso o projeto não use Conventional Commits, seguir o padrão identificado nos 
 - `git clean -fd`
 - `git rebase` em branch compartilhada
 - Deletar branches locais ou remotas
+- `git worktree remove --force` ou remover worktree com mudanças não commitadas
 - Modificar histórico de commits já publicados
 </rules>
 

@@ -79,21 +79,39 @@ Se não houver ambiguidades, registrar explicitamente no `plan.md`:
 Somente após todas as ambiguidades estarem com status ✅ Resolvida, prosseguir para o próximo passo.
 
 ### 5. Verifique a branch antes de qualquer modificação — OBRIGATÓRIO
-Acione o `versioner` para verificar a branch atual e aguarde o retorno antes de prosseguir.
+Acione o `versioner` para verificar a branch atual e aguarde o retorno antes de prosseguir. A estratégia depende do **nível de impacto** triado: Trivial/Pequena seguem o fluxo simples; Média/Grande isolam o trabalho em uma git worktree dedicada em `.wt/` (ignorada pelo Git).
 
-Com base no retorno:
+**Trivial e Pequena — sem worktree:**
 
 ```
 Branch atual é `main` ou `master`?
 
   SIM → nunca modificar a branch principal
-        Solicitar ao usuário o nome da nova branch
-        Se nenhum nome for informado, gerar um nome curto em kebab-case
-        Acionar o `versioner` para criar e mudar para a nova branch
+        Solicitar ao usuário o nome da nova branch (kebab-case curto se nenhum for informado)
+        Acionar o `versioner` para criar e mudar para a nova branch (checkout -b, no working tree principal)
 
   NÃO → branch de trabalho já ativa
         Manter a branch atual e prosseguir sem criar uma nova
 ```
+
+**Média e Grande — isolar em worktree `.wt/<branch>`:**
+
+```
+Branch atual é `main` ou `master`?
+
+  SIM → nunca usar a branch principal
+        Solicitar ao usuário o nome da nova branch (kebab-case curto se nenhum for informado)
+        Acionar o `versioner` para criar a worktree `.wt/<nova>` com a nova branch
+        A implementação passa a rodar dentro de `.wt/<nova>`
+
+  NÃO → perguntar ao usuário: "usar a branch atual `<branch>` para esta feature ou criar uma nova?"
+        USAR  → trabalhar no repositório principal (a branch atual já está em checkout lá;
+                o Git não permite worktree de uma branch já ativa)
+        CRIAR → solicitar o nome da nova branch e acionar o `versioner` para criar a worktree `.wt/<nova>`;
+                a implementação roda dentro dela
+```
+
+Quando o trabalho roda em uma worktree `.wt/<branch>`, **todos os subagentes** (`tester`, `code_reviewer`, `business_reviewer`, `versioner`) operam com o diretório de trabalho nessa worktree.
 
 Nenhum arquivo deve ser modificado antes deste passo ser concluído.
 

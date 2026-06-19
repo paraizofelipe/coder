@@ -62,7 +62,7 @@ O `install.sh` **monta** o arquivo final de cada agente/command juntando `<harne
 | `documenter` | primary | `document-plan`, `get-plan` | Publica e sincroniza planos de implementação com o Confluence via MCP `atlassian_local` |
 | `kanban` | primary | `kanban-force` | Cria, move, atualiza e organiza cards em boards via MCP `kanban-force` |
 | `infra` | primary | `query-argocd` | Consulta aplicações no ArgoCD (status, logs, sincronizações, eventos) via MCPs `argocd-*` |
-| `mr_reviewer` | primary | `review-mr` | Revisa Merge Requests do GitLab via CLI `glab` — prepara uma worktree isolada da branch do MR, lê diff/comentários, aciona o `analyzer` e responde/aprova sob confirmação |
+| `mr_reviewer` | primary | `review-mr` | Revisa Merge Requests do GitLab via CLI `glab` — prepara uma worktree isolada da branch do MR em `.wt/`, lê diff/comentários, aciona o `analyzer` e responde/aprova sob confirmação |
 | `qa` | primary | `validate-implementation` | Valida funcionalmente as modificações da branch (smoke/black-box/e2e/regressão) contra serviços reais; aciona `analyzer`/`infra`; grava o plano em `.coder/tests-*.md`; executa em HML sob confirmação |
 | `analyzer` | subagent | `analyse-code` | Inspeciona a codebase (estrutura, padrões, convenções, testes) antes de qualquer modificação |
 | `clarifier` | subagent | `clarify-intent` | Transforma ambiguidades brutas do `analyzer` em perguntas com opções e recomendação justificada |
@@ -71,7 +71,7 @@ O `install.sh` **monta** o arquivo final de cada agente/command juntando `<harne
 | `tester` | subagent | `test-code` | Cria e executa testes com abordagem TDD (fase red antes, fase green depois) |
 | `code_reviewer` | subagent | `review-code` | Revisão técnica — Camada 1 (qualidade, padrões, cobertura de testes) |
 | `business_reviewer` | subagent | `review-code` | Revisão de negócio e segurança — Camada 2 (regras de negócio, OWASP); portão final antes do versionamento |
-| `versioner` | subagent | `version-code` | Executa operações Git (branch, commit, tag) somente com confirmação explícita |
+| `versioner` | subagent | `version-code` | Executa operações Git (branch, worktree, commit, tag) somente com confirmação explícita |
 
 A skill `review-code` é **compartilhada** pelo `code_reviewer` e pelo `business_reviewer` — o papel que a aciona define a camada (técnica ou negócio/segurança).
 
@@ -87,7 +87,7 @@ A skill `review-code` é **compartilhada** pelo `code_reviewer` e pelo `business
 | `detail-tasks` | `detailer` | Enriquece cada task com preview, estratégia de testes, critérios de aceite, contrato e definition of done |
 | `test-code` | `tester` | Cria testes que descrevem o comportamento esperado e os executa (red/green) |
 | `review-code` | `code_reviewer`, `business_reviewer` | Revisão em duas camadas: técnica e negócio/segurança |
-| `review-mr` | `mr_reviewer` | Revisa um MR do GitLab: worktree isolada da branch, diff, comentários, parecer e ações via `glab` |
+| `review-mr` | `mr_reviewer` | Revisa um MR do GitLab: worktree isolada da branch em `.wt/`, diff, comentários, parecer e ações via `glab` |
 | `validate-implementation` | `qa` | Planeja e executa testes funcionais de QA sobre a branch (smoke/black-box/e2e/regressão), valida acessos aos serviços e reporta achados |
 | `version-code` | `versioner` | Prepara commits, mensagens padronizadas e operações Git sob confirmação |
 | `kanban-force` | `kanban` | Operações de card e board via MCP `kanban-force` |

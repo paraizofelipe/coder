@@ -18,7 +18,7 @@ Acione o agente `mr_reviewer` com a skill `review-mr` para revisar o Merge Reque
 
 Garantir que a revisão seja feita sobre o código mais atual do MR, em uma worktree dedicada que não toca na branch atual do repositório principal:
 - `git fetch origin <source_branch>` para atualizar as refs remotas
-- Definir o caminho determinístico da worktree (diretório irmão, branch com `/` saneada para `-`) e checar `git worktree list --porcelain`
+- Definir o caminho determinístico da worktree em `.wt/` dentro do repositório (`$RAIZ/.wt/<branch-safe>`, ignorada pelo Git), branch com `/` saneada para `-`, e checar `git worktree list --porcelain`
 - Se **não existe**: `git worktree add <WT> <source_branch>` (ou `git worktree add --track -b <source_branch> <WT> origin/<source_branch>`)
 - Se **já existe**: reaproveitar e **sempre atualizar antes de revisar** — `git -C <WT> fetch origin <source_branch>` + `git -C <WT> reset --hard origin/<source_branch>`
 - Confirmar que `git -C <WT> rev-parse HEAD` corresponde ao `diff_refs.head_sha`; se divergir, alertar e não prosseguir
