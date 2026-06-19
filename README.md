@@ -63,6 +63,7 @@ O `install.sh` **monta** o arquivo final de cada agente/command juntando `<harne
 | `kanban` | primary | `kanban-force` | Cria, move, atualiza e organiza cards em boards via MCP `kanban-force` |
 | `infra` | primary | `query-argocd` | Consulta aplicações no ArgoCD (status, logs, sincronizações, eventos) via MCPs `argocd-*` |
 | `mr_reviewer` | primary | `review-mr` | Revisa Merge Requests do GitLab via CLI `glab` — prepara uma worktree isolada da branch do MR, lê diff/comentários, aciona o `analyzer` e responde/aprova sob confirmação |
+| `qa` | primary | `validate-implementation` | Valida funcionalmente as modificações da branch (smoke/black-box/e2e/regressão) contra serviços reais; aciona `analyzer`/`infra`; grava o plano em `.coder/tests-*.md`; executa em HML sob confirmação |
 | `analyzer` | subagent | `analyse-code` | Inspeciona a codebase (estrutura, padrões, convenções, testes) antes de qualquer modificação |
 | `clarifier` | subagent | `clarify-intent` | Transforma ambiguidades brutas do `analyzer` em perguntas com opções e recomendação justificada |
 | `planner` | subagent | `plan-tasks` | Produz o TaskGraph esqueleto (tasks com dependências e riscos) a partir da intenção esclarecida |
@@ -87,6 +88,7 @@ A skill `review-code` é **compartilhada** pelo `code_reviewer` e pelo `business
 | `test-code` | `tester` | Cria testes que descrevem o comportamento esperado e os executa (red/green) |
 | `review-code` | `code_reviewer`, `business_reviewer` | Revisão em duas camadas: técnica e negócio/segurança |
 | `review-mr` | `mr_reviewer` | Revisa um MR do GitLab: worktree isolada da branch, diff, comentários, parecer e ações via `glab` |
+| `validate-implementation` | `qa` | Planeja e executa testes funcionais de QA sobre a branch (smoke/black-box/e2e/regressão), valida acessos aos serviços e reporta achados |
 | `version-code` | `versioner` | Prepara commits, mensagens padronizadas e operações Git sob confirmação |
 | `kanban-force` | `kanban` | Operações de card e board via MCP `kanban-force` |
 | `query-argocd` | `infra` | Consultas a aplicações no ArgoCD via MCPs `argocd-*` |
@@ -109,6 +111,7 @@ Slash commands invocáveis diretamente. Cada command é um subdiretório com `bo
 | `/get-plan` | `/get-plan` | Baixa o plano de implementação do Confluence e salva em `.coder/plan.md`; cria o arquivo se não existir |
 | `/kanban-card` | `/kanban-card <friendlyID>` | Consulta um card pelo friendlyID via MCP `kanban-force` e carrega as informações no contexto (ignora cards arquivados) |
 | `/mr-review` | `/mr-review <iid\|url>` | Aciona o `mr_reviewer` para revisar um Merge Request do GitLab via `glab` |
+| `/qa` | `/qa [foco]` | Aciona o `qa` para validar funcionalmente as modificações da branch atual; monta plano em `.coder/tests-*.md`, valida acessos e executa em HML sob confirmação |
 
 ## Integrações externas
 
