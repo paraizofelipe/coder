@@ -146,6 +146,8 @@ flowchart LR
 
     Coder(["🤖 Coder\n(primary)"])
     Kanban(["🤖 Kanban\n(primary)"])
+    Infra(["🤖 Infra\n(primary)"])
+    MrReviewer(["🤖 MrReviewer\n(primary)"])
     Analyzer["🤖 Analyzer\n(subagent)"]
     Tester["🤖 Tester\n(subagent)"]
     Versioner["🤖 Versioner\n(subagent)"]
@@ -153,28 +155,38 @@ flowchart LR
     BusinessReviewer["🤖 BusinessReviewer\n(subagent)"]
 
     Coder --> Analyzer
-    Coder --> Versioner
     Coder --> Tester
-    Coder --> Kanban
     Coder --> CodeReviewer
     Coder --> BusinessReviewer
+    Coder --> Versioner
+    Coder --> Kanban
+    Coder --> Infra
+    Coder --> MrReviewer
 
-    Kanban --> kanban-force{{kanban-force}}:::task
-    kanban-force --> MCP[(mcp-kanban-force)]:::mcp
-
+    Coder --> write-code{{write-code}}:::task
     Analyzer --> analyse-code{{analyse-code}}:::task
     Tester --> test-code{{test-code}}:::task
-    Versioner --> version-code{{version-code}}:::task
-    Coder --> write-code{{write-code}}:::task
     CodeReviewer --> review-code{{review-code}}:::task
     BusinessReviewer --> review-code{{review-code}}:::task
+    Versioner --> version-code{{version-code}}:::task
+
+    Kanban --> kanban-force{{kanban-force}}:::task
+    kanban-force --> kanbanMCP[(mcp-kanban-force)]:::mcp
+
+    Infra --> query-argocd{{query-argocd}}:::task
+    query-argocd --> argocdMCP[(mcp-argocd-*)]:::mcp
+
+    MrReviewer --> review-mr{{review-mr}}:::task
+    review-mr --> glabCLI[(glab CLI)]:::cli
+    MrReviewer -.aciona.-> Analyzer
 
     classDef agent fill:#4A9,color:#fff
     classDef subAgent fill:#555,color:#fff
     classDef task fill:#1565C0,color:#fff
     classDef mcp fill:#555,color:#fff
+    classDef cli fill:#6A1B9A,color:#fff
 
-    class Coder,Kanban agent
+    class Coder,Kanban,Infra,MrReviewer agent
     class Analyzer,Tester,Versioner,CodeReviewer,BusinessReviewer subAgent
 ```
 
