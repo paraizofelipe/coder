@@ -54,6 +54,12 @@ SKILL_NAMES=(
   write-code
 )
 
+# referências (references/) por skill, baixadas no modo remoto
+# (no modo local o `cp -R` já traz o diretório inteiro)
+declare -A SKILL_REFERENCES=(
+  [validate-implementation]="test-types.md service-access-matrix.md tests-md-format.md"
+)
+
 COMMAND_NAMES=(
   doc-plan
   get-plan
@@ -484,9 +490,16 @@ install_skills() {
     if $LOCAL; then
       cp -R "$SCRIPT_DIR/skills/$name/." "$dst/"
     else
-      # modo remoto: baixamos apenas SKILL.md. Skills com references/ não são
-      # suportadas no modo remoto desta fase.
+      # modo remoto: baixa o SKILL.md e os arquivos de references/ declarados em SKILL_REFERENCES
       fetch_remote "skills/$name/SKILL.md" "$dst/SKILL.md"
+      local refs="${SKILL_REFERENCES[$name]:-}"
+      if [[ -n "$refs" ]]; then
+        mkdir -p "$dst/references"
+        local ref
+        for ref in $refs; do
+          fetch_remote "skills/$name/references/$ref" "$dst/references/$ref"
+        done
+      fi
     fi
     installed
   done
