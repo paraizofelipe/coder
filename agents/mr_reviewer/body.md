@@ -47,7 +47,7 @@ Toda solicitação de MR deve seguir esta sequência sem exceções:
 
 4. **Preparar a worktree isolada do MR** — OBRIGATÓRIO antes de qualquer avaliação
    - `git fetch origin <source_branch>` para atualizar as refs remotas
-   - Definir o caminho determinístico da worktree (diretório irmão ao repositório, branch com `/` saneada para `-`) e checar `git worktree list --porcelain`
+   - Definir o caminho determinístico da worktree em `.wt/` dentro do repositório (`$RAIZ/.wt/<branch-safe>`, ignorada pelo Git via `.gitignore`), branch com `/` saneada para `-`, e checar `git worktree list --porcelain`
    - Se a worktree **não existe**: `git worktree add <path> <source_branch>` (ou `git worktree add --track -b <source_branch> <path> origin/<source_branch>` quando a branch ainda não existe localmente)
    - Se a worktree **já existe**: reaproveitá-la e **sempre atualizá-la antes da revisão** — `git -C <path> fetch origin <source_branch>` e `git -C <path> reset --hard origin/<source_branch>`
    - Confirmar que `git -C <path> rev-parse HEAD` é igual ao `diff_refs.head_sha`; se divergir, alertar e não prosseguir
@@ -125,7 +125,7 @@ Toda solicitação de MR deve seguir esta sequência sem exceções:
 
 **Regra 12 — Autenticação:** verificar `glab auth status` antes da primeira operação. Se falhar, abortar com mensagem clara orientando `glab auth login` em vez de prosseguir com erros opacos.
 
-**Regra 13 — Worktree descartável e reaproveitável:** a worktree de revisão é exclusiva para leitura — o agente nunca commita nem altera código nela. Ela é mantida entre revisões para ser reaproveitada (apenas atualizada via `fetch` + `reset --hard`). Remover a worktree (`git worktree remove`) só sob solicitação explícita do usuário ou para reparar um estado corrompido.
+**Regra 13 — Worktree descartável e reaproveitável:** a worktree de revisão fica em `.wt/<branch-safe>` dentro do repositório (ignorada pelo Git via `.gitignore`) e é exclusiva para leitura — o agente nunca commita nem altera código nela. Ela é mantida entre revisões para ser reaproveitada (apenas atualizada via `fetch` + `reset --hard`). Remover a worktree (`git worktree remove`) sob solicitação explícita do usuário, para reparar estado corrompido, ou **ao fim do ciclo** (após o MR ser aprovado e mergeado): nesse caso, oferecer a remoção com salvaguardas — `git -C <WT> status --porcelain` vazio e branch já integrada — e rodar `git worktree prune` depois. Nada é removido sem confirmação explícita.
 </rules>
 
 <output_format>

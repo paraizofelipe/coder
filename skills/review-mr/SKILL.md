@@ -70,9 +70,8 @@ A avaliação técnica (tanto a análise das modificações quanto o julgamento 
 
 2. **Definir o caminho determinístico da worktree:**
    - Raiz do repo: `RAIZ=$(git rev-parse --show-toplevel)`
-   - Nome do repo: `REPO=$(basename "$RAIZ")`
    - Branch saneada (trocar `/` por `-`): `BRANCH_SAFE` (ex.: `feat/foo` → `feat-foo`)
-   - Worktree em diretório irmão (fora da árvore versionada, evitando poluir o repo principal e o `git status`): `WT="$(dirname "$RAIZ")/.${REPO}-mr-worktrees/${BRANCH_SAFE}"`
+   - Worktree em `.wt/` dentro do repositório, ignorada pelo Git (o `.gitignore` contém `.wt/`), uma por branch: `WT="$RAIZ/.wt/${BRANCH_SAFE}"`
 
 3. **Criar ou reaproveitar a worktree:**
    - Conferir as worktrees existentes: `git worktree list --porcelain`
@@ -93,7 +92,7 @@ A avaliação técnica (tanto a análise das modificações quanto o julgamento 
 
 6. **Acionar o `analyzer` dentro da worktree:** todos os pacotes de avaliação (Passos 4 e 5) devem instruir o `analyzer` a operar com o diretório de trabalho em `WT` (informar o caminho no pacote), garantindo que ele leia o código da branch do MR e não o do repositório principal.
 
-A worktree é **mantida entre revisões** para reaproveitamento. Removê-la (`git worktree remove "$WT"`) só sob solicitação explícita do usuário ou para reparar estado corrompido.
+A worktree é **mantida entre revisões** para reaproveitamento. Removê-la (`git worktree remove "$WT"`) sob solicitação explícita do usuário ou para reparar estado corrompido. Além disso, **após o MR ser aprovado e mergeado** (fim de ciclo), oferecer a remoção da worktree, com as salvaguardas de limpeza: confirmar `git -C "$WT" status --porcelain` vazio e que a branch já está integrada (`git merge-base --is-ancestor <source_branch> origin/<target_branch>`); remover com `git worktree remove "$WT"` (sem `--force`) e rodar `git worktree prune` depois. Nada é removido sem confirmação explícita.
 
 Só prosseguir para os Passos 4 e 5 após o HEAD da worktree bater com o `head_sha` do MR.
 

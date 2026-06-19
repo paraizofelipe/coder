@@ -1,0 +1,3 @@
+# Worktrees criadas pelos agentes (mr_reviewer e coder/versioner) — uma por branch.
+# Mantidas dentro do repositório, mas fora do versionamento para não poluir o git status.
+.wt/
