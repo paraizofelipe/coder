@@ -23,7 +23,7 @@ Acione o agente `qa` com a skill `validate-implementation` para validar funciona
 
 ### 5. Salvar o plano e pedir aprovação
 
-- Gravar `.coder/tests-<timestamp>.md` (mesmo padrão do `.coder/task-*.md`)
+- Gravar `.coder/tests-AAAAMMDD-HHMMSS.md` (mesmo padrão do `.coder/task-*.md`)
 - Apresentar resumo (≤15 linhas) e aguardar "sim" explícito antes de prosseguir
 
 ### 6. Validar os acessos

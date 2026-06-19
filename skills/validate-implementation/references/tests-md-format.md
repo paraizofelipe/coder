@@ -15,7 +15,7 @@ Template literal do artefato gravado no Passo 5 da skill. O nome usa a data e ho
 ## Serviços e acessos necessários
 | Serviço | Tipo | Método de acesso | Classe |
 |---|---|---|---|
-| <id/alias> | DB / API / ambiente-logs / fila | MCP <x> / CLI <y> / curl | leitura / mutação |
+| <id/alias> | DB / API / ambiente-logs / fila-broker / outro | MCP <x> / CLI <y> / curl | leitura / mutação |
 
 ## Plano de testes
 

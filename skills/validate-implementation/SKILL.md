@@ -14,7 +14,7 @@ Pré-requisitos:
 
 Conceitos-chave:
 - **Tipo de teste** — smoke | black-box | e2e | regressão (ver `references/test-types.md`)
-- **Serviço / acesso** — recurso externo que um teste exige (DB, API, ambiente/logs, fila) e o método para alcançá-lo (MCP / CLI / curl). A lista de serviços vem do que o projeto realmente acessa (ver `references/service-access-matrix.md`)
+- **Serviço / acesso** — recurso externo que um teste exige (DB, API, ambiente/logs, fila-broker, outro) e o método para alcançá-lo (MCP / CLI / curl). A lista de serviços vem do que o projeto realmente acessa (ver `references/service-access-matrix.md`)
 - **Classe do teste** — `leitura` (não muta estado) ou `mutação` (cria/altera/apaga dados)
 - **Evidência** — saída real da execução (request/response, query/result, trecho de log) que sustenta o veredito de cada caso
 - **Ambiente** — HML por padrão; PROD nunca é default e exige confirmação reforçada
