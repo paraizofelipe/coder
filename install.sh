@@ -553,11 +553,33 @@ install_codex_prompts() {
   echo ""
 }
 
-# AGENTS.md de orquestração para o Codex.
+# prompts montados (pi.yml + body.md) para o Pi.
+# Diferente do Codex (body-only): o Pi exibe description/argument-hint no autocomplete do `/`.
+install_pi_prompts() {
+  [[ -n "$H_PROMPTS" ]] || return 0
+  mkdir -p "$H_PROMPTS"
+  info "Instalando prompts em $H_PROMPTS"
+  echo ""
+  for name in "${COMMAND_NAMES[@]}"; do
+    echo -e "  ${BOLD}$name${RESET}"
+    local dst="$H_PROMPTS/$name.md"
+    if ! check_overwrite "$dst" "$name"; then
+      continue
+    fi
+    local src_dir
+    src_dir="$(prepare_assembled_src commands "$name" "pi")"
+    assemble "$src_dir" "pi" "$dst"
+    apply_model "$dst" "pi"
+    installed
+  done
+  echo ""
+}
+
+# AGENTS.md de orquestração (Codex e Pi) — grava no destino indicado por H_AGENTSMD.
 # NOTA: AGENTS.md existe no disco mas é gitignored (não está no GitHub).
 # Em --local a cópia local funciona; em modo remoto o download retorna 404,
 # por isso a falha remota é não-fatal (warn e segue).
-install_codex_agentsmd() {
+install_agentsmd() {
   [[ -n "$H_AGENTSMD" ]] || return 0
   info "Instalando AGENTS.md em $H_AGENTSMD"
   mkdir -p "$(dirname "$H_AGENTSMD")"
@@ -639,7 +661,7 @@ for h in "${HARNESSES[@]}"; do
   install_commands "$h"
   if [[ "$h" == "codex" ]]; then
     install_codex_prompts
-    install_codex_agentsmd
+    install_agentsmd
   fi
   ok "Concluído: $h"
   echo ""
