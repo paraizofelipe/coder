@@ -178,6 +178,7 @@ select_harness() {
   echo "        2) claude"
   echo "        3) codex"
   echo "        4) todos"
+  echo "        5) pi"
   local choice=()
   # lê de /dev/tty para funcionar em curl|bash (stdin = pipe).
   # se /dev/tty não disponível (sem tty E sem flag), aborta com graça.
@@ -190,15 +191,16 @@ select_harness() {
       1) HARNESSES+=(opencode) ;;
       2) HARNESSES+=(claude) ;;
       3) HARNESSES+=(codex) ;;
-      4) HARNESSES=(opencode claude codex) ;;
+      4) HARNESSES=(opencode claude codex pi) ;;
+      5) HARNESSES+=(pi) ;;
     esac
   done
   if [[ ${#HARNESSES[@]} -eq 0 ]]; then
     warn "Nenhum harness selecionado."
     exit 1
   fi
-  # dedup preservando ordem canônica: opencode → claude → codex
-  local -a canonical=(opencode claude codex)
+  # dedup preservando ordem canônica: opencode → claude → codex → pi
+  local -a canonical=(opencode claude codex pi)
   local -a deduped=()
   local h
   for h in "${canonical[@]}"; do
@@ -221,11 +223,11 @@ resolve_harness_flag() {
   input="${input//,/ }"
   local -a raw=()
   read -r -a raw <<< "$input"
-  local -a canonical=(opencode claude codex)
+  local -a canonical=(opencode claude codex pi)
   local h token found
   for token in "${raw[@]}"; do
     if [[ "$token" == "all" ]]; then
-      HARNESSES=(opencode claude codex)
+      HARNESSES=(opencode claude codex pi)
       ok "Harnesses: ${HARNESSES[*]}"
       return
     fi
@@ -242,7 +244,7 @@ resolve_harness_flag() {
       fi
     done
     if ! $found; then
-      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, codex, all."
+      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, codex, pi, all."
       exit 1
     fi
   done
@@ -659,10 +661,16 @@ for h in "${HARNESSES[@]}"; do
   install_agents "$h"
   install_skills
   install_commands "$h"
-  if [[ "$h" == "codex" ]]; then
-    install_codex_prompts
-    install_agentsmd
-  fi
+  case "$h" in
+    codex)
+      install_codex_prompts
+      install_agentsmd
+      ;;
+    pi)
+      install_pi_prompts
+      install_agentsmd
+      ;;
+  esac
   ok "Concluído: $h"
   echo ""
 done
