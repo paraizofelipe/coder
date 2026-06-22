@@ -366,13 +366,13 @@ while [[ $# -gt 0 ]]; do
       echo -e "  ${BOLD}Uso:${RESET} install.sh [opções]"
       echo ""
       echo "  Instala agentes, skills e commands em um ou mais harnesses"
-      echo "  (OpenCode, Claude Code, Codex), escolhidos antes da instalação."
+      echo "  (OpenCode, Claude Code, Codex, Pi), escolhidos antes da instalação."
       echo ""
       echo "  Opções:"
       echo "    --force, -f              Substituir todos os arquivos sem perguntar"
       echo "    --local, -l              Instalar a partir dos arquivos locais do repositório"
       echo "    --harness <lista>        Harness(es) a instalar sem menu interativo."
-      echo "                             Valores: opencode, claude, codex, all (ou combinações"
+      echo "                             Valores: opencode, claude, codex, pi, all (ou combinações"
       echo "                             separadas por vírgula/espaço, ex.: opencode,claude)"
       echo "    --vendor <nome>          Vendor para o OpenCode sem menu interativo (ignorado se OpenCode"
       echo "                             não estiver nos harnesses selecionados). Vendor inválido → exit 1."
@@ -384,6 +384,8 @@ while [[ $# -gt 0 ]]; do
       echo "    CLAUDE_DIR          base do Claude Code (default ~/.claude)"
       echo "    CODEX_DIR           base do Codex (default ~/.codex)"
       echo "    CODEX_SKILLS_DIR    skills do Codex (default ~/.agents/skills)"
+      echo "    PI_DIR              base do Pi (default ~/.pi/agent)"
+      echo "    PI_SKILLS_DIR       skills do Pi (default \$PI_DIR/skills)"
       echo ""
       exit 0
       ;;
@@ -620,6 +622,7 @@ print_summary() {
       opencode) echo "      modelo principal: $OPENCODE_MAIN" ;;
       claude)   echo "      modelo principal: sonnet" ;;
       codex)    echo "      modelo: herdado da sessão" ;;
+      pi)       echo "      modelo: definido via settings/provider do Pi" ;;
     esac
   done
   echo ""
