@@ -1,8 +1,8 @@
 # coder
 
-Coleção de **agentes** e **skills** para [OpenCode](https://opencode.ai), [Claude Code](https://claude.ai/code) e [Codex](https://github.com/openai/codex) que implementa um fluxo disciplinado de desenvolvimento de software assistido por IA: análise prévia da codebase, TDD, revisão técnica, revisão de negócio/segurança e versionamento controlado — com calibração do esforço ao impacto real de cada mudança.
+Coleção de **agentes** e **skills** para [OpenCode](https://opencode.ai), [Claude Code](https://claude.ai/code), [Codex](https://github.com/openai/codex) e [Pi](https://github.com/earendil-works/pi-coding-agent) que implementa um fluxo disciplinado de desenvolvimento de software assistido por IA: análise prévia da codebase, TDD, revisão técnica, revisão de negócio/segurança e versionamento controlado — com calibração do esforço ao impacto real de cada mudança.
 
-As skills seguem o padrão aberto [**Agent Skills**](https://agentskills.io/specification), portável entre os três harnesses. Os agentes são instalados no formato nativo de cada um. O repositório é **somente Markdown + um shell script** (`install.sh`) — sem código executável, dependências ou build.
+As skills seguem o padrão aberto [**Agent Skills**](https://agentskills.io/specification), portável entre os quatro harnesses. Os agentes são instalados no formato nativo de cada um. O repositório é **somente Markdown + um shell script** (`install.sh`) — sem código executável, dependências ou build.
 
 ## Índice
 
@@ -23,8 +23,8 @@ As skills seguem o padrão aberto [**Agent Skills**](https://agentskills.io/spec
 
 ## Conceitos
 
-- **Skill** — uma pasta `skills/<nome>/SKILL.md` no padrão [Agent Skills](https://agentskills.io/specification): metadados (`name` em kebab-case, `description`) + instruções operacionais passo a passo. É a unidade portável, igual nos três harnesses.
-- **Agente** — um papel de orquestração com um prompt de sistema e regras de comportamento. É um conceito **nativo de cada harness** (OpenCode e Claude Code têm subagentes; o Codex usa o `AGENTS.md` como guia de orquestração). Cada agente normalmente aciona uma skill.
+- **Skill** — uma pasta `skills/<nome>/SKILL.md` no padrão [Agent Skills](https://agentskills.io/specification): metadados (`name` em kebab-case, `description`) + instruções operacionais passo a passo. É a unidade portável, igual nos quatro harnesses.
+- **Agente** — um papel de orquestração com um prompt de sistema e regras de comportamento. É um conceito **nativo de cada harness** (OpenCode e Claude Code têm subagentes; o Codex e o Pi usam o `AGENTS.md` como guia de orquestração). Cada agente normalmente aciona uma skill.
 - **Primário (`primary`)** — agente com o qual o usuário interage diretamente; é o ponto de entrada de uma solicitação.
 - **Subagente (`subagent`)** — agente delegado, acionado por um primário para uma tarefa especializada (análise, testes, revisão, versionamento).
 
@@ -47,7 +47,8 @@ commands/
     body.md         # corpo do slash command (template do prompt)
     opencode.yml    # frontmatter (description, agent)
     claude.yml      # frontmatter (description)
-AGENTS.md           # guia de orquestração (também instalado no Codex)
+    pi.yml          # frontmatter Pi (description, [argument-hint])
+AGENTS.md           # guia de orquestração (também instalado no Codex e no Pi)
 install.sh          # instalador multi-harness
 ```
 
@@ -230,7 +231,7 @@ cd coder
 ./install.sh --local
 ```
 
-Ao executar, a primeira etapa é **selecionar o(s) harness(es)** de destino (OpenCode, Claude Code, Codex ou todos). Em seguida, se OpenCode estiver entre os selecionados, há a opção de escolher o vendor de modelos. Ambas as etapas podem ser puladas com as flags `--harness` e `--vendor`.
+Ao executar, a primeira etapa é **selecionar o(s) harness(es)** de destino (OpenCode, Claude Code, Codex, Pi ou todos). Em seguida, se OpenCode estiver entre os selecionados, há a opção de escolher o vendor de modelos. Ambas as etapas podem ser puladas com as flags `--harness` e `--vendor`.
 
 ### Seleção de harness
 
@@ -240,6 +241,7 @@ Ao executar, a primeira etapa é **selecionar o(s) harness(es)** de destino (Ope
         2) claude
         3) codex
         4) todos
+        5) pi
 
 [?]    Números separados por espaço (ex.: 1 2):
 ```
@@ -278,7 +280,7 @@ O vendor define o modelo aplicado aos agentes **primários** no OpenCode. Para p
 ./install.sh --local --harness opencode --vendor anthropic
 ```
 
-**Claude Code** usa `sonnet` para os primários, independentemente de vendor. **Codex** não recebe `model` por agente — herda o modelo da sessão.
+**Claude Code** usa `sonnet` para os primários, independentemente de vendor. **Codex** e **Pi** não recebem `model` por agente — o Codex herda o modelo da sessão e o Pi resolve via settings/provider.
 
 > Para verificar os modelos disponíveis no seu ambiente OpenCode: `opencode models <vendor>`
 
@@ -318,6 +320,18 @@ O Codex **não** recebe arquivos de agente — a orquestração é feita via `AG
 
 Overrides: `CODEX_DIR` (padrão: `~/.codex`) e `CODEX_SKILLS_DIR` (padrão: `~/.agents/skills`)
 
+### Pi
+
+| Tipo | Destino padrão |
+|---|---|
+| Skills | `~/.pi/agent/skills/<nome>/` (pasta com `SKILL.md`) |
+| Prompts (commands) | `~/.pi/agent/prompts/<nome>.md` (montado com frontmatter `pi.yml`) |
+| `AGENTS.md` | `~/.pi/agent/AGENTS.md` (guia de orquestração) |
+
+Como o Codex, o Pi **não** recebe arquivos de agente — a orquestração é feita via `AGENTS.md`. Diferente do Codex, os commands são montados com o frontmatter `pi.yml` (`description` + `argument-hint`), exibido no autocomplete do `/`.
+
+Overrides: `PI_DIR` (padrão: `~/.pi/agent`) e `PI_SKILLS_DIR` (padrão: `$PI_DIR/skills`)
+
 ### Sobrescrevendo diretórios via variável de ambiente
 
 ```bash
@@ -341,7 +355,7 @@ Responda `s` para substituir ou pressione Enter para pular (`--force` substitui 
 
 | Flag | Descrição |
 |---|---|
-| `--harness <lista>` | Harness(es) a instalar sem menu interativo. Valores: `opencode`, `claude`, `codex`, `all` (separados por vírgula ou espaço, ex.: `opencode,claude`) |
+| `--harness <lista>` | Harness(es) a instalar sem menu interativo. Valores: `opencode`, `claude`, `codex`, `pi`, `all` (separados por vírgula ou espaço, ex.: `opencode,claude`) |
 | `--vendor <nome>` | Vendor para o OpenCode sem menu interativo. Valores: `anthropic`, `openai`, `google`, `groq`, `amazon-bedrock`, `github-copilot`. Inválido → erro + exit 1. Ignorado se OpenCode não estiver nos harnesses selecionados |
 | `--force`, `-f` | Substitui todos os arquivos sem perguntar |
 | `--local`, `-l` | Instala a partir dos arquivos locais do repositório clonado |
@@ -385,6 +399,7 @@ Apenas os agentes **primários** recebem `model` no frontmatter. Os **subagentes
 | OpenCode | `github-copilot` | `github-copilot/claude-sonnet-4.6` |
 | Claude Code | — | `sonnet` |
 | Codex | — | herdado da sessão |
+| Pi | — | definido via settings/provider do Pi |
 
 ## Artefatos gerados
 
@@ -397,7 +412,7 @@ Esses artefatos podem ser publicados/sincronizados com o Confluence pelos comman
 
 ## Requisitos
 
-- Um ou mais harnesses instalados: [OpenCode](https://opencode.ai), [Claude Code](https://claude.ai/code) e/ou [Codex](https://github.com/openai/codex)
+- Um ou mais harnesses instalados: [OpenCode](https://opencode.ai), [Claude Code](https://claude.ai/code), [Codex](https://github.com/openai/codex) e/ou [Pi](https://github.com/earendil-works/pi-coding-agent)
 - `curl` ou `wget` (para instalação remota)
 - `bash` >= 4.0
 - MCP `kanban-force` configurado (para operações de board/card com o `kanban`); demais integrações (Confluence, ArgoCD, GitLab) conforme os agentes utilizados

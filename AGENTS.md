@@ -2,14 +2,14 @@
 
 ## Sobre o repositorio
 
-Markdown-only: definicoes de agentes e skills para OpenCode, Claude Code e Codex. Nao ha codigo executavel, dependencias, build ou testes. O unico script e `install.sh`.
+Markdown-only: definicoes de agentes e skills para OpenCode, Claude Code, Codex e Pi. Nao ha codigo executavel, dependencias, build ou testes. O unico script e `install.sh`.
 
 ## Estrutura
 
 ```text
 agents/    14 subdiretorios — cada agente tem body.md + opencode.yml + claude.yml
 skills/    14 subdiretorios — cada skill tem SKILL.md + references/ (opcional)
-commands/  4 subdiretorios  — cada command tem body.md + opencode.yml + claude.yml
+commands/  5 subdiretorios  — cada command tem body.md + opencode.yml + claude.yml + pi.yml
 install.sh                  — monta e copia tudo para ~/.config/opencode/
 ```
 
@@ -61,6 +61,7 @@ Integracao `coder` -> `kanban`: quando a solicitacao tiver ID de card (ex.: `STK
   - OpenCode: `$OPENCODE_DIR` (default `~/.config/opencode/`) → `agents/`, `skills/`, `commands/`
   - Claude Code: `$CLAUDE_DIR` (default `~/.claude/`) → `agents/`, `skills/`, `commands/`
   - Codex: skills em `$CODEX_SKILLS_DIR` (default `~/.agents/skills/`); commands viram prompts body-only em `~/.codex/prompts/`; `AGENTS.md` copiado para `~/.codex/`; sem agentes nativos
+  - Pi: skills em `$PI_SKILLS_DIR` (default `~/.pi/agent/skills/`); commands viram prompts montados (`pi.yml` + body) em `~/.pi/agent/prompts/`; `AGENTS.md` copiado para `~/.pi/agent/`; sem agentes nativos; modelo via settings/provider do Pi
 - Copia skills como diretorios completos (`SKILL.md`) — identicas nos tres harnesses
 - Modelo: so agentes **primarios** recebem `model`. OpenCode → `openai/gpt-5.5` (default) ou `vendor/main`; Claude Code → `sonnet`; Codex herda. Subagentes nao recebem `model`
 - Flags: `--harness <lista>`, `--vendor <nome>`, `--force` (sobrescreve sem perguntar), `--local` (usa arquivos locais em vez de baixar do GitHub)
@@ -78,7 +79,7 @@ Conventional Commits em ingles: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`,
 | `kanban-card/` | `/kanban-card <friendlyID>` | Consulta um card pelo friendlyID via MCP kanban-force e carrega no contexto |
 | `mr-review/` | `/mr-review` | Aciona o `mr_reviewer` para revisar o MR aberto na branch atual via `glab` |
 
-Cada command e um subdiretorio com `body.md` (instrucoes) + frontmatter por harness (`opencode.yml` e `claude.yml`). O nome do diretorio vira o slash command. Argumentos sao acessados via `$ARGUMENTS` (todos) ou `$1`, `$2`... (posicionais).
+Cada command e um subdiretorio com `body.md` (instrucoes) + frontmatter por harness (`opencode.yml`, `claude.yml` e `pi.yml`). O nome do diretorio vira o slash command. Argumentos sao acessados via `$ARGUMENTS` (todos) ou `$1`, `$2`... (posicionais).
 
 Instalados em `$OPENCODE_DIR/commands/` (padrao: `~/.config/opencode/commands/`).
 
