@@ -1,0 +1,2 @@
+description: "Valida funcionalmente as modificações da branch atual (smoke, black-box, e2e, regressão) contra serviços reais. Monta plano de testes, salva em .coder/tests-<timestamp>.md, valida acessos aos serviços e executa em HML sob confirmação. Uso: /qa  ou  /qa <foco/escopo opcional>"
+argument-hint: "[foco/escopo]"
