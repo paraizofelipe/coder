@@ -140,6 +140,7 @@ assemble() {
 #  opencode → substitui o token __OPENCODE_MAIN__ pelo modelo escolhido.
 #  claude   → no-op (claude.yml já traz `model: sonnet` nos primários; subagentes sem model).
 #  codex    → no-op (codex não recebe agentes nesta fase).
+#  pi       → no-op (Pi define modelo via settings/provider, sem token no pi.yml).
 apply_model() {
   local file="$1" harness="$2"
   case "$harness" in
