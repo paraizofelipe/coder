@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## O que é este repositório
 
-Coleção de definições de agentes e skills para [OpenCode](https://opencode.ai) que implementa um fluxo disciplinado de desenvolvimento de software assistido por IA. Não há código executável, dependências ou comandos de build — todos os arquivos são Markdown mais um shell script (`install.sh`).
+Coleção de definições de agentes e skills para [OpenCode](https://opencode.ai), [Claude Code](https://claude.ai/code), [Codex](https://github.com/openai/codex) e [Pi](https://github.com/earendil-works/pi-coding-agent) que implementa um fluxo disciplinado de desenvolvimento de software assistido por IA. Não há código executável, dependências ou comandos de build — todos os arquivos são Markdown mais um shell script (`install.sh`).
 
 ## Estrutura
 

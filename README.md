@@ -338,6 +338,7 @@ Overrides: `PI_DIR` (padrão: `~/.pi/agent`) e `PI_SKILLS_DIR` (padrão: `$PI_DI
 OPENCODE_DIR=/caminho/customizado ./install.sh --local --harness opencode
 CLAUDE_DIR=/outro/caminho ./install.sh --local --harness claude
 CODEX_DIR=~/.meu-codex CODEX_SKILLS_DIR=~/.meu-codex/skills ./install.sh --local --harness codex
+PI_DIR=~/.meu-pi/agent PI_SKILLS_DIR=~/.meu-pi/agent/skills ./install.sh --local --harness pi
 ```
 
 ### Checagem antes de instalar
