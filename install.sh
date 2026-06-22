@@ -8,7 +8,7 @@ set -euo pipefail
 #   commands/<name>/{opencode.yml,claude.yml,body.md}
 #   skills/<name>/SKILL.md[, references/])
 #
-# Harnesses suportados: OpenCode, Claude Code, Codex.
+# Harnesses suportados: OpenCode, Claude Code, Codex, Pi.
 # Cada um recebe os artefatos no diretório e formato nativos.
 # ─────────────────────────────────────────────
 
@@ -146,6 +146,7 @@ apply_model() {
     opencode) sed -i.bak "s|__OPENCODE_MAIN__|$OPENCODE_MAIN|g" "$file" && rm -f "$file.bak" ;;
     claude)   : ;;
     codex)    : ;;
+    pi)       : ;;
   esac
 }
 
@@ -285,6 +286,11 @@ harness_paths() {
       H_AGENTS=""; H_COMMANDS=""
       H_PROMPTS="${CODEX_DIR:-$HOME/.codex}/prompts"
       H_AGENTSMD="${CODEX_DIR:-$HOME/.codex}/AGENTS.md" ;;
+    pi)
+      H_SKILLS="${PI_SKILLS_DIR:-${PI_DIR:-$HOME/.pi/agent}/skills}"
+      H_AGENTS=""; H_COMMANDS=""
+      H_PROMPTS="${PI_DIR:-$HOME/.pi/agent}/prompts"
+      H_AGENTSMD="${PI_DIR:-$HOME/.pi/agent}/AGENTS.md" ;;
   esac
 }
 
