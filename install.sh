@@ -8,7 +8,7 @@ set -euo pipefail
 #   commands/<name>/{opencode.yml,claude.yml,body.md}
 #   skills/<name>/SKILL.md[, references/])
 #
-# Harnesses suportados: OpenCode, Claude Code, Codex.
+# Harnesses suportados: OpenCode, Claude Code, Codex, Pi.
 # Cada um recebe os artefatos no diretório e formato nativos.
 # ─────────────────────────────────────────────
 
@@ -140,12 +140,14 @@ assemble() {
 #  opencode → substitui o token __OPENCODE_MAIN__ pelo modelo escolhido.
 #  claude   → no-op (claude.yml já traz `model: sonnet` nos primários; subagentes sem model).
 #  codex    → no-op (codex não recebe agentes nesta fase).
+#  pi       → no-op (Pi define modelo via settings/provider, sem token no pi.yml).
 apply_model() {
   local file="$1" harness="$2"
   case "$harness" in
     opencode) sed -i.bak "s|__OPENCODE_MAIN__|$OPENCODE_MAIN|g" "$file" && rm -f "$file.bak" ;;
     claude)   : ;;
     codex)    : ;;
+    pi)       : ;;
   esac
 }
 
@@ -177,6 +179,7 @@ select_harness() {
   echo "        2) claude"
   echo "        3) codex"
   echo "        4) todos"
+  echo "        5) pi"
   local choice=()
   # lê de /dev/tty para funcionar em curl|bash (stdin = pipe).
   # se /dev/tty não disponível (sem tty E sem flag), aborta com graça.
@@ -189,15 +192,16 @@ select_harness() {
       1) HARNESSES+=(opencode) ;;
       2) HARNESSES+=(claude) ;;
       3) HARNESSES+=(codex) ;;
-      4) HARNESSES=(opencode claude codex) ;;
+      4) HARNESSES=(opencode claude codex pi) ;;
+      5) HARNESSES+=(pi) ;;
     esac
   done
   if [[ ${#HARNESSES[@]} -eq 0 ]]; then
     warn "Nenhum harness selecionado."
     exit 1
   fi
-  # dedup preservando ordem canônica: opencode → claude → codex
-  local -a canonical=(opencode claude codex)
+  # dedup preservando ordem canônica: opencode → claude → codex → pi
+  local -a canonical=(opencode claude codex pi)
   local -a deduped=()
   local h
   for h in "${canonical[@]}"; do
@@ -220,11 +224,11 @@ resolve_harness_flag() {
   input="${input//,/ }"
   local -a raw=()
   read -r -a raw <<< "$input"
-  local -a canonical=(opencode claude codex)
+  local -a canonical=(opencode claude codex pi)
   local h token found
   for token in "${raw[@]}"; do
     if [[ "$token" == "all" ]]; then
-      HARNESSES=(opencode claude codex)
+      HARNESSES=(opencode claude codex pi)
       ok "Harnesses: ${HARNESSES[*]}"
       return
     fi
@@ -241,7 +245,7 @@ resolve_harness_flag() {
       fi
     done
     if ! $found; then
-      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, codex, all."
+      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, codex, pi, all."
       exit 1
     fi
   done
@@ -285,6 +289,14 @@ harness_paths() {
       H_AGENTS=""; H_COMMANDS=""
       H_PROMPTS="${CODEX_DIR:-$HOME/.codex}/prompts"
       H_AGENTSMD="${CODEX_DIR:-$HOME/.codex}/AGENTS.md" ;;
+    pi)
+      # skills no diretório compartilhado do padrão Agent Skills (~/.agents/skills),
+      # que o Pi varre nativamente além de ~/.pi/agent/skills/. Instalar aqui evita
+      # colisão de nomes quando Codex e Pi coexistem (ambos usam ~/.agents/skills).
+      H_SKILLS="${PI_SKILLS_DIR:-$HOME/.agents/skills}"
+      H_AGENTS=""; H_COMMANDS=""
+      H_PROMPTS="${PI_DIR:-$HOME/.pi/agent}/prompts"
+      H_AGENTSMD="${PI_DIR:-$HOME/.pi/agent}/AGENTS.md" ;;
   esac
 }
 
@@ -358,13 +370,13 @@ while [[ $# -gt 0 ]]; do
       echo -e "  ${BOLD}Uso:${RESET} install.sh [opções]"
       echo ""
       echo "  Instala agentes, skills e commands em um ou mais harnesses"
-      echo "  (OpenCode, Claude Code, Codex), escolhidos antes da instalação."
+      echo "  (OpenCode, Claude Code, Codex, Pi), escolhidos antes da instalação."
       echo ""
       echo "  Opções:"
       echo "    --force, -f              Substituir todos os arquivos sem perguntar"
       echo "    --local, -l              Instalar a partir dos arquivos locais do repositório"
       echo "    --harness <lista>        Harness(es) a instalar sem menu interativo."
-      echo "                             Valores: opencode, claude, codex, all (ou combinações"
+      echo "                             Valores: opencode, claude, codex, pi, all (ou combinações"
       echo "                             separadas por vírgula/espaço, ex.: opencode,claude)"
       echo "    --vendor <nome>          Vendor para o OpenCode sem menu interativo (ignorado se OpenCode"
       echo "                             não estiver nos harnesses selecionados). Vendor inválido → exit 1."
@@ -376,6 +388,8 @@ while [[ $# -gt 0 ]]; do
       echo "    CLAUDE_DIR          base do Claude Code (default ~/.claude)"
       echo "    CODEX_DIR           base do Codex (default ~/.codex)"
       echo "    CODEX_SKILLS_DIR    skills do Codex (default ~/.agents/skills)"
+      echo "    PI_DIR              base do Pi (default ~/.pi/agent)"
+      echo "    PI_SKILLS_DIR       skills do Pi (default ~/.agents/skills, compartilhado com o Codex)"
       echo ""
       exit 0
       ;;
@@ -547,11 +561,33 @@ install_codex_prompts() {
   echo ""
 }
 
-# AGENTS.md de orquestração para o Codex.
+# prompts montados (pi.yml + body.md) para o Pi.
+# Diferente do Codex (body-only): o Pi exibe description/argument-hint no autocomplete do `/`.
+install_pi_prompts() {
+  [[ -n "$H_PROMPTS" ]] || return 0
+  mkdir -p "$H_PROMPTS"
+  info "Instalando prompts em $H_PROMPTS"
+  echo ""
+  for name in "${COMMAND_NAMES[@]}"; do
+    echo -e "  ${BOLD}$name${RESET}"
+    local dst="$H_PROMPTS/$name.md"
+    if ! check_overwrite "$dst" "$name"; then
+      continue
+    fi
+    local src_dir
+    src_dir="$(prepare_assembled_src commands "$name" "pi")"
+    assemble "$src_dir" "pi" "$dst"
+    apply_model "$dst" "pi"
+    installed
+  done
+  echo ""
+}
+
+# AGENTS.md de orquestração (Codex e Pi) — grava no destino indicado por H_AGENTSMD.
 # NOTA: AGENTS.md existe no disco mas é gitignored (não está no GitHub).
 # Em --local a cópia local funciona; em modo remoto o download retorna 404,
 # por isso a falha remota é não-fatal (warn e segue).
-install_codex_agentsmd() {
+install_agentsmd() {
   [[ -n "$H_AGENTSMD" ]] || return 0
   info "Instalando AGENTS.md em $H_AGENTSMD"
   mkdir -p "$(dirname "$H_AGENTSMD")"
@@ -590,6 +626,7 @@ print_summary() {
       opencode) echo "      modelo principal: $OPENCODE_MAIN" ;;
       claude)   echo "      modelo principal: sonnet" ;;
       codex)    echo "      modelo: herdado da sessão" ;;
+      pi)       echo "      modelo: definido via settings/provider do Pi" ;;
     esac
   done
   echo ""
@@ -631,10 +668,16 @@ for h in "${HARNESSES[@]}"; do
   install_agents "$h"
   install_skills
   install_commands "$h"
-  if [[ "$h" == "codex" ]]; then
-    install_codex_prompts
-    install_codex_agentsmd
-  fi
+  case "$h" in
+    codex)
+      install_codex_prompts
+      install_agentsmd
+      ;;
+    pi)
+      install_pi_prompts
+      install_agentsmd
+      ;;
+  esac
   ok "Concluído: $h"
   echo ""
 done
