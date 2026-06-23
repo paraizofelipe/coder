@@ -61,7 +61,7 @@ Integracao `coder` -> `kanban`: quando a solicitacao tiver ID de card (ex.: `STK
   - OpenCode: `$OPENCODE_DIR` (default `~/.config/opencode/`) → `agents/`, `skills/`, `commands/`
   - Claude Code: `$CLAUDE_DIR` (default `~/.claude/`) → `agents/`, `skills/`, `commands/`
   - Codex: skills em `$CODEX_SKILLS_DIR` (default `~/.agents/skills/`); commands viram prompts body-only em `~/.codex/prompts/`; `AGENTS.md` copiado para `~/.codex/`; sem agentes nativos
-  - Pi: skills em `$PI_SKILLS_DIR` (default `~/.pi/agent/skills/`); commands viram prompts montados (`pi.yml` + body) em `~/.pi/agent/prompts/`; `AGENTS.md` copiado para `~/.pi/agent/`; sem agentes nativos; modelo via settings/provider do Pi
+  - Pi: skills em `$PI_SKILLS_DIR` (default `~/.agents/skills/`, compartilhado com o Codex — o Pi varre esse diretorio nativamente, o que evita colisao de nomes quando Codex e Pi coexistem); commands viram prompts montados (`pi.yml` + body) em `~/.pi/agent/prompts/`; `AGENTS.md` copiado para `~/.pi/agent/`; sem agentes nativos; modelo via settings/provider do Pi
 - Copia skills como diretorios completos (`SKILL.md`) — identicas nos quatro harnesses
 - Modelo: so agentes **primarios** recebem `model`. OpenCode → `openai/gpt-5.5` (default) ou `vendor/main`; Claude Code → `sonnet`; Codex herda. Subagentes nao recebem `model`
 - Flags: `--harness <lista>`, `--vendor <nome>`, `--force` (sobrescreve sem perguntar), `--local` (usa arquivos locais em vez de baixar do GitHub)

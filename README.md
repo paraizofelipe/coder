@@ -324,13 +324,15 @@ Overrides: `CODEX_DIR` (padrão: `~/.codex`) e `CODEX_SKILLS_DIR` (padrão: `~/.
 
 | Tipo | Destino padrão |
 |---|---|
-| Skills | `~/.pi/agent/skills/<nome>/` (pasta com `SKILL.md`) |
+| Skills | `~/.agents/skills/<nome>/` (pasta com `SKILL.md`, compartilhado com o Codex) |
 | Prompts (commands) | `~/.pi/agent/prompts/<nome>.md` (montado com frontmatter `pi.yml`) |
 | `AGENTS.md` | `~/.pi/agent/AGENTS.md` (guia de orquestração) |
 
 Como o Codex, o Pi **não** recebe arquivos de agente — a orquestração é feita via `AGENTS.md`. Diferente do Codex, os commands são montados com o frontmatter `pi.yml` (`description` + `argument-hint`), exibido no autocomplete do `/`.
 
-Overrides: `PI_DIR` (padrão: `~/.pi/agent`) e `PI_SKILLS_DIR` (padrão: `$PI_DIR/skills`)
+As skills vão para `~/.agents/skills/` — o diretório do padrão Agent Skills que o Pi varre nativamente (além de `~/.pi/agent/skills/`) e que o Codex também usa. Instalá-las nesse local compartilhado evita o aviso de colisão de nomes que apareceria se as mesmas skills existissem nos dois diretórios quando Codex e Pi coexistem.
+
+Overrides: `PI_DIR` (padrão: `~/.pi/agent`, usado para prompts e `AGENTS.md`) e `PI_SKILLS_DIR` (padrão: `~/.agents/skills`). Ao customizar `PI_SKILLS_DIR`, aponte para um diretório que o Pi varra (`~/.agents/skills` ou `~/.pi/agent/skills`); um caminho fora desses não é descoberto pelo Pi.
 
 ### Sobrescrevendo diretórios via variável de ambiente
 
@@ -338,7 +340,7 @@ Overrides: `PI_DIR` (padrão: `~/.pi/agent`) e `PI_SKILLS_DIR` (padrão: `$PI_DI
 OPENCODE_DIR=/caminho/customizado ./install.sh --local --harness opencode
 CLAUDE_DIR=/outro/caminho ./install.sh --local --harness claude
 CODEX_DIR=~/.meu-codex CODEX_SKILLS_DIR=~/.meu-codex/skills ./install.sh --local --harness codex
-PI_DIR=~/.meu-pi/agent PI_SKILLS_DIR=~/.meu-pi/agent/skills ./install.sh --local --harness pi
+PI_DIR=~/.meu-pi/agent ./install.sh --local --harness pi
 ```
 
 ### Checagem antes de instalar

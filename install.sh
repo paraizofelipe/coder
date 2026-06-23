@@ -290,7 +290,10 @@ harness_paths() {
       H_PROMPTS="${CODEX_DIR:-$HOME/.codex}/prompts"
       H_AGENTSMD="${CODEX_DIR:-$HOME/.codex}/AGENTS.md" ;;
     pi)
-      H_SKILLS="${PI_SKILLS_DIR:-${PI_DIR:-$HOME/.pi/agent}/skills}"
+      # skills no diretório compartilhado do padrão Agent Skills (~/.agents/skills),
+      # que o Pi varre nativamente além de ~/.pi/agent/skills/. Instalar aqui evita
+      # colisão de nomes quando Codex e Pi coexistem (ambos usam ~/.agents/skills).
+      H_SKILLS="${PI_SKILLS_DIR:-$HOME/.agents/skills}"
       H_AGENTS=""; H_COMMANDS=""
       H_PROMPTS="${PI_DIR:-$HOME/.pi/agent}/prompts"
       H_AGENTSMD="${PI_DIR:-$HOME/.pi/agent}/AGENTS.md" ;;
@@ -386,7 +389,7 @@ while [[ $# -gt 0 ]]; do
       echo "    CODEX_DIR           base do Codex (default ~/.codex)"
       echo "    CODEX_SKILLS_DIR    skills do Codex (default ~/.agents/skills)"
       echo "    PI_DIR              base do Pi (default ~/.pi/agent)"
-      echo "    PI_SKILLS_DIR       skills do Pi (default \$PI_DIR/skills)"
+      echo "    PI_SKILLS_DIR       skills do Pi (default ~/.agents/skills, compartilhado com o Codex)"
       echo ""
       exit 0
       ;;
