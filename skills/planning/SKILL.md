@@ -62,6 +62,7 @@ C. <opção, se aplicável> — <consequência>
 ### 4. Consolide o plano somente quando a árvore terminar
 - A entrevista termina apenas quando a fronteira estiver vazia: todos os ramos relevantes foram visitados e nenhuma decisão material ficou implícita.
 - Antes de consolidar, apresente uma síntese das decisões e pergunte se o entendimento está correto. Se o usuário corrigir algo, reabra somente os ramos afetados.
+- A síntese e o pedido de aprovação final são uma mensagem textual, não uma rodada de decisões. Nunca use o questionário nativo nessa etapa; aguarde a resposta livre do usuário.
 - Crie ou atualize `.coder/plan.md` com o conteúdo abaixo. Preserve decisões já registradas para a mesma solicitação e acrescente iterações datadas em vez de reescrever sua história.
 
 ```markdown
@@ -138,7 +139,7 @@ Nenhuma.
 </checklist>
 
 <output_format>
-Durante a entrevista, use o questionário nativo quando ele estiver disponível. Caso contrário, responda somente com a rodada de perguntas no formato textual definido acima. Após todas as decisões, responda com:
+Durante a entrevista de decisões, use o questionário nativo quando ele estiver disponível. Caso contrário, responda somente com a rodada de perguntas no formato textual definido acima. A síntese e a aprovação final são sempre textuais. Após todas as decisões, responda com:
 
 ```text
 Planejamento consolidado em `.coder/plan.md`.
@@ -149,6 +150,6 @@ Planejamento consolidado em `.coder/plan.md`.
 - Verificação: <resumo>
 - Riscos residuais: <resumo ou “nenhum identificado”>
 
-O plano está pronto para implementação mediante aprovação do usuário.
+O plano está pronto para implementação. Revise esta síntese e responda em texto livre se aprova o plano ou que ajustes deseja.
 ```
 </output_format>
