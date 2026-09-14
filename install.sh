@@ -45,6 +45,7 @@ SKILL_NAMES=(
   kanban-force
   plan-implementation
   plan-tasks
+  planning
   query-argocd
   review-code
   review-mr
