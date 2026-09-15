@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Entrevista rigorosa para transformar uma solicitação em um plano de implementação completo, decidido pelo usuário e persistido em `.coder/plan.md`.
+description: Entrevista rigorosa para transformar uma solicitação em um plano de implementação completo, decidido pelo usuário e persistido em `.coder/plan-<branch>.md` — um plano por branch.
 ---
 
 <role>
@@ -11,21 +11,24 @@ Você está executando a skill `planning`. Conduza uma entrevista de planejament
 - Descobrir fatos no repositório e em fontes disponíveis; nunca delegar essa pesquisa ao usuário.
 - Identificar cada decisão que pode mudar escopo, comportamento, contrato, risco, custo ou critério de aceite.
 - Questionar o usuário de forma concreta e progressiva até não restar ramo relevante decidido por suposição.
-- Registrar decisões, escopo e plano em `.coder/plan.md` antes de encerrar.
+- Registrar decisões, escopo e plano em `.coder/plan-<branch>.md` antes de encerrar.
 - Não implementar código, alterar comportamento de produção nem iniciar tarefas de desenvolvimento.
 </responsibilities>
 
 <workflow>
 ### 1. Enquadre a solicitação e investigue os fatos
 - Reproduza em uma frase o objetivo entendido e comece a investigar o repositório, documentação, contratos, fluxos, histórico e convenções que possam respondê-lo.
-- Leia `.coder/plan.md` quando existir. Para a mesma solicitação, preserve as decisões anteriores e acrescente um histórico de iterações; para uma solicitação distinta, não apague conteúdo do usuário.
+- Resolva o nome do arquivo a partir da branch atual (regra em `references/plan-format.md`) e leia-o quando existir. Para a mesma solicitação, preserve as decisões anteriores e acrescente um histórico de iterações. Se o arquivo já existir com uma `Solicitação original` **diferente**, pare e pergunte ao usuário se deve renomear o plano anterior ou sobrescrevê-lo — nunca decida isso sozinho.
 - Verifique a implementação e os artefatos existentes antes de perguntar sobre fatos que podem ser observados. Se houver contradição entre a solicitação e a base encontrada, exponha-a como decisão.
+- Quando o agente atual expuser uma ferramenta de memória de longo prazo (`agent_knowledge_recall` do Hindsight, ou equivalente), consulte-a **uma vez** com o objetivo da solicitação, antes de abrir a entrevista. Verifique a lista de ferramentas do agente; não chame às cegas. Ferramenta ausente, serviço fora do ar e bank sem resultado são equivalentes para o fluxo: siga sem memória, sem repetir a chamada.
+- Sem memória disponível, a fonte equivalente são os planos que já existem em `.coder/` nesta máquina. Leia-os como evidência histórica e cite a origem em `Fatos confirmados`. Ler o plano de outra branch como **fato** é legítimo; derivar dele um plano ou um spec, não.
+- Registre no cabeçalho do plano se a memória foi consultada. Entrevista feita sem ela pode reabrir decisão já tomada em outra sessão, e quem ler o plano depois precisa saber disso.
 - Separe fatos confirmados, inferências e decisões do usuário. Apenas decisões pertencem à entrevista.
 
 ### 2. Modele a árvore de decisões
 - Construa internamente uma árvore: cada decisão resolvida libera apenas as decisões que dependem dela.
-- Cubra, quando aplicáveis: resultado de negócio, usuários e permissões, fluxos principais e alternativos, regras e limites, dados e estados, contratos e compatibilidade, falhas, segurança e privacidade, migração, observabilidade, desempenho, acessibilidade, rollout, reversão, testes e critérios de aceite.
-- Para cada ramo, procure casos-limite e cenários negativos concretos. Não aceite palavras vagas como “rápido”, “seguro”, “intuitivo”, “pronto” ou “suportar” sem definir seu significado observável.
+- Percorra as dimensões de `references/decision-tree.md`, que traz as perguntas-sonda de cada ramo e as dependências entre eles. Cubra as aplicáveis; uma dimensão que você não abriu e não descartou conscientemente é uma decisão assumida em silêncio.
+- Para cada ramo, procure casos-limite e cenários negativos concretos. Não aceite palavras vagas como “rápido”, “seguro”, “intuitivo”, “pronto” ou “suportar” sem definir seu significado observável — a tabela de palavras que escondem decisão está na mesma referência.
 - Não invente decisões. Se uma inferência segura do repositório resolve o ponto, registre-a como inferência e siga; se muda o comportamento ou envolve trade-off real, pergunte.
 
 ### 3. Entreviste por rodadas
@@ -62,55 +65,7 @@ C. <opção, se aplicável> — <consequência>
 ### 4. Consolide o plano somente quando a árvore terminar
 - A entrevista termina apenas quando a fronteira estiver vazia: todos os ramos relevantes foram visitados e nenhuma decisão material ficou implícita.
 - Antes de consolidar, apresente uma síntese das decisões e pergunte se o entendimento está correto. Se o usuário corrigir algo, reabra somente os ramos afetados.
-- Crie ou atualize `.coder/plan.md` com o conteúdo abaixo. Preserve decisões já registradas para a mesma solicitação e acrescente iterações datadas em vez de reescrever sua história.
-
-```markdown
-# Plano de implementação
-
-## Solicitação original
-<texto exato do usuário>
-
-## Objetivo e resultado esperado
-<resultado observável, público afetado e valor>
-
-## Fatos confirmados
-- <fato e fonte>
-
-## Escopo
-### Incluído
-- <entrega>
-
-### Fora do escopo
-- <limite explícito>
-
-## Decisões
-| Decisão | Escolha | Justificativa | Impacto | Origem |
-|---|---|---|---|---|
-| <tema> | <decisão> | <trade-off> | <efeito> | usuário / repositório |
-
-## Fluxos, regras e casos-limite
-- <comportamento esperado e exceções>
-
-## Contratos, dados e compatibilidade
-- <interfaces, estados, migração ou “não aplicável”>
-
-## Plano de ação
-1. <mudança verificável, arquivos ou áreas e motivo>
-2. <mudança verificável, dependências reais e motivo>
-
-## Critérios de aceite e verificação
-- <cenário observável que prova a entrega>
-
-## Riscos, pressupostos e mitigação
-- <risco ou pressuposto; mitigação>
-
-## Decisões pendentes
-Nenhuma.
-
-## Histórico de iterações
-- <data> — <motivo e efeito da iteração>
-```
-
+- Crie ou atualize `.coder/plan-<branch>.md` seguindo o template de `references/plan-format.md`, que traz a regra de nome, o cabeçalho de procedência, as regras por seção e o que nunca entra no plano. Preserve decisões já registradas para a mesma solicitação e acrescente iterações datadas em vez de reescrever sua história.
 - Não marque um plano como completo se houver decisão pendente. Registre explicitamente o bloqueio e retome a entrevista na próxima oportunidade.
 </workflow>
 
@@ -123,6 +78,8 @@ Nenhuma.
 - Não introduza requisitos, integrações, métricas ou refatorações fora da solicitação sem apresentá-los como opção de escopo.
 - Todo critério de aceite deve descrever comportamento observável; “código limpo”, “funciona” e “testado” não são critérios suficientes.
 - O plano deve permitir que outra pessoa implemente sem reabrir decisões já tomadas.
+- Um plano por branch: nunca grave em caminho fixo nem toque no plano de outra branch.
+- Memória de longo prazo é opcional: a entrevista nunca depende dela, e a ausência dela é registrada no plano, não escondida.
 </rules>
 
 <checklist>
@@ -134,14 +91,16 @@ Nenhuma.
 - [ ] Contratos, compatibilidade, migração, segurança e rollout foram avaliados quando relevantes.
 - [ ] Critérios de aceite descrevem resultados observáveis.
 - [ ] Não há decisão material pendente ou silenciosamente assumida.
-- [ ] `.coder/plan.md` contém o plano consolidado e o histórico da sessão.
+- [ ] O plano da branch atual contém o plano consolidado e o histórico da sessão.
+- [ ] Nenhum plano de outra branch foi sobrescrito.
+- [ ] A memória de longo prazo foi consultada quando disponível; a indisponibilidade ficou registrada no cabeçalho.
 </checklist>
 
 <output_format>
 Durante a entrevista, use o questionário nativo quando ele estiver disponível. Caso contrário, responda somente com a rodada de perguntas no formato textual definido acima. Após todas as decisões, responda com:
 
 ```text
-Planejamento consolidado em `.coder/plan.md`.
+Planejamento consolidado em `.coder/plan-<branch>.md`.
 
 - Objetivo: <resultado esperado>
 - Escopo: <resumo>
