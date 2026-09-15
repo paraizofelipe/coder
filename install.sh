@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────
-# coder — instalador do fluxo planning → to-spec
+# coder — instalador do fluxo planning → to-spec → implement
 # (instala a partir do layout híbrido:
-#   commands/<name>/{opencode.yml,claude.yml,pi.yml,body.md}
+#   commands/<name>/{opencode.yml,claude.yml,omp.yml,body.md}
 #   skills/<name>/SKILL.md[, references/])
 #
-# Harnesses suportados: OpenCode, Claude Code, Codex, Pi.
+# Harnesses suportados: OpenCode, Claude Code, Oh My Pi (omp).
 # Cada um recebe os artefatos no diretório e formato nativos.
 # ─────────────────────────────────────────────
 
@@ -18,19 +18,35 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── listas de nomes (não caminhos) ────────────
 
+# ordem do fluxo, não alfabética
 SKILL_NAMES=(
   planning
   to-spec
+  to-cards
+  implement
+  tdd
+  code-review
+  to-memory
 )
 
 # referências (references/) por skill, baixadas no modo remoto
 # (no modo local o `cp -R` já traz o diretório inteiro)
 declare -A SKILL_REFERENCES=(
+  [planning]="decision-tree.md plan-format.md"
   [to-spec]="plan-to-spec-map.md seams.md spec-format.md"
+  [to-cards]="card-format.md decomposition.md"
+  [implement]="commit-gate.md impl-format.md vertical-slices.md"
+  [tdd]="mocking.md test-quality.md"
+  [code-review]="spec-axis.md standards-axis.md"
+  [to-memory]="artifact-map.md knowledge-pages.md redaction.md"
 )
 
 COMMAND_NAMES=(
   to-spec
+  to-cards
+  implement
+  code-review
+  to-memory
 )
 
 # ── helpers ──────────────────────────────────
@@ -119,9 +135,8 @@ select_harness() {
   info "Selecione o(s) harness(es) de destino:"
   echo "        1) opencode"
   echo "        2) claude"
-  echo "        3) codex"
+  echo "        3) omp"
   echo "        4) todos"
-  echo "        5) pi"
   local choice=()
   # lê de /dev/tty para funcionar em curl|bash (stdin = pipe).
   # se /dev/tty não disponível (sem tty E sem flag), aborta com graça.
@@ -133,17 +148,16 @@ select_harness() {
     case "$c" in
       1) HARNESSES+=(opencode) ;;
       2) HARNESSES+=(claude) ;;
-      3) HARNESSES+=(codex) ;;
-      4) HARNESSES=(opencode claude codex pi) ;;
-      5) HARNESSES+=(pi) ;;
+      3) HARNESSES+=(omp) ;;
+      4) HARNESSES=(opencode claude omp) ;;
     esac
   done
   if [[ ${#HARNESSES[@]} -eq 0 ]]; then
     warn "Nenhum harness selecionado."
     exit 1
   fi
-  # dedup preservando ordem canônica: opencode → claude → codex → pi
-  local -a canonical=(opencode claude codex pi)
+  # dedup preservando ordem canônica: opencode → claude → omp
+  local -a canonical=(opencode claude omp)
   local -a deduped=()
   local h
   for h in "${canonical[@]}"; do
@@ -166,11 +180,11 @@ resolve_harness_flag() {
   input="${input//,/ }"
   local -a raw=()
   read -r -a raw <<< "$input"
-  local -a canonical=(opencode claude codex pi)
+  local -a canonical=(opencode claude omp)
   local h token found
   for token in "${raw[@]}"; do
     if [[ "$token" == "all" ]]; then
-      HARNESSES=(opencode claude codex pi)
+      HARNESSES=(opencode claude omp)
       ok "Harnesses: ${HARNESSES[*]}"
       return
     fi
@@ -187,7 +201,7 @@ resolve_harness_flag() {
       fi
     done
     if ! $found; then
-      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, codex, pi, all."
+      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, omp, all."
       exit 1
     fi
   done
@@ -213,32 +227,23 @@ resolve_harness_flag() {
 # ── diretórios de destino por harness ─────────
 
 # variáveis preenchidas por harness_paths()
-H_SKILLS=""; H_COMMANDS=""; H_PROMPTS=""; H_AGENTSMD=""
+H_SKILLS=""; H_COMMANDS=""
 
 harness_paths() {
   local h="$1"
   case "$h" in
     opencode)
       local base="${OPENCODE_DIR:-$HOME/.config/opencode}"
-      H_SKILLS="$base/skills"; H_COMMANDS="$base/commands"
-      H_PROMPTS=""; H_AGENTSMD="" ;;
+      H_SKILLS="$base/skills"; H_COMMANDS="$base/commands" ;;
     claude)
       local base="${CLAUDE_DIR:-$HOME/.claude}"
-      H_SKILLS="$base/skills"; H_COMMANDS="$base/commands"
-      H_PROMPTS=""; H_AGENTSMD="" ;;
-    codex)
-      H_SKILLS="${CODEX_SKILLS_DIR:-$HOME/.agents/skills}"
-      H_COMMANDS=""
-      H_PROMPTS="${CODEX_DIR:-$HOME/.codex}/prompts"
-      H_AGENTSMD="${CODEX_DIR:-$HOME/.codex}/AGENTS.md" ;;
-    pi)
-      # skills no diretório compartilhado do padrão Agent Skills (~/.agents/skills),
-      # que o Pi varre nativamente além de ~/.pi/agent/skills/. Instalar aqui evita
-      # colisão de nomes quando Codex e Pi coexistem (ambos usam ~/.agents/skills).
-      H_SKILLS="${PI_SKILLS_DIR:-$HOME/.agents/skills}"
-      H_COMMANDS=""
-      H_PROMPTS="${PI_DIR:-$HOME/.pi/agent}/prompts"
-      H_AGENTSMD="${PI_DIR:-$HOME/.pi/agent}/AGENTS.md" ;;
+      H_SKILLS="$base/skills"; H_COMMANDS="$base/commands" ;;
+    omp)
+      # Oh My Pi descobre skills e slash commands pelo provider "Agent Dirs":
+      # .agent/ e .agents/ no walk-up do projeto E no home do usuário.
+      # ~/.agents é o destino nativo e segue o padrão Agent Skills.
+      local base="${OMP_AGENTS_DIR:-$HOME/.agents}"
+      H_SKILLS="$base/skills"; H_COMMANDS="$base/commands" ;;
   esac
 }
 
@@ -261,24 +266,21 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo -e "  ${BOLD}Uso:${RESET} install.sh [opções]"
       echo ""
-      echo "  Instala as skills e os commands do fluxo planning → to-spec"
-      echo "  (OpenCode, Claude Code, Codex, Pi), escolhidos antes da instalação."
+      echo "  Instala as skills e os commands do fluxo planning → to-spec → implement"
+      echo "  (OpenCode, Claude Code, Oh My Pi), escolhidos antes da instalação."
       echo ""
       echo "  Opções:"
       echo "    --force, -f              Substituir todos os arquivos sem perguntar"
       echo "    --local, -l              Instalar a partir dos arquivos locais do repositório"
       echo "    --harness <lista>        Harness(es) a instalar sem menu interativo."
-      echo "                             Valores: opencode, claude, codex, pi, all (ou combinações"
+      echo "                             Valores: opencode, claude, omp, all (ou combinações"
       echo "                             separadas por vírgula/espaço, ex.: opencode,claude)"
       echo "    --help,  -h              Exibir esta ajuda"
       echo ""
       echo "  Overrides de diretório (env vars):"
       echo "    OPENCODE_DIR        base do OpenCode (default ~/.config/opencode)"
       echo "    CLAUDE_DIR          base do Claude Code (default ~/.claude)"
-      echo "    CODEX_DIR           base do Codex (default ~/.codex)"
-      echo "    CODEX_SKILLS_DIR    skills do Codex (default ~/.agents/skills)"
-      echo "    PI_DIR              base do Pi (default ~/.pi/agent)"
-      echo "    PI_SKILLS_DIR       skills do Pi (default ~/.agents/skills, compartilhado com o Codex)"
+      echo "    OMP_AGENTS_DIR      base de agent dirs do Oh My Pi (default ~/.agents)"
       echo ""
       exit 0
       ;;
@@ -341,20 +343,6 @@ prepare_assembled_src() {
   echo "$tmp"
 }
 
-# prepara o body.md de um command (usado pelo Codex, body-only).
-prepare_body_src() {
-  local kind="$1"   # commands
-  local name="$2"
-  if $LOCAL; then
-    echo "$SCRIPT_DIR/$kind/$name/body.md"
-    return
-  fi
-  local tmp="$REMOTE_TMP/$kind/$name"
-  mkdir -p "$tmp"
-  fetch_remote "$kind/$name/body.md" "$tmp/body.md"
-  echo "$tmp/body.md"
-}
-
 # ── instalação por harness ────────────────────
 
 install_skills() {
@@ -390,7 +378,6 @@ install_skills() {
 
 install_commands() {
   local harness="$1"
-  [[ -n "$H_COMMANDS" ]] || return 0   # codex: tratado por install_codex_prompts
   mkdir -p "$H_COMMANDS"
   info "Instalando commands em $H_COMMANDS"
   echo ""
@@ -408,72 +395,6 @@ install_commands() {
   echo ""
 }
 
-# prompts body-only para o Codex (sem frontmatter de `agent:`, que não se aplica).
-install_codex_prompts() {
-  [[ -n "$H_PROMPTS" ]] || return 0
-  mkdir -p "$H_PROMPTS"
-  info "Instalando prompts em $H_PROMPTS"
-  echo ""
-  for name in "${COMMAND_NAMES[@]}"; do
-    echo -e "  ${BOLD}$name${RESET}"
-    local dst="$H_PROMPTS/$name.md"
-    if ! check_overwrite "$dst" "$name"; then
-      continue
-    fi
-    local src
-    src="$(prepare_body_src commands "$name")"
-    cp "$src" "$dst"
-    installed
-  done
-  echo ""
-}
-
-# prompts montados (pi.yml + body.md) para o Pi.
-# Diferente do Codex (body-only): o Pi exibe description/argument-hint no autocomplete do `/`.
-install_pi_prompts() {
-  [[ -n "$H_PROMPTS" ]] || return 0
-  mkdir -p "$H_PROMPTS"
-  info "Instalando prompts em $H_PROMPTS"
-  echo ""
-  for name in "${COMMAND_NAMES[@]}"; do
-    echo -e "  ${BOLD}$name${RESET}"
-    local dst="$H_PROMPTS/$name.md"
-    if ! check_overwrite "$dst" "$name"; then
-      continue
-    fi
-    local src_dir
-    src_dir="$(prepare_assembled_src commands "$name" "pi")"
-    assemble "$src_dir" "pi" "$dst"
-    installed
-  done
-  echo ""
-}
-
-# AGENTS.md de orquestração (Codex e Pi) — grava no destino indicado por H_AGENTSMD.
-# NOTA: AGENTS.md existe no disco mas é gitignored (não está no GitHub).
-# Em --local a cópia local funciona; em modo remoto o download retorna 404,
-# por isso a falha remota é não-fatal (warn e segue).
-install_agentsmd() {
-  [[ -n "$H_AGENTSMD" ]] || return 0
-  info "Instalando AGENTS.md em $H_AGENTSMD"
-  mkdir -p "$(dirname "$H_AGENTSMD")"
-  if ! check_overwrite "$H_AGENTSMD" "AGENTS.md"; then
-    return 0
-  fi
-  if $LOCAL; then
-    cp "$SCRIPT_DIR/AGENTS.md" "$H_AGENTSMD"
-    installed
-  else
-    if fetch_remote "AGENTS.md" "$H_AGENTSMD"; then
-      installed
-    else
-      warn "AGENTS.md indisponível no modo remoto (gitignored); pulando."
-      rm -f "$H_AGENTSMD"
-    fi
-  fi
-  echo ""
-}
-
 # ── resumo final ──────────────────────────────
 
 print_summary() {
@@ -485,8 +406,6 @@ print_summary() {
     echo -e "  ${BOLD}• $h${RESET}"
     echo "      skills:   $H_SKILLS"
     [[ -n "$H_COMMANDS" ]] && echo "      commands: $H_COMMANDS"
-    [[ -n "$H_PROMPTS"  ]] && echo "      prompts:  $H_PROMPTS"
-    [[ -n "$H_AGENTSMD" ]] && echo "      AGENTS.md: $H_AGENTSMD"
   done
   echo ""
   echo -e "  Reinicie o harness para carregar as novas skills e commands."
@@ -496,7 +415,7 @@ print_summary() {
 # ── fluxo principal ───────────────────────────
 
 echo ""
-echo -e "${BOLD}  coder — fluxo planning → to-spec${RESET}"
+echo -e "${BOLD}  coder — fluxo planning → to-spec → implement${RESET}"
 echo "  ─────────────────────────────────────"
 echo ""
 
@@ -516,16 +435,6 @@ for h in "${HARNESSES[@]}"; do
   echo ""
   install_skills
   install_commands "$h"
-  case "$h" in
-    codex)
-      install_codex_prompts
-      install_agentsmd
-      ;;
-    pi)
-      install_pi_prompts
-      install_agentsmd
-      ;;
-  esac
   ok "Concluído: $h"
   echo ""
 done
