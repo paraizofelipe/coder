@@ -1,0 +1,2 @@
+description: "Revisa a diff entre HEAD e um ponto fixo em dois eixos independentes — aderência ao spec (faltando, escopo indevido, implementado errado) e aderência aos padrões documentados do repositório, com linha de base de smells. Reporta os dois lado a lado, sem fundir. Não corrige. Uso: /code-review main  ou  /code-review <commit|branch|tag>"
+argument-hint: "[ponto-fixo]"
