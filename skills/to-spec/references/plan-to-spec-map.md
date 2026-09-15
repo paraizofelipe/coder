@@ -1,10 +1,23 @@
-# Mapeamento `.coder/plan.md` → spec
+# Mapeamento plano → spec
 
-Carregue no **passo 1**. Define de onde vem cada seção do spec e, principalmente, **o que não migra**.
+Carregue no **passo 1**. Define qual arquivo ler, de onde vem cada seção do spec e, principalmente, **o que não migra**.
+
+## Qual arquivo ler
+
+`.coder/plan-<branch-safe>.md`, onde `<branch-safe>` é a branch atual (`git rev-parse --abbrev-ref HEAD`) com `/` trocado por `-`. Em `HEAD` desanexado, o `planning` grava `.coder/plan-AAAAMMDD-HHMMSS.md`.
+
+| Situação | O que fazer |
+|---|---|
+| Existe plano da branch atual | Use-o como fonte canônica |
+| Não existe | Sintetize do contexto da conversa |
+| Existem planos de outras branches | **Ignore-os.** Descrevem outro trabalho; um spec derivado deles sai plausível e errado |
+| Existem vários planos com timestamp (`HEAD` desanexado) | Pergunte ao usuário qual é o alvo. Não presuma o mais recente |
+
+Registre no cabeçalho do spec qual arquivo de plano foi usado.
 
 ## Tabela de origem
 
-| Seção do `.coder/plan.md` | Seção do spec | Transformação |
+| Seção do plano | Seção do spec | Transformação |
 |---|---|---|
 | `Solicitação original` | `Problema` | Reescreva na perspectiva de quem sofre o problema. Não cole o texto cru do pedido |
 | `Objetivo e resultado esperado` | `Problema` + `Solução` | O resultado esperado vira a `Solução`; o público afetado ancora o `Problema` |
@@ -28,7 +41,7 @@ Carregue no **passo 1**. Define de onde vem cada seção do spec e, principalmen
 | `Plano de ação` | Ordem de execução envelhece na primeira surpresa da implementação. O spec descreve o destino |
 | `Histórico de iterações` do plano | Confundir os dois históricos apaga a rastreabilidade de qual documento mudou quando |
 
-## Quando não existe `.coder/plan.md`
+## Quando não existe plano para a branch
 
 Sintetize do contexto da conversa, aplicando o mesmo filtro:
 
@@ -41,7 +54,7 @@ Sintetize do contexto da conversa, aplicando o mesmo filtro:
 
 Antes de gravar, para cada afirmação do spec pergunte: *de onde isso veio?* Toda resposta deve ser uma destas três:
 
-1. Decisão registrada no `.coder/plan.md` ou tomada explicitamente na conversa
+1. Decisão registrada no plano da branch atual ou tomada explicitamente na conversa
 2. Fato observável no repositório (código, config, ADR, glossário)
 3. Inferência **declarada como inferência** no próprio texto
 

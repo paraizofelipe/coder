@@ -6,8 +6,8 @@ Esta skill **não entrevista**: ela registra decisões que já existem. A única
 
 ### 1. Reunir a base de decisões
 
-- Ler `.coder/plan.md` quando existir — é a fonte canônica, produzida por `/planning`
-- Sem `.coder/plan.md`, sintetizar do contexto da conversa atual
+- Ler `.coder/plan-<branch>.md` da branch atual quando existir — é a fonte canônica, produzida por `/planning`
+- Sem plano para a branch atual, sintetizar do contexto da conversa. Nunca usar o plano de outra branch
 - Sem nenhum dos dois com decisões tomadas, parar e instruir o usuário a executar `/planning` antes
 - Classificar cada item em decisão registrada, inferência do repositório ou lacuna; lacuna nunca vira decisão
 
@@ -15,7 +15,7 @@ Esta skill **não entrevista**: ela registra decisões que já existem. A única
 
 - Explorar apenas o necessário para nomear módulos, interfaces e integrações com precisão
 - Usar o vocabulário de domínio do projeto e respeitar ADRs e convenções da área tocada
-- Não revalidar fatos que o `.coder/plan.md` já confirmou
+- Não revalidar fatos que o plano já confirmou
 
 ### 3. Propor as seams e confirmar
 

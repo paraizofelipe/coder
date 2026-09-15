@@ -9,7 +9,7 @@ Os títulos em português correspondem ao spec canônico assim: `Problema` = Pro
 ````markdown
 # Spec — <título curto do que será construído>
 
-> Base: `.coder/plan.md` | conversa da sessão — <AAAA-MM-DD HH:MM>
+> Base: `.coder/plan-<branch>.md` | conversa da sessão · Branch: `<branch atual>` · <AAAA-MM-DD HH:MM>
 
 ## Problema
 
