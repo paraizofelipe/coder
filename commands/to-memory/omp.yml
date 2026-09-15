@@ -1,0 +1,2 @@
+description: "Envia os artefatos de .coder/ da branch atual, crus e sob confirmação, ao serviço de memória de longo prazo (Hindsight), e mantém as páginas de conhecimento — perguntas permanentes que o servidor re-responde. Sem serviço de memória no harness, encerra sem erro. Use depois de /implement. Uso: /to-memory  ou  /to-memory <artefato>"
+argument-hint: "[artefato]"
