@@ -1,0 +1,1 @@
+description: "Quebra um spec em cards — fatias verticais tracer-bullet, cada uma declarando quem a bloqueia — gravados em .coder/cards-<branch>/. Inclui prefactor como card 01 quando necessário. Só grava depois de você aprovar a granularidade. Use depois de /to-spec, quando o trabalho será distribuído. Uso: /to-cards  ou  /to-cards <spec>"
