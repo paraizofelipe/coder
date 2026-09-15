@@ -1,91 +1,55 @@
 # AGENTS.md
 
-## Sobre o repositorio
+## Sobre o repositório
 
-Markdown-only: definicoes de agentes e skills para OpenCode, Claude Code, Codex e Pi. Nao ha codigo executavel, dependencias, build ou testes. O unico script e `install.sh`.
+Markdown puro: as skills e o command do fluxo `planning` → `to-spec`, para OpenCode, Claude Code, Codex e Pi. Não há código executável, dependências, build ou testes. O único script é o `install.sh`.
+
+Esta branch (`feat-new-flow`) não contém agentes: as duas skills rodam no agente ativo do harness.
 
 ## Estrutura
 
 ```text
-agents/    14 subdiretorios — cada agente tem body.md + opencode.yml + claude.yml
-skills/    14 subdiretorios — cada skill tem SKILL.md + references/ (opcional)
-commands/  5 subdiretorios  — cada command tem body.md + opencode.yml + claude.yml + pi.yml
-install.sh                  — monta e copia tudo para ~/.config/opencode/
+skills/    2 subdiretórios — SKILL.md + references/ (opcional)
+commands/  1 subdiretório  — body.md + opencode.yml + claude.yml + pi.yml
+install.sh                 — monta e copia para o diretório nativo de cada harness
 ```
 
-## Convencoes obrigatorias
+## O fluxo
 
-- **Idioma:** todo conteudo em portugues do Brasil
-- **Frontmatter YAML** separado por harness — cada harness usa os campos que entende:
-  - `opencode.yml` (OpenCode usa `mode` e `temperature`):
-    - Primario: `description`, `mode: primary`, `model` (token `__OPENCODE_MAIN__`, resolvido na instalacao), `temperature`
-    - Subagente: `description`, `mode: subagent`, `temperature` — sem `model`
-  - `claude.yml` (Claude Code **nao** usa `mode` nem `temperature`):
-    - Primario: `name`, `description`, `model: sonnet`
-    - Subagente: `name`, `description` — sem `model`
-  - Skills (`SKILL.md`): `name` (kebab-case), `description`
-- **XML tags** para estruturar conteudo: `<role>`, `<responsibilities>`, `<rules>`, `<workflow>`, `<instructions>`, `<output_format>`, `<checklist>`, `<principles>`, `<criteria>`, `<context>`, `<code_navigation>`
-- **Listas de verificacao** (`- [ ]`) nas skills de revisao e nos agentes reviewer
-- **Formato de saida** (`<output_format>`) no final de cada arquivo define o contrato de resposta
-- **Bloco de diff estruturado** nos reviewers: toda sugestao usa o formato `path > linha > atual > sugerido > motivo`
+```text
+/planning  ──→  .coder/plan.md  ──→  /to-spec  ──→  .coder/spec-<timestamp>.md
+```
 
-## Relacao agentes ↔ skills
-
-| Agente | Mode | Skill | Obs |
-|---|---|---|---|
-| `coder` | primary | `write-code` | Orquestrador — aciona todos os subagentes |
-| `lead` | primary | `plan-implementation` | Orquestrador de planejamento |
-| `documenter` | primary | `document-plan`, `get-plan` | Publica planos no Confluence |
-| `kanban` | primary | `kanban-force` | Gerencia cards e boards |
-| `infra` | primary | `query-argocd` | Consulta ArgoCD |
-| `mr_reviewer` | primary | `review-mr` | Revisa MRs via glab |
-| `analyzer` | subagent | `analyse-code` | Inspeciona codebase |
-| `clarifier` | subagent | `clarify-intent` | Formata perguntas de ambiguidade |
-| `planner` | subagent | `plan-tasks` | TaskGraph esqueleto |
-| `detailer` | subagent | `detail-tasks` | Enriquece tasks |
-| `tester` | subagent | `test-code` | TDD: testes antes e depois da implementacao |
-| `code_reviewer` | subagent | `review-code` | Camada 1 — tecnica |
-| `business_reviewer` | subagent | `review-code` | Camada 2 — negocio/seguranca (mesma skill, papel diferente) |
-| `versioner` | subagent | `version-code` | Operacoes Git; herda modelo do chamador |
-
-`review-code` e compartilhada: o agente identifica se e Camada 1 ou 2 pelo papel que o acionou.
-
-`kanban` e um agente primary independente (standalone). Depende do MCP `kanban-force` para todas as operacoes.
-
-Integracao `coder` -> `kanban`: quando a solicitacao tiver ID de card (ex.: `STK-90AB`, `UST-FF51`) ou pedir operacao de board/card (criar, mover, atualizar, comentar, bloquear, arquivar etc.), o `coder` deve delegar ao `kanban`.
-
-## install.sh — como funciona
-
-- Instala para um ou mais harnesses escolhidos antes da instalacao: OpenCode, Claude Code, Codex e/ou Pi (menu interativo ou flag `--harness`)
-- Monta cada agente/command juntando `<harness>.yml` (`opencode.yml` ou `claude.yml`) + `body.md` e copia para o diretorio nativo do harness:
-  - OpenCode: `$OPENCODE_DIR` (default `~/.config/opencode/`) → `agents/`, `skills/`, `commands/`
-  - Claude Code: `$CLAUDE_DIR` (default `~/.claude/`) → `agents/`, `skills/`, `commands/`
-  - Codex: skills em `$CODEX_SKILLS_DIR` (default `~/.agents/skills/`); commands viram prompts body-only em `~/.codex/prompts/`; `AGENTS.md` copiado para `~/.codex/`; sem agentes nativos
-  - Pi: skills em `$PI_SKILLS_DIR` (default `~/.agents/skills/`, compartilhado com o Codex — o Pi varre esse diretorio nativamente, o que evita colisao de nomes quando Codex e Pi coexistem); commands viram prompts montados (`pi.yml` + body) em `~/.pi/agent/prompts/`; `AGENTS.md` copiado para `~/.pi/agent/`; sem agentes nativos; modelo via settings/provider do Pi
-- Copia skills como diretorios completos (`SKILL.md`) — identicas nos quatro harnesses
-- Modelo: so agentes **primarios** recebem `model`. OpenCode → `openai/gpt-5.5` (default) ou `vendor/main`; Claude Code → `sonnet`; Codex herda. Subagentes nao recebem `model`
-- Flags: `--harness <lista>`, `--vendor <nome>`, `--force` (sobrescreve sem perguntar), `--local` (usa arquivos locais em vez de baixar do GitHub)
-
-## Commits
-
-Conventional Commits em ingles: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `style:`, `perf:`, `test:`
-
-## Commands (`commands/`)
-
-| Diretorio | Comando | Descricao |
+| Skill | Papel | Pode perguntar? |
 |---|---|---|
-| `doc-plan/` | `/doc-plan` | Publica `.coder/plan.md` no Confluence (space CAT, raiz Implementacoes) via MCP `atlassian_local`; ignora se sem diferencas |
-| `get-plan/` | `/get-plan` | Baixa o plano do Confluence e salva em `.coder/plan.md`; cria o arquivo se nao existir |
-| `kanban-card/` | `/kanban-card <friendlyID>` | Consulta um card pelo friendlyID via MCP kanban-force e carrega no contexto |
-| `mr-review/` | `/mr-review` | Aciona o `mr_reviewer` para revisar o MR aberto na branch atual via `glab` |
+| `planning` | Entrevista por rodadas até a árvore de decisões esvaziar. Investiga os fatos no repositório em vez de devolvê-los ao usuário | Sim |
+| `to-spec` | Sintetiza as decisões em um spec de sete seções, confirmando antes as seams de teste | Só a confirmação das seams |
 
-Cada command e um subdiretorio com `body.md` (instrucoes) + frontmatter por harness (`opencode.yml`, `claude.yml` e `pi.yml`). O nome do diretorio vira o slash command. Argumentos sao acessados via `$ARGUMENTS` (todos) ou `$1`, `$2`... (posicionais).
+Regra invariável: `planning` decide, `to-spec` registra. O spec não reabre decisão e não inventa nenhuma — afirmação que ninguém decidiu é defeito.
 
-Instalados em `$OPENCODE_DIR/commands/` (padrao: `~/.config/opencode/commands/`).
+Use `to-spec` quando o trabalho atravessa várias sessões. Quando cabe em uma janela de contexto, implemente direto.
 
-## O que nao fazer
+## Convenções obrigatórias
 
-- Nao adicionar codigo executavel, dependencias ou config de build — o repo e apenas Markdown + 1 shell script
-- Nao alterar a estrutura de XML tags sem verificar todos os arquivos que a usam
-- Nao remover `<output_format>` de nenhum arquivo — e o contrato de resposta do agente
-- Nao mudar o valor de `model:` manualmente — `install.sh` sobrescreve na instalacao
+- **Idioma:** todo conteúdo em português do Brasil; commits em inglês
+- **Skills** (`SKILL.md`): frontmatter com `name` (kebab-case, igual ao nome da pasta) e `description` (o que faz e quando usar)
+- **Progressive disclosure:** `SKILL.md` abaixo de 500 linhas; material extenso em `references/<arquivo>.md`, um nível só, carregado no passo que precisa dele
+- **Commands:** frontmatter separado por harness — `opencode.yml`, `claude.yml` e `pi.yml` (este com `argument-hint`). Sem campo `agent:` nesta branch
+- **XML tags** para estruturar conteúdo: `<role>`, `<context>`, `<workflow>`, `<rules>`, `<checklist>`, `<output_format>`
+- **`<output_format>`** no final de cada skill define o contrato de resposta — nunca remover
+
+## Artefatos do fluxo
+
+| Arquivo | Origem | Observação |
+|---|---|---|
+| `.coder/plan.md` | `planning` | Atualizado na mesma solicitação, com histórico de iterações |
+| `.coder/spec-AAAAMMDD-HHMMSS.md` | `to-spec` | Um por solicitação; ajuste na mesma sessão atualiza o mesmo arquivo |
+
+Nenhuma das duas skills escreve código de produção, cria branch ou commita.
+
+## Validação
+
+```bash
+npx -y skills-ref validate ./skills/to-spec
+bash -n install.sh
+```

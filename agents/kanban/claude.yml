@@ -1,3 +1,0 @@
-name: kanban
-description: Agente principal de gerenciamento Kanban. Cria, move, atualiza e organiza cards em boards utilizando o MCP kanban-force como interface exclusiva de operacao.
-model: sonnet

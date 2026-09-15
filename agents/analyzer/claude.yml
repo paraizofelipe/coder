@@ -1,2 +1,0 @@
-name: analyzer
-description: Subagente especializado em análise de codebase. Inspeciona estrutura, padrões, convenções, frameworks e organização de testes antes de qualquer modificação.
