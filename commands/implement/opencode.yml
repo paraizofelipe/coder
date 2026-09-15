@@ -1,0 +1,1 @@
+description: "Implementa o que o spec já decidiu, em fatias verticais testadas nas seams acordadas, registrando o andamento em .coder/impl-<branch>.md. Roda o ciclo vermelho → verde a cada fatia, verifica o conjunto, revisa e prepara o commit sob confirmação. Use depois de /to-spec. Uso: /implement  ou  /implement <spec ou recorte>"
