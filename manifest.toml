@@ -1,0 +1,30 @@
+# Manifesto do instalador — o que é embutido no binário e instalado.
+#
+# A ordem aqui é a do fluxo, não alfabética: é ela que aparece no menu e no
+# log da instalação. Ordem alfabética contaria a história errada.
+#
+# Diretório novo em skills/ ou commands/ precisa entrar nesta lista. Se não
+# entrar, o conteúdo é embutido mas nunca instalado — e
+# TestManifestoCobreExatamenteOQueFoiEmbutido falha nomeando o que faltou.
+
+# Cada nome é um diretório em skills/, copiado inteiro, com references/.
+skills = [
+  "planning",
+  "to-spec",
+  "to-cards",
+  "implement",
+  "tdd",
+  "code-review",
+  "to-memory",
+]
+
+# Cada nome é um diretório em commands/, montado como <harness>.yml + body.md.
+# Tem command a skill que o usuário dispara. A tdd não tem, porque quem a
+# aciona é a implement.
+commands = [
+  "to-spec",
+  "to-cards",
+  "implement",
+  "code-review",
+  "to-memory",
+]
