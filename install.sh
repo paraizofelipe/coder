@@ -7,8 +7,9 @@ set -euo pipefail
 #   commands/<name>/{opencode.yml,claude.yml,omp.yml,body.md}
 #   skills/<name>/SKILL.md[, references/])
 #
-# Harnesses suportados: OpenCode, Claude Code, Oh My Pi (omp).
-# Cada um recebe os artefatos no diretório e formato nativos.
+# Harnesses suportados: OpenCode, Claude Code, Oh My Pi (omp), GitHub Copilot.
+# Cada um recebe os artefatos no diretório e formato nativos. O Copilot recebe
+# só as skills: a CLI dele já invoca a skill por /<nome> e não lê prompt file.
 # ─────────────────────────────────────────────
 
 # ATENÇÃO: aponta para a branch do fluxo novo. Ao integrar em main, voltar para /main.
@@ -136,7 +137,8 @@ select_harness() {
   echo "        1) opencode"
   echo "        2) claude"
   echo "        3) omp"
-  echo "        4) todos"
+  echo "        4) copilot"
+  echo "        5) todos"
   local choice=()
   # lê de /dev/tty para funcionar em curl|bash (stdin = pipe).
   # se /dev/tty não disponível (sem tty E sem flag), aborta com graça.
@@ -149,15 +151,16 @@ select_harness() {
       1) HARNESSES+=(opencode) ;;
       2) HARNESSES+=(claude) ;;
       3) HARNESSES+=(omp) ;;
-      4) HARNESSES=(opencode claude omp) ;;
+      4) HARNESSES+=(copilot) ;;
+      5) HARNESSES=(opencode claude omp copilot) ;;
     esac
   done
   if [[ ${#HARNESSES[@]} -eq 0 ]]; then
     warn "Nenhum harness selecionado."
     exit 1
   fi
-  # dedup preservando ordem canônica: opencode → claude → omp
-  local -a canonical=(opencode claude omp)
+  # dedup preservando ordem canônica: opencode → claude → omp → copilot
+  local -a canonical=(opencode claude omp copilot)
   local -a deduped=()
   local h
   for h in "${canonical[@]}"; do
@@ -180,11 +183,11 @@ resolve_harness_flag() {
   input="${input//,/ }"
   local -a raw=()
   read -r -a raw <<< "$input"
-  local -a canonical=(opencode claude omp)
+  local -a canonical=(opencode claude omp copilot)
   local h token found
   for token in "${raw[@]}"; do
     if [[ "$token" == "all" ]]; then
-      HARNESSES=(opencode claude omp)
+      HARNESSES=(opencode claude omp copilot)
       ok "Harnesses: ${HARNESSES[*]}"
       return
     fi
@@ -201,7 +204,7 @@ resolve_harness_flag() {
       fi
     done
     if ! $found; then
-      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, omp, all."
+      echo -e "${RED}${BOLD}[erro]${RESET} harness inválido: '$token'. Use: opencode, claude, omp, copilot, all."
       exit 1
     fi
   done
@@ -244,6 +247,12 @@ harness_paths() {
       # ~/.agents é o destino nativo e segue o padrão Agent Skills.
       local base="${OMP_AGENTS_DIR:-$HOME/.agents}"
       H_SKILLS="$base/skills"; H_COMMANDS="$base/commands" ;;
+    copilot)
+      # COPILOT_HOME é a variável da própria CLI do Copilot, não uma inventada
+      # aqui: inventar outra criaria dois lugares para apontar o mesmo diretório.
+      # H_COMMANDS vazio porque o Copilot não lê command em markdown.
+      local base="${COPILOT_HOME:-$HOME/.copilot}"
+      H_SKILLS="$base/skills"; H_COMMANDS="" ;;
   esac
 }
 
@@ -267,20 +276,23 @@ while [[ $# -gt 0 ]]; do
       echo -e "  ${BOLD}Uso:${RESET} install.sh [opções]"
       echo ""
       echo "  Instala as skills e os commands do fluxo planning → to-spec → implement"
-      echo "  (OpenCode, Claude Code, Oh My Pi), escolhidos antes da instalação."
+      echo "  (OpenCode, Claude Code, Oh My Pi, GitHub Copilot), escolhidos antes da"
+      echo "  instalação. O Copilot recebe só as skills: a CLI dele já invoca a skill"
+      echo "  por /<nome> e não lê prompt file."
       echo ""
       echo "  Opções:"
       echo "    --force, -f              Substituir todos os arquivos sem perguntar"
       echo "    --local, -l              Instalar a partir dos arquivos locais do repositório"
       echo "    --harness <lista>        Harness(es) a instalar sem menu interativo."
-      echo "                             Valores: opencode, claude, omp, all (ou combinações"
-      echo "                             separadas por vírgula/espaço, ex.: opencode,claude)"
+      echo "                             Valores: opencode, claude, omp, copilot, all (ou"
+      echo "                             combinações separadas por vírgula/espaço)"
       echo "    --help,  -h              Exibir esta ajuda"
       echo ""
       echo "  Overrides de diretório (env vars):"
       echo "    OPENCODE_DIR        base do OpenCode (default ~/.config/opencode)"
       echo "    CLAUDE_DIR          base do Claude Code (default ~/.claude)"
       echo "    OMP_AGENTS_DIR      base de agent dirs do Oh My Pi (default ~/.agents)"
+      echo "    COPILOT_HOME        base do GitHub Copilot (default ~/.copilot)"
       echo ""
       exit 0
       ;;
@@ -378,6 +390,12 @@ install_skills() {
 
 install_commands() {
   local harness="$1"
+  # destino sem commands merece uma linha, não silêncio
+  if [[ -z "$H_COMMANDS" ]]; then
+    info "$harness não lê commands: a skill já responde a /<nome>"
+    echo ""
+    return 0
+  fi
   mkdir -p "$H_COMMANDS"
   info "Instalando commands em $H_COMMANDS"
   echo ""
