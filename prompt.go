@@ -33,12 +33,48 @@ func (u *ui) harnessLabel(h harness) string {
 	return label
 }
 
-func (u *ui) selectHarnesses() ([]harness, error) {
+// rotulosDeEscopo descreve as duas saídas do menu. Separado do formulário
+// para que o texto tenha teste sem abrir terminal — e o rótulo de projeto
+// nomeia a raiz pela mesma razão da marca [instalado]: a tela não pode
+// descrever um lugar e a instalação escrever em outro.
+func rotulosDeEscopo(raiz string) (projeto, global string) {
+	return "projeto — " + raiz,
+		"global — diretórios de usuário de cada harness"
+}
+
+// selectEscopo pergunta antes de tudo, porque é a resposta daqui que define
+// a base de cada harness — e, com ela, o [instalado] da tela seguinte.
+func (u *ui) selectEscopo(raiz string) (escopo, error) {
+	if !u.interactive {
+		return escopo{}, errSemTerminal
+	}
+	projeto, global := rotulosDeEscopo(raiz)
+
+	// Global vem primeiro e é a opção destacada ao abrir: Enter mantém o
+	// comportamento de sempre, e instalar no repositório é escolha ativa.
+	var escolhido string
+	field := huh.NewSelect[string]().
+		Title("Escopo da instalação").
+		Description("Um dos dois, nunca os dois na mesma execução.").
+		Options(
+			huh.NewOption(global, escopoGlobal),
+			huh.NewOption(projeto, escopoProjeto),
+		).
+		Height(6).
+		Value(&escolhido)
+
+	if err := u.form(field).Run(); err != nil {
+		return escopo{}, err
+	}
+	return resolveEscopoFlag(escolhido, raiz)
+}
+
+func (u *ui) selectHarnesses(e escopo) ([]harness, error) {
 	if !u.interactive {
 		return nil, errSemTerminal
 	}
 	options := make([]huh.Option[string], 0, len(harnesses))
-	for _, h := range harnesses {
+	for _, h := range comEscopo(harnesses, e) {
 		options = append(options, huh.NewOption(u.harnessLabel(h), h.name))
 	}
 

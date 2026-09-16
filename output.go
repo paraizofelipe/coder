@@ -198,3 +198,49 @@ func (u *ui) summary(targets []harness, dryRun bool) {
 	}
 	u.blank()
 }
+
+// sobreposicaoNotice conta o alcance real da seleção antes de instalar. Fica
+// em silêncio quando não há sobreposição — aviso em toda execução viraria
+// ruído, e é a ausência dele que passa a dizer "este destino é exclusivo".
+//
+// O alcance sai como informação e a redundância como aviso, porque são
+// coisas diferentes: alcançar mais harnesses pode ser o que se quer; gravar
+// a mesma skill duas vezes onde um só harness vai lê-las, não.
+func (u *ui) sobreposicaoNotice(targets []harness) {
+	alcance, redundantes := sobreposicao(targets)
+	if len(alcance) == 0 && len(redundantes) == 0 {
+		return
+	}
+	for _, linha := range alcance {
+		u.info("%s", linha)
+	}
+	for _, linha := range redundantes {
+		u.warn("%s", linha)
+	}
+	u.blank()
+}
+
+// statusReport relata o que a varredura encontrou. Destino vazio não vira
+// linha: o comando descreve o que existe, e listar os oito caminhos
+// possíveis afogaria o que importa.
+func (u *ui) statusReport(destinos []destino, avisos []string) {
+	if len(destinos) == 0 {
+		u.info("Nenhum artefato deste instalador foi encontrado.")
+		u.blank()
+		return
+	}
+	for _, d := range destinos {
+		u.printf("  %s %s · %s", u.bold("•"), u.bold(d.harness), rotulo(d.escopo))
+		u.printf("      %s", d.dir)
+		u.printf("      skills: %d   commands: %d", len(d.skills), len(d.commands))
+	}
+	u.blank()
+	for _, aviso := range avisos {
+		u.warn("%s", aviso)
+	}
+	if len(avisos) > 0 {
+		u.printf("        Reinstale nos dois destinos, ou remova um: cópias que divergem")
+		u.printf("        transformam a precedência em sorteio.")
+		u.blank()
+	}
+}

@@ -7,6 +7,29 @@ import (
 	"strings"
 )
 
+// escopo diz onde os artefatos caem. A raiz vazia é o escopo global — o
+// comportamento que sempre existiu —, e é ela o zero value de propósito:
+// harness que ninguém marcou continua apontando para o home.
+//
+// Um estado só, e não um par "modo + raiz": dois campos obrigados a
+// concordar acabam discordando, e o dia em que discordassem o menu diria
+// "projeto" enquanto a escrita cairia no home.
+type escopo struct {
+	raiz string // raiz do repositório; vazia no escopo global
+}
+
+func (e escopo) projeto() bool { return e.raiz != "" }
+
+// resumo é o escopo em uma linha da saída. Só o de projeto nomeia um
+// caminho: no global não há um único a citar, porque cada harness tem o seu
+// — e o resumo do fim da instalação já lista os quatro.
+func (e escopo) resumo() string {
+	if e.projeto() {
+		return "projeto (" + e.raiz + ")"
+	}
+	return "global"
+}
+
 // harness é um agente de destino. Cada um recebe os artefatos no diretório
 // nativo que ele varre; o instalador não tenta unificar caminhos.
 type harness struct {
@@ -15,25 +38,60 @@ type harness struct {
 	envVar     string // override do diretório base
 	defaultDir string // relativo ao HOME, quando não há override
 
+	// projectDir é o diretório que o harness varre dentro do repositório.
+	// Não é derivável do defaultDir: em dois dos quatro o nome é outro.
+	projectDir string
+
 	// commands diz se o harness lê command em markdown. O Copilot não lê:
 	// na CLI a skill já responde a /<nome>, e prompt file continua sendo
 	// coisa de IDE. Instalar commands ali criaria arquivo que ninguém abre.
 	commands bool
+
+	// escopo é preenchido por comEscopo, depois da escolha. Guardá-lo dentro
+	// do próprio harness é o que mantém skillsDir, detected e hasSkill
+	// intactos: todos continuam lendo base(), e a marca do menu passa a
+	// seguir o escopo sem que nenhum deles saiba que ele existe.
+	escopo
 }
 
 // harnesses está em ordem canônica: ela define a sequência de instalação e a
 // ordem do menu, independente de como o usuário digitou --harness.
 var harnesses = []harness{
-	{name: "opencode", label: "OpenCode", envVar: "OPENCODE_DIR", defaultDir: ".config/opencode", commands: true},
-	{name: "claude", label: "Claude Code", envVar: "CLAUDE_DIR", defaultDir: ".claude", commands: true},
-	{name: "omp", label: "Oh My Pi", envVar: "OMP_AGENTS_DIR", defaultDir: ".agents", commands: true},
+	{name: "opencode", label: "OpenCode", envVar: "OPENCODE_DIR",
+		defaultDir: ".config/opencode", projectDir: ".opencode", commands: true},
+	{name: "claude", label: "Claude Code", envVar: "CLAUDE_DIR",
+		defaultDir: ".claude", projectDir: ".claude", commands: true},
+	{name: "omp", label: "Oh My Pi", envVar: "OMP_AGENTS_DIR",
+		defaultDir: ".agents", projectDir: ".agents", commands: true},
 	// COPILOT_HOME quebra o padrão <NOME>_DIR de propósito: é a variável da
 	// própria CLI do Copilot. Inventar uma segunda criaria dois lugares para
 	// apontar o mesmo diretório, livres para discordar.
-	{name: "copilot", label: "GitHub Copilot", envVar: "COPILOT_HOME", defaultDir: ".copilot", commands: false},
+	//
+	// E o diretório de projeto dele é .github, não .copilot: é lá que a CLI
+	// procura skill versionada junto com o repositório.
+	{name: "copilot", label: "GitHub Copilot", envVar: "COPILOT_HOME",
+		defaultDir: ".copilot", projectDir: ".github", commands: false},
+}
+
+// comEscopo carimba o escopo escolhido nos harnesses. É o ponto único onde
+// isso acontece: o resto do instalador recebe harness já apontando para o
+// lugar certo e não precisa saber que houve escolha.
+func comEscopo(hs []harness, e escopo) []harness {
+	out := make([]harness, 0, len(hs))
+	for _, h := range hs {
+		h.escopo = e
+		out = append(out, h)
+	}
+	return out
 }
 
 func (h harness) base() string {
+	// No escopo de projeto o override de ambiente não entra: essas variáveis
+	// nomeiam a base de usuário, e deixá-las vencer aqui faria o menu
+	// prometer o repositório enquanto a instalação escreve no home.
+	if h.projeto() {
+		return filepath.Join(h.raiz, h.projectDir)
+	}
 	if dir := os.Getenv(h.envVar); dir != "" {
 		return dir
 	}

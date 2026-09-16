@@ -11,7 +11,7 @@ import (
 
 func TestSelectTargetsPrefereAFlagAoMenu(t *testing.T) {
 	// ui sem terminal: se a flag não tivesse precedência, isto falharia.
-	obtido, err := selectTargets(&ui{out: io.Discard}, "claude,opencode")
+	obtido, err := selectTargets(&ui{out: io.Discard}, "claude,opencode", escopo{})
 	if err != nil {
 		t.Fatalf("erro inesperado: %v", err)
 	}
@@ -21,7 +21,7 @@ func TestSelectTargetsPrefereAFlagAoMenu(t *testing.T) {
 }
 
 func TestSelectTargetsExplicaAAusenciaDeTerminalEmVezDeTravar(t *testing.T) {
-	_, err := selectTargets(&ui{out: io.Discard}, "")
+	_, err := selectTargets(&ui{out: io.Discard}, "", escopo{})
 	if err == nil {
 		t.Fatal("esperava erro sem terminal e sem --harness")
 	}
@@ -41,8 +41,11 @@ func TestRunEncerraSemInstalarNadaEmHelpEVersion(t *testing.T) {
 func TestHelpTextDocumentaTodasAsOpcoesEOverrides(t *testing.T) {
 	texto := helpText()
 	obrigatorios := []string{
-		"--force", "--harness", "--version", "--help",
+		"--force", "--harness", "--scope", "--version", "--help",
 		"NO_COLOR", "ACCESSIBLE", "all",
+		// Os dois valores de --scope, e a regra que o menu não explica:
+		// no escopo de projeto os overrides de ambiente não valem.
+		escopoProjeto, escopoGlobal, ".github",
 	}
 	// Nome e override saem da tabela de harnesses: harness novo sem linha na
 	// ajuda é um destino que a flag aceita e que ninguém descobre lendo -h.

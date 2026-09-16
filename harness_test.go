@@ -210,3 +210,84 @@ func TestAceitaCommandsBastaUmDestinoQueLeia(t *testing.T) {
 		})
 	}
 }
+
+// O escopo de projeto sai da raiz do repositório e não consulta o override de
+// ambiente: OPENCODE_DIR e companhia nomeiam a base de usuário, e deixá-los
+// vencer faria o menu dizer "projeto" enquanto a escrita cai em outro lugar.
+func TestBaseNoEscopoDeProjetoSaiDaRaizEIgnoraOOverride(t *testing.T) {
+	t.Setenv("CLAUDE_DIR", filepath.Join("/tmp", "base-global-de-teste"))
+	raiz := filepath.Join("/tmp", "projeto-de-teste")
+	claude, _ := lookupHarness("claude")
+
+	h := comEscopo([]harness{claude}, escopo{raiz: raiz})[0]
+	if got, esperado := h.skillsDir(), filepath.Join(raiz, ".claude", "skills"); got != esperado {
+		t.Errorf("skillsDir: obtido %q, esperado %q", got, esperado)
+	}
+	if got, esperado := h.commandsDir(), filepath.Join(raiz, ".claude", "commands"); got != esperado {
+		t.Errorf("commandsDir: obtido %q, esperado %q", got, esperado)
+	}
+}
+
+// Raiz vazia é o escopo global, e é o zero value: harness que ninguém marcou
+// continua apontando para o home, como antes de existir escopo.
+func TestEscopoVazioMantemOComportamentoGlobal(t *testing.T) {
+	t.Setenv("CLAUDE_DIR", "/tmp/base-global-de-teste")
+	claude, _ := lookupHarness("claude")
+
+	h := comEscopo([]harness{claude}, escopo{})[0]
+	if h.projeto() {
+		t.Error("raiz vazia não pode contar como escopo de projeto")
+	}
+	if got := h.skillsDir(); got != "/tmp/base-global-de-teste/skills" {
+		t.Errorf("obtido %q", got)
+	}
+}
+
+// Invariante, não lista fixa: harness novo sem diretório de projeto cairia na
+// raiz do repositório, criando um "<raiz>/skills" que ninguém varre.
+func TestTodoHarnessDeclaraDiretorioDeProjeto(t *testing.T) {
+	for _, h := range harnesses {
+		if h.projectDir == "" {
+			t.Errorf("%s não declara projectDir", h.name)
+		}
+		if strings.HasPrefix(h.projectDir, "/") || strings.Contains(h.projectDir, "..") {
+			t.Errorf("%s: projectDir precisa ser relativo à raiz; obtido %q", h.name, h.projectDir)
+		}
+	}
+}
+
+// O Copilot é o caso em que o nome do diretório de projeto não é o do global:
+// a CLI lê .github/skills no repositório, e ~/.copilot/skills no usuário.
+func TestCopilotNoProjetoVaiParaGithubEContinuaSemCommands(t *testing.T) {
+	raiz := filepath.Join("/tmp", "projeto-de-teste")
+	copilot, _ := lookupHarness("copilot")
+
+	h := comEscopo([]harness{copilot}, escopo{raiz: raiz})[0]
+	if got, esperado := h.skillsDir(), filepath.Join(raiz, ".github", "skills"); got != esperado {
+		t.Errorf("obtido %q, esperado %q", got, esperado)
+	}
+	if got := h.commandsDir(); got != "" {
+		t.Errorf("o escopo não muda quem lê command; apontou %q", got)
+	}
+}
+
+// A marca do menu usa o mesmo caminho da escrita — inclusive no escopo de
+// projeto, onde a base de usuário pode contar a história oposta.
+func TestMarcaDeInstaladoSegueOEscopoEscolhido(t *testing.T) {
+	raiz := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(raiz, ".claude", "skills", "planning"), dirPerm); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("CLAUDE_DIR", filepath.Join(t.TempDir(), "sem-nada"))
+	claude, _ := lookupHarness("claude")
+
+	noProjeto := comEscopo([]harness{claude}, escopo{raiz: raiz})[0]
+	if !noProjeto.detected() || !noProjeto.hasSkill("planning") {
+		t.Error("o escopo de projeto deveria enxergar o que está em <raiz>/.claude")
+	}
+
+	global := comEscopo([]harness{claude}, escopo{})[0]
+	if global.detected() || global.hasSkill("planning") {
+		t.Error("o escopo global não pode reportar o que só existe no projeto")
+	}
+}

@@ -14,7 +14,9 @@ type options struct {
 	force       bool
 	dryRun      bool
 	harnessList string
+	scope       string
 	showHelp    bool
+	showStatus  bool
 	showVersion bool
 }
 
@@ -52,19 +54,33 @@ func run(args []string) error {
 		ui.dryRunNotice()
 	}
 
-	targets, err := selectTargets(ui, opts.harnessList)
+	// O status responde e encerra: é leitura do disco, não instalação, e
+	// misturá-lo ao fluxo faria o binário perguntar coisas para nada.
+	if opts.showStatus {
+		return runStatus(ui)
+	}
+
+	esc, err := selectScope(ui, opts)
 	if err != nil {
 		return err
 	}
+	targets, err := selectTargets(ui, opts.harnessList, esc)
+	if err != nil {
+		return err
+	}
+	ui.ok("Escopo: %s", esc.resumo())
 	ui.ok("Harnesses: %s", strings.Join(namesOf(targets), " "))
 	ui.blank()
+	// Antes de gravar, não depois: o alcance real da seleção é a informação
+	// que muda a escolha, e depois da instalação ela vira só constatação.
+	ui.sobreposicaoNotice(targets)
 
 	man, err := loadManifest(content)
 	if err != nil {
 		return err
 	}
 	// --harness é o caminho de script, e o --help promete "sem menu
-	// interativo": ele pula os dois menus, não só o de destino.
+	// interativo": ele pula os três menus, não só o de destino.
 	if opts.harnessList == "" {
 		if man, err = ui.selectArtifacts(man, targets); err != nil {
 			return err
@@ -88,14 +104,62 @@ func run(args []string) error {
 	return nil
 }
 
+// runStatus varre os destinos e relata o que está lá. Não usa registro de
+// instalação de propósito: o disco é a verdade, e um arquivo à parte seria
+// uma segunda — livre para discordar depois de qualquer remoção manual.
+func runStatus(ui *ui) error {
+	man, err := loadManifest(content)
+	if err != nil {
+		return err
+	}
+	raiz, _ := raizDoProjetoAtual()
+	destinos := varrerDestinos(man, raiz)
+	ui.statusReport(destinos, duplicatas(destinos))
+	return nil
+}
+
 // selectTargets resolve --harness quando ele veio, e só abre o menu quando
 // não veio. Manter a flag com precedência é o que permite rodar o instalador
 // em script, sem terminal.
-func selectTargets(ui *ui, list string) ([]harness, error) {
+//
+// O escopo é carimbado aqui, num ponto só, nos dois caminhos: o menu usa-o
+// para rotular o [instalado], mas quem decide o destino é sempre esta função.
+func selectTargets(ui *ui, list string, e escopo) ([]harness, error) {
+	targets, err := escolherTargets(ui, list, e)
+	if err != nil {
+		return nil, err
+	}
+	return comEscopo(targets, e), nil
+}
+
+func escolherTargets(ui *ui, list string, e escopo) ([]harness, error) {
 	if list != "" {
 		return resolveHarnessFlag(list)
 	}
-	return ui.selectHarnesses()
+	return ui.selectHarnesses(e)
+}
+
+// selectScope decide o escopo antes de qualquer outro menu — e antes de
+// propósito: é o escopo que define a base de cada harness, e é da base que
+// sai a marca [instalado] da tela seguinte.
+func selectScope(u *ui, opts options) (escopo, error) {
+	raiz, _ := raizDoProjetoAtual()
+	if opts.scope != "" {
+		return resolveEscopoFlag(opts.scope, raiz)
+	}
+	if !devePerguntarEscopo(opts, raiz != "", u.interactive) {
+		return escopo{}, nil
+	}
+	return u.selectEscopo(raiz)
+}
+
+// devePerguntarEscopo é a tabela inteira de quando o menu aparece. Fica
+// separada do formulário para que a decisão tenha teste sem terminal.
+//
+// Fora de repositório não há escolha a cobrar, e o silêncio é a resposta
+// certa: o escopo global é o comportamento que o instalador sempre teve.
+func devePerguntarEscopo(opts options, emRepo, interativo bool) bool {
+	return opts.scope == "" && opts.harnessList == "" && emRepo && interativo
 }
 
 func namesOf(targets []harness) []string {
@@ -118,12 +182,21 @@ func parseArgs(args []string) (options, error) {
 			opts.showHelp = true
 		case "--version", "-v":
 			opts.showVersion = true
+		case "--status", "-s":
+			opts.showStatus = true
 		case "--harness":
 			if i+1 >= len(args) {
 				return opts, errors.New("--harness exige um valor. Ex.: --harness opencode,claude")
 			}
 			i++
 			opts.harnessList = args[i]
+		case "--scope":
+			if i+1 >= len(args) {
+				return opts, fmt.Errorf("--scope exige um valor: %s ou %s",
+					escopoProjeto, escopoGlobal)
+			}
+			i++
+			opts.scope = args[i]
 		case "--local", "-l":
 			// Existia para instalar a partir do repositório em vez da rede.
 			// O conteúdo agora vem embutido no binário, então não há o que
@@ -133,6 +206,10 @@ func parseArgs(args []string) (options, error) {
 		default:
 			if value, ok := strings.CutPrefix(arg, "--harness="); ok {
 				opts.harnessList = value
+				continue
+			}
+			if value, ok := strings.CutPrefix(arg, "--scope="); ok {
+				opts.scope = value
 				continue
 			}
 			return opts, fmt.Errorf("opção desconhecida: %q (use --help)", arg)
@@ -171,10 +248,30 @@ func helpText() string {
                          manifesto inteiro. Valores: opencode, claude, omp,
                          copilot, all (ou combinações separadas por vírgula
                          ou espaço, ex.: opencode,claude)
+    --scope <valor>      Onde instalar, sem menu: project ou global. Sem a
+                         flag, o instalador pergunta quando é chamado de
+                         dentro de um repositório git, e cai em global fora
+                         dele. É um ou outro — nunca os dois na mesma
+                         execução
+    --status, -s         Listar o que já está instalado, nos dois escopos, e
+                         apontar skill que um mesmo harness enxerga em mais
+                         de um destino. Só lê o disco: não instala nada
     --version, -v        Exibir a versão
     --help, -h           Exibir esta ajuda
 
-  Overrides de diretório (variáveis de ambiente):
+  Escopo de projeto (--scope project):
+
+    Os artefatos vão para a raiz do repositório — a partir do .git, subindo
+    do diretório atual —, no diretório que cada harness varre lá dentro:
+
+      opencode  .opencode/     claude   .claude/
+      omp       .agents/       copilot  .github/
+
+    O Copilot é o caso em que o nome muda: no usuário ele lê ~/.copilot, no
+    repositório lê .github. E os overrides abaixo não valem neste escopo:
+    eles nomeiam a base de usuário.
+
+  Overrides de diretório (variáveis de ambiente, só no escopo global):
     OPENCODE_DIR         base do OpenCode (default ~/.config/opencode)
     CLAUDE_DIR           base do Claude Code (default ~/.claude)
     OMP_AGENTS_DIR       base de agent dirs do Oh My Pi (default ~/.agents)
