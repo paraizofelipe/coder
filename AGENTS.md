@@ -14,10 +14,11 @@ skills/    7 subdiretórios — SKILL.md + references/ (opcional)
 commands/  5 subdiretórios — body.md + opencode.yml + claude.yml + omp.yml
            to-spec · to-cards · implement · code-review · to-memory
 manifest.toml  lista do que é instalado, na ordem do fluxo
-*.go       instalador — main · embed · harness · assemble · installer
+*.go       instalador — main · embed · harness · project · assemble · installer
            tree · banner · output · prompt
 *_test.go  manifesto vs conteúdo embutido, montagem, gate de sobrescrita
 install.sh instalador anterior, em bash; saída idêntica à do binário
+Dockerfile ambiente descartável de teste, com os quatro harnesses instalados
 ```
 
 ## O fluxo
@@ -79,18 +80,22 @@ Enviar é irreversível e nunca resumido: a ingestão pede conteúdo bruto, e a 
 
 ## Onde cada harness encontra o fluxo
 
-| Harness | Skills | Commands |
-|---|---|---|
-| OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/commands/` |
-| Claude Code | `~/.claude/skills/` | `~/.claude/commands/` |
-| Oh My Pi | `~/.agents/skills/` | `~/.agents/commands/` |
-| GitHub Copilot | `~/.copilot/skills/` | — não lê command em markdown |
+| Harness | Skills (global) | Commands (global) | Raiz no projeto |
+|---|---|---|---|
+| OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/commands/` | `.opencode/` |
+| Claude Code | `~/.claude/skills/` | `~/.claude/commands/` | `.claude/` |
+| Oh My Pi | `~/.agents/skills/` | `~/.agents/commands/` | `.agents/` |
+| GitHub Copilot | `~/.copilot/skills/` | — não lê command em markdown | `.github/` |
 
-O OMP sabe ler os diretórios do Claude Code e do OpenCode, mas **só no nível de projeto** — `skills.enableClaudeUser`, `commands.enableClaudeUser` e `commands.enableOpencodeUser` vêm desligados. No nível de usuário, o único caminho ligado por padrão é `~/.agents`. Instalar no alvo `omp` é necessário, não opcional.
+Os harnesses leem os diretórios uns dos outros: `.claude/` no projeto é lido pelos quatro; `~/.claude` também pelo OpenCode; `~/.agents` pelo OpenCode e pelo Copilot. Só `~/.config/opencode/`, `~/.copilot/` e `.github/` são exclusivos. `coder --status` lista o que está instalado e aponta cópia ambígua.
+
+A instalação é **global ou de projeto**, nunca as duas na mesma execução. Chamado de dentro de um repositório git, o instalador pergunta; fora dele, vai de global sem perguntar. O Copilot é o único em que o nome do diretório muda entre os escopos: no usuário lê `~/.copilot`, no repositório lê `.github`.
+
+O OMP sabe ler os diretórios do Claude Code e do OpenCode, mas **só no nível de projeto** — `skills.enableClaudeUser`, `commands.enableClaudeUser` e `commands.enableOpencodeUser` vêm desligados. No nível de usuário, o único caminho ligado por padrão é `~/.agents`. Instalar no alvo `omp` é necessário, não opcional — **no escopo global**. Instalando no projeto, `.claude/` e `.opencode/` já são lidos pelo OMP por padrão, e é o sentido inverso que passa a valer.
 
 Invocação por harness: no Claude Code e no Copilot a skill já responde a `/<nome>`; no OMP ela responde a `/skill:<nome>` e o command dá o nome curto com `argument-hint`; no OpenCode a skill só é carregada pelo tool `skill`, escolhido pelo modelo — ali o command é a única porta do usuário. Por isso têm command as skills que o usuário dispara (`to-spec`, `to-cards`, `implement`, `code-review`, `to-memory`) e não a `tdd`, acionada pela `implement`.
 
-Este `AGENTS.md` é documentação do repositório: o instalador não o copia para lugar nenhum.
+Este `AGENTS.md` é documentação do repositório: o instalador não o copia para lugar nenhum. O mesmo vale para o `Dockerfile`, que serve só ao container de teste — `docker build -t coder-test . && docker run --rm -it coder-test`, sem volume, com o binário compilado dentro da imagem.
 
 ## Validação
 

@@ -102,13 +102,14 @@ commands/
 manifest.toml    o que é instalado, na ordem do fluxo
 main.go          CLI: flags, orquestração, ajuda
 embed.go         go:embed do manifesto, das skills e dos commands
-harness.go       destinos, overrides de diretório, --harness
+harness.go       destinos, escopo, overrides de diretório, --harness
+project.go       raiz do repositório, escopo projeto/global, --scope
 assemble.go      frontmatter do harness + body.md → .md final
 installer.go     cópia das skills, gate de sobrescrita
 tree.go          caminhada da árvore embutida: cópia e contagem
 banner.go        a arte ASCII, a largura calculada dela e o traçado
 output.go        cores, detecção de terminal, banner e resumo
-prompt.go        formulários huh: seleção de harness e gate de conflito
+prompt.go        formulários huh: escopo, seleção de harness e gate de conflito
 install.sh       instalador anterior, em bash (ver Instalação)
 ```
 
@@ -328,6 +329,32 @@ git switch feat-new-flow
 go run .
 ```
 
+### Escopo: projeto ou global
+
+A instalação é **uma coisa ou outra**, nunca as duas na mesma execução. Chamado de dentro de um repositório git, o instalador pergunta antes de qualquer outra coisa:
+
+```text
+Escopo da instalação
+Um dos dois, nunca os dois na mesma execução.
+> ● global — diretórios de usuário de cada harness
+  ○ projeto — /Users/voce/projetos/api
+```
+
+Global vem primeiro e é a opção destacada ao abrir: Enter mantém o comportamento de sempre, e instalar dentro do repositório é escolha ativa. Fora de um repositório a pergunta não aparece — não há decisão a cobrar.
+
+```bash
+coder --scope project             # na raiz do repositório, sem menu
+coder --scope global              # nos diretórios de usuário, sem menu
+```
+
+A pergunta vem **antes** do menu de harness porque é ela que define a base de cada um — e é da base que sai a marca `[instalado]` da tela seguinte. Sem essa ordem, o menu descreveria um lugar e a instalação escreveria em outro.
+
+A raiz é a do repositório, não o diretório atual: a busca sobe do cwd até achar `.git`, aceitando **arquivo ou diretório** — worktree e submódulo gravam um arquivo. Rodar o instalador de dentro de `cmd/` instala na raiz, que é onde os quatro harnesses procuram no walk-up deles.
+
+`--scope project` fora de um repositório é erro, não um silencioso rebaixamento para global: instalar "no projeto" sem projeto espalharia `.claude/` por qualquer diretório de onde o binário fosse chamado.
+
+Neste escopo os overrides de ambiente **não valem**. `CLAUDE_DIR` e companhia nomeiam a base de usuário; deixá-los vencer aqui faria o menu prometer o repositório enquanto a escrita cai no home.
+
 ### Seleção de harness
 
 ```bash
@@ -337,7 +364,7 @@ coder --harness copilot           # só as skills, no ~/.copilot
 coder --harness all               # todos
 ```
 
-Sem a flag, abre o menu interativo — multi-seleção, espaço marca e enter confirma. O harness já presente na máquina vem marcado com `[instalado]` em amarelo; a ausência de marca é a informação sobre o resto.
+Sem a flag, abre o menu interativo — multi-seleção, espaço marca e enter confirma. O harness já presente **no escopo escolhido** vem marcado com `[instalado]` em amarelo; a ausência de marca é a informação sobre o resto.
 
 Depois do destino vêm duas telas de artefatos, uma para skills e outra para commands, com tudo pré-marcado: Enter instala o conjunto inteiro, e desmarcar é que é a ação. Cada linha mostra em quais dos destinos escolhidos o artefato **já existe**:
 
@@ -353,6 +380,30 @@ Instalação de Skills
 A marca cobre só os harnesses selecionados. Saber que uma skill está instalada num destino que você não escolheu não muda decisão nenhuma.
 
 A detecção é a existência do diretório base — o mesmo caminho onde a instalação vai gravar, e o mesmo que os overrides de ambiente mudam. Apontar `CLAUDE_DIR` para um sandbox muda destino **e** marca, para o menu não descrever um lugar enquanto a instalação escreve em outro.
+
+### O que já está instalado
+
+```bash
+coder --status
+```
+
+Varre os oito destinos possíveis — quatro harnesses, dois escopos — e lista os ocupados:
+
+```text
+  • claude · global
+      /root/.claude
+      skills: 7   commands: 5
+  • omp · global
+      /root/.agents
+      skills: 7   commands: 5
+
+[warn]  opencode (escopo global) enxerga 7 skill(s) em mais de um destino
+        (/root/.claude, /root/.agents) — qual cópia vence não é definido
+```
+
+Destino vazio não vira linha, e o aviso só aparece quando há ambiguidade real: mesma skill, mesmo escopo, dois destinos que um só harness lê.
+
+Não há arquivo de registro por trás disso. O comando varre o disco, que é a verdade — um `installed.yml` seria uma segunda, livre para discordar no dia em que alguém apagasse um diretório à mão.
 
 ### Simulação
 
@@ -373,8 +424,46 @@ Em CI, sob pipe ou com a saída redirecionada, não há onde desenhar o formulá
 | Sem terminal e sem `--harness` | Para e diz para informar `--harness` |
 | Sem terminal, com `--harness`, arquivo já existe | Pula o conflito e segue, em vez de sobrescrever |
 | Sem terminal, com `--harness` e `--force` | Instala tudo, sem pergunta nenhuma |
+| Sem terminal ou com `--harness`, sem `--scope` | Escopo global, mesmo dentro de um repositório |
+
+A última linha é proposital: `--harness` é o caminho de script, e o `--help` promete "sem menu interativo". Ele pula os **três** menus, e o destino de um script não muda por causa do diretório de onde ele foi chamado.
 
 A detecção é `IsTerminal` no descritor, não a existência dele: `/dev/null` é um character device e seria aceito por uma checagem ingênua.
+
+### Testar em container
+
+Ambiente descartável com os quatro harnesses instalados de verdade, para exercitar o instalador sem sujar a máquina — e sem volume: o binário é compilado no próprio build e copiado para dentro da imagem, então o que se testa é o conteúdo embutido nele.
+
+```bash
+docker build -t coder-test .
+docker run --rm -it coder-test
+```
+
+O `-it` não é conforto. O instalador abre `/dev/tty` para desenhar os formulários; sem terminal ele cai no caminho de script e para dizendo para informar `--harness`.
+
+A imagem abre em `/work/projeto`, um repositório git criado no build. É ele que faz o menu de escopo aparecer assim que você roda `coder`, sem preparar nada. Para o caminho global, `cd /tmp`, que não é repositório.
+
+```bash
+coder                      # menu completo: escopo, harnesses, artefatos
+coder --scope project --harness all
+tree -a -L 2 -d /work/projeto -I .git
+```
+
+**O `-a` importa:** todos os destinos começam com ponto, e sem ele o `tree` mostra um diretório vazio e você conclui que a instalação falhou.
+
+O que se espera ver, com o manifesto inteiro: 29 arquivos em `.opencode/`, `.claude/` e `.agents/` — 24 de skills e 5 de commands — e 24 em `.github/`, que não recebe command.
+
+| Dentro da imagem | |
+|---|---|
+| `opencode`, `claude`, `omp`, `copilot` | Os quatro harnesses, instalados por `npm -g`, sem versão fixada |
+| `bun` | O bin do `omp` é um script `#!/usr/bin/env bun`: sem ele o pacote instala e a CLI não sobe |
+| `git`, `tree` | O primeiro é o que faz o escopo de projeto existir; o segundo é para conferir |
+
+Numa imagem intocada, o menu de harness já marca `opencode` como `[instalado]`: a instalação do npm dele cria `~/.config/opencode` por conta própria. A marca está certa — ela diz que o diretório base existe, que é exatamente a pergunta que importa — e o container não está sujo.
+
+Nenhuma credencial entra na imagem, e nenhuma é necessária: o instalador escreve em diretório, nunca invoca as CLIs. Rodar as quatro de fato — para ver cada uma listar as skills — exige o login próprio de cada uma, que é outro assunto.
+
+O `Dockerfile` é infraestrutura de teste: não é embutido pelo `go:embed` nem instalado em lugar nenhum.
 
 ### Adicionar uma skill
 
@@ -391,7 +480,7 @@ Command novo segue a mesma regra, na lista `commands`, e precisa de um `.yml` pa
 
 ### O `install.sh` continua aqui
 
-É o instalador anterior, em bash, que baixa o conteúdo do GitHub arquivo a arquivo. Produz exatamente os mesmos 111 arquivos que o binário — a saída dos dois foi comparada byte a byte. Enquanto não houver release publicado, ele é o caminho para instalar em máquina sem Go.
+É o instalador anterior, em bash, que baixa o conteúdo do GitHub arquivo a arquivo. **No escopo global** produz exatamente os mesmos 111 arquivos que o binário — a saída dos dois foi comparada byte a byte. Escopo de projeto ele não tem: é caminho do binário, e duplicá-lo em bash seria manter a mesma decisão em dois lugares. Enquanto não houver release publicado, ele é o caminho para instalar em máquina sem Go.
 
 ## Diretórios de instalação
 
@@ -401,6 +490,49 @@ Command novo segue a mesma regra, na lista `commands`, e precisa de um `.yml` pa
 | Claude Code | `~/.claude/skills/` | `~/.claude/commands/` |
 | Oh My Pi (`omp`) | `~/.agents/skills/` | `~/.agents/commands/` |
 | GitHub Copilot | `~/.copilot/skills/` | — |
+
+No escopo de projeto, a base troca para o diretório que cada harness varre dentro do repositório — o resto do caminho é o mesmo:
+
+| Harness | Base no projeto | Skills |
+|---|---|---|
+| OpenCode | `.opencode/` | `<raiz>/.opencode/skills/` |
+| Claude Code | `.claude/` | `<raiz>/.claude/skills/` |
+| Oh My Pi (`omp`) | `.agents/` | `<raiz>/.agents/skills/` |
+| GitHub Copilot | `.github/` | `<raiz>/.github/skills/` |
+
+O Copilot é o único em que o nome muda entre os escopos: a CLI lê skill pessoal em `~/.copilot/skills` e skill versionada com o repositório em `.github/skills`. Por isso `projectDir` é um campo próprio na tabela de harnesses, e não algo derivado do diretório global.
+
+### Quem mais lê cada destino
+
+Escolher o destino não escolhe quem enxerga. Os quatro convergiram para o mesmo formato de skill e passaram a ler os diretórios uns dos outros — esta matriz foi **medida**, com `opencode debug skill`, `copilot skill list` e `omp config list` num container limpo por combinação, não deduzida da documentação de cada um:
+
+| Instalado em | OpenCode | Claude Code | OMP | Copilot |
+|---|---|---|---|---|
+| `~/.config/opencode/` | ✅ | — | — | — |
+| `~/.claude/` | ✅ | ✅ | — | — |
+| `~/.agents/` | ✅ | — | ✅ | ✅ |
+| `~/.copilot/` | — | — | — | ✅ |
+| `.opencode/` | ✅ | — | só commands | — |
+| `.claude/` | ✅ | ✅ | ✅ | ✅ |
+| `.agents/` | ✅ | — | ✅ | ✅ |
+| `.github/` | — | — | — | ✅ |
+
+Três consequências práticas:
+
+**Não existe destino exclusivo para o Claude Code nem para o OMP.** Os únicos exclusivos são `~/.config/opencode/`, `~/.copilot/` e `.github/`.
+
+**Há conjuntos que cobrem tudo com menos cópias.** No projeto, `--harness claude` alcança os quatro. No global, `--harness omp,claude` alcança os quatro. `all` instala nos quatro destinos e é a escolha que mais duplica.
+
+**Duas cópias no mesmo escopo não têm precedência definida.** Com as sete skills em `~/.claude` e `~/.agents`, quatro execuções do `opencode debug skill` em containers limpos deram 3/4, 1/6, 7/0 e 5/2 entre as duas fontes. Enquanto as cópias forem idênticas isso não muda nada; quando uma é atualizada e a outra não, qual delas está no ar vira sorteio. Entre escopos é diferente — projeto tem precedência sobre usuário, e essa sobreposição é prevista.
+
+Por isso o instalador diz o alcance antes de gravar:
+
+```text
+[info]  /work/projeto/.claude/skills também é lido por: opencode, omp, copilot
+[warn]  omp já é alcançado pelo destino de claude — instalar neles duplica o conteúdo
+```
+
+A linha some quando o destino é exclusivo. Ela não muda o que é instalado: a matriz descreve os defaults, e quem mexeu nos settings do OMP ou nas env vars do OpenCode (`OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1`, por exemplo, que desliga a varredura) tem outra — que o instalador não tem como enxergar.
 
 O destino do OMP é `~/.agents` porque é o que o provider **Agent Dirs** dele varre: `.agent/` e `.agents/`, tanto no walk-up do projeto quanto no home do usuário. É também o diretório canônico do padrão Agent Skills.
 
@@ -444,7 +576,7 @@ Instalar em mais de um alvo não duplica: a deduplicação é por nome, e o prov
 
 A `tdd` não precisa disso: quem a aciona é a `implement`, e o caminho que o modelo usa para carregá-la — o tool `skill` no OpenCode, a skill pelo nome nos outros — funciona sem command em todos eles.
 
-Overrides por variável de ambiente: `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR` e `COPILOT_HOME` — esta última é a variável da própria CLI do Copilot, não uma inventada aqui.
+Overrides por variável de ambiente: `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR` e `COPILOT_HOME` — esta última é a variável da própria CLI do Copilot, não uma inventada aqui. As quatro valem só no escopo global: elas nomeiam a base de usuário, e no escopo de projeto o caminho sai da raiz do repositório.
 
 ## Opções do instalador
 
@@ -452,7 +584,9 @@ Overrides por variável de ambiente: `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_D
 |---|---|
 | `--dry-run`, `-n` | Percorre o fluxo inteiro sem gravar nada |
 | `--force`, `-f` | Substitui tudo sem perguntar |
-| `--harness <lista>` | `opencode`, `claude`, `omp`, `copilot`, `all` — vírgula ou espaço. Pula **os dois** menus e instala o manifesto inteiro |
+| `--harness <lista>` | `opencode`, `claude`, `omp`, `copilot`, `all` — vírgula ou espaço. Pula **os três** menus e instala o manifesto inteiro |
+| `--scope <valor>` | `project` ou `global`. Pula o menu de escopo. `project` fora de um repositório git é erro |
+| `--status`, `-s` | Lista o que já está instalado nos dois escopos e aponta cópia ambígua. Só lê o disco |
 | `--version`, `-v` | Versão do binário |
 | `--help`, `-h` | Ajuda |
 
@@ -462,7 +596,7 @@ Em conflito, o menu oferece três saídas: pular, substituir e substituir todos 
 
 | Variável | Efeito |
 |---|---|
-| `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR`, `COPILOT_HOME` | Override do diretório base de cada harness |
+| `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR`, `COPILOT_HOME` | Override do diretório base de cada harness, **só no escopo global** |
 | `NO_COLOR` | Desliga as cores da saída |
 | `ACCESSIBLE` | Troca o TUI por prompts de texto, para leitor de tela |
 

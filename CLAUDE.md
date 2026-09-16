@@ -25,10 +25,11 @@ commands/
   implement/{...}
   code-review/{...}
   to-memory/{...}
-main.go · embed.go · harness.go · assemble.go · installer.go
-tree.go · banner.go · output.go · prompt.go
+main.go · embed.go · harness.go · project.go · assemble.go · installer.go
+overlap.go · status.go · tree.go · banner.go · output.go · prompt.go
 *_test.go
 install.sh          instalador anterior, em bash
+Dockerfile          ambiente descartável de teste, com os quatro harnesses
 ```
 
 ## O fluxo
@@ -130,12 +131,15 @@ Binário Go na raiz. Copia `skills/` e `commands/` para o diretório nativo de c
 | `main.go` | Flags, orquestração, ajuda |
 | `manifest.toml` | O que é instalado, e em que ordem — dado, não código |
 | `embed.go` | `go:embed` do conteúdo e leitura do manifesto |
-| `harness.go` | Destinos, overrides de diretório, parsing de `--harness` |
+| `harness.go` | Destinos, escopo, overrides de diretório, parsing de `--harness` |
+| `project.go` | Raiz do repositório, escopo projeto/global, parsing de `--scope` |
+| `overlap.go` | Matriz medida de quem lê o destino de quem, e o aviso de alcance |
+| `status.go` | Varredura dos destinos e detecção de cópia ambígua (`--status`) |
 | `assemble.go` | Frontmatter do harness + `body.md` no `.md` final |
 | `installer.go` | Cópia das skills e o gate de sobrescrita |
 | `banner.go` | A arte ASCII e a largura calculada dela |
 | `output.go` | Cores, detecção de terminal, banner e resumo |
-| `prompt.go` | Formulários `huh`: seleção de harness e gate de conflito |
+| `prompt.go` | Formulários `huh`: escopo, seleção de harness e gate de conflito |
 
 | Regra | Razão |
 |---|---|
@@ -153,7 +157,24 @@ Binário Go na raiz. Copia `skills/` e `commands/` para o diretório nativo de c
 | A marca do artefato cobre só os destinos escolhidos | Saber que a skill existe num harness não selecionado não muda decisão, e alonga a linha |
 | Artefatos vêm pré-marcados | Enter instala tudo, como antes da tela existir; o contrário obrigaria a marcar sete itens no caminho mais comum |
 | A escolha é reordenada pelo manifesto | A ordem do fluxo é contrato — não se confia na ordem que o formulário devolve |
-| `--harness` pula os dois menus | É o caminho de script, e o `--help` já promete "sem menu interativo" |
+| `--harness` pula os três menus | É o caminho de script, e o `--help` já promete "sem menu interativo" |
+| A instalação é projeto **ou** global | Permitir os dois na mesma execução gravaria o mesmo conteúdo duas vezes, e a atualização seguinte deixaria uma das cópias para trás |
+| O escopo é perguntado antes do harness | É ele que define a base de cada harness, e é da base que sai a marca `[instalado]` da tela seguinte |
+| O escopo mora dentro do `harness` | `skillsDir`, `detected` e `hasSkill` seguem lendo `base()`: a marca acompanha o escopo sem que nenhum deles saiba que ele existe |
+| Raiz vazia é o escopo global | É o zero value: harness que ninguém marcou continua apontando para o home, e nenhum teste anterior precisou mudar |
+| Um campo só, não "modo + raiz" | Dois campos obrigados a concordar acabam discordando — e no dia em que discordassem, o menu diria "projeto" e a escrita cairia no home |
+| `projectDir` é campo, não derivação | O Copilot lê `.github` no repositório e `~/.copilot` no usuário: não há regra que derive um do outro |
+| A raiz vem do `.git`, arquivo ou diretório | Worktree e submódulo gravam um arquivo. E o destino é a raiz, não o cwd, porque é dela que os quatro harnesses partem no walk-up |
+| Override de ambiente só vale no global | As quatro variáveis nomeiam a base de usuário; deixá-las vencer no projeto faria o menu prometer o repositório enquanto a escrita cai no home |
+| Fora de repositório não se pergunta | Não há decisão a cobrar, e o escopo global é o comportamento de origem |
+| `--scope project` sem repositório é erro | Rebaixar para global em silêncio espalharia `.claude/` por qualquer diretório de onde o binário fosse chamado |
+| Global é a opção destacada no menu | Enter mantém o comportamento de sempre; instalar dentro do repositório é escolha ativa |
+| Remover o destino antes de escrever command | `os.WriteFile` segue symlink: um link plantado ali faz a instalação sobrescrever arquivo que ela nunca escolheu. O `RemoveAll` já dava esse cuidado às skills |
+| A matriz de leitores foi medida, não lida | A documentação de cada harness diz o que **ele** lê; ninguém publica a matriz inversa, que é a que importa para quem instala |
+| O aviso informa, não decide | A matriz vale para os defaults, e settings do OMP ou env vars do OpenCode mudam tudo. Decidir por quem roda, com base em configuração que não se vê, é pior do que informar |
+| Sem sobreposição, sem linha | Aviso em toda execução vira ruído; é a ausência dele que passa a dizer "este destino é exclusivo" |
+| `--status` varre, não consulta registro | Arquivo de estado é uma segunda verdade sobre o disco, e diverge no primeiro `rm -rf` manual |
+| Duplicata só conta dentro do mesmo escopo | Projeto tem precedência sobre usuário nos quatro: acusar isso de ambiguidade seria alarme falso. O indefinido é `~/.claude` + `~/.agents`, que nenhuma regra ordena |
 | Seção vazia não cria diretório | Zero skills selecionadas não deve deixar um `skills/` vazio para trás |
 | A marca é texto, a cor é decoração | Sem cor — `NO_COLOR`, modo acessível — a informação continua legível |
 | Arte e legenda somem se não couberem | Cabeçalho quebrado em terminal estreito é ruído; `bannerWidth` é calculado da arte, não fixado à mão |
@@ -166,7 +187,7 @@ Binário Go na raiz. Copia `skills/` e `commands/` para o diretório nativo de c
 | O menu de commands some quando nenhum destino os lê | Cobrar uma decisão que não muda nada é pior do que não perguntar |
 | `COPILOT_HOME`, não `COPILOT_DIR` | É a variável da própria CLI. Inventar outra criaria dois lugares para apontar o mesmo diretório, livres para discordar |
 
-O `install.sh` continua no repositório como instalador anterior. A saída dos dois foi comparada byte a byte: 111 arquivos idênticos.
+O `install.sh` continua no repositório como instalador anterior. **No escopo global** a saída dos dois foi comparada byte a byte: 111 arquivos idênticos. Escopo de projeto ele não tem — é caminho do binário, e duplicá-lo em bash seria manter a mesma decisão em dois lugares.
 
 Diferenças em relação ao instalador da `main`:
 
@@ -182,9 +203,28 @@ Adicionados:
 - harness `omp` (Oh My Pi) → `~/.agents/skills` e `~/.agents/commands`, override por `OMP_AGENTS_DIR`
 - harness `copilot` (GitHub Copilot) → `~/.copilot/skills`, override por `COPILOT_HOME`. Sem commands
 
-Flags do binário: `--dry-run`, `--force`, `--harness <lista>`, `--version`, `--help`. O `--local` do `install.sh` é aceito com aviso de depreciação — o conteúdo vem embutido, então não há de onde escolher.
+Flags do binário: `--dry-run`, `--force`, `--harness <lista>`, `--scope <project|global>`, `--status`, `--version`, `--help`. O `--local` do `install.sh` é aceito com aviso de depreciação — o conteúdo vem embutido, então não há de onde escolher.
 
 O `AGENTS.md` da raiz é documentação do repositório e não é instalado em lugar nenhum.
+
+## O container de teste
+
+`docker build -t coder-test . && docker run --rm -it coder-test`. Ambiente descartável com os quatro harnesses instalados por `npm -g`, para exercitar o instalador sem sujar a máquina.
+
+| Regra | Razão |
+|---|---|
+| Binário compilado em estágio `builder`, não copiado do host | Build local é darwin/arm64 e não executa no container. Um `COPY` do host exigiria cross-compile manual antes de cada build — o passo que se esquece |
+| Sem volume, sempre | Montar o repositório testaria o markdown do disco; o que precisa de teste é o conteúdo **embutido** no binário |
+| `node:22-slim`, não Alpine | As quatro CLIs trazem binários nativos de glibc. Em musl elas instalam sem reclamar e quebram só na hora de rodar |
+| `npm` antes do `COPY` do binário | É a camada cara e a que menos muda; invertida, cada mexida no Go rebaixaria os cinco pacotes |
+| `bun` entra junto | O bin do `omp` é um script `#!/usr/bin/env bun`. Sem ele o pacote instala e a CLI não sobe — o que não é o mesmo que harness instalado |
+| Versões não são fixadas | O container existe para testar contra o que as pessoas instalam hoje, não contra um instantâneo |
+| `WORKDIR` é um repo git criado no build | É o que faz o menu de escopo aparecer sem preparação. Para o caminho global, `cd /tmp` |
+| Root, sem usuário não-privilegiado | Container descartável, e os destinos globais precisam ser exatamente `~/.claude`, `~/.config/opencode`, `~/.agents`, `~/.copilot` |
+| Nenhuma credencial na imagem | O instalador escreve em diretório e nunca invoca as CLIs; a validação é de filesystem |
+| O `.dockerignore` não exclui markdown | `skills/` e `commands/` são o que o `go:embed` lê no estágio de build |
+
+Conferir com `tree -a`: todos os destinos começam com ponto, e sem o `-a` o resultado parece vazio.
 
 No modo remoto, o `REPO_URL` aponta para a branch `feat-new-flow`. **Ao integrar em `main`, voltar para `/main`** — senão o instalador continuará baixando de uma branch que pode não existir mais.
 
@@ -197,6 +237,9 @@ No modo remoto, o `REPO_URL` aponta para a branch `feat-new-flow`. **Ao integrar
 - Não deixar o `to-spec` fazer perguntas além da confirmação das seams
 - Não deixar a `implement` decidir o que o spec não decidiu, nem implementar o que ele não pediu
 - Não deixar nenhuma skill executar commit, push, branch, merge, rebase ou reset sem confirmação explícita
+- Não permitir instalação de projeto e global na mesma execução, nem escopo por harness: é uma decisão da rodada inteira
+- Não deixar o escopo de projeto consultar `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR` ou `COPILOT_HOME` — as quatro nomeiam a base de usuário
+- Não derivar o diretório de projeto do global: o do Copilot é `.github`, não `.copilot`
 - Não deixar a `code-review` corrigir o que aponta, nem fundir os dois eixos em uma lista só
 - Não duplicar as regras de fatiamento no `to-cards` — elas vivem em `implement/references/vertical-slices.md`
 - Não deixar o `to-cards` gravar antes da aprovação, nem registrar estado de andamento dentro do card
