@@ -1,0 +1,16 @@
+# O contexto de build precisa do markdown: skills/ e commands/ são o conteúdo
+# que o go:embed carrega para dentro do binário. Só sai daqui o que não serve
+# para compilar nem para embutir.
+
+.git
+.wt/
+
+# Binário compilado na máquina — darwin/arm64 não roda no container, e mandá-lo
+# junto só aumentaria o contexto.
+/coder
+
+# Artefatos do fluxo: são de quem rodou as skills, não da imagem.
+.coder/
+
+Dockerfile
+.dockerignore
