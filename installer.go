@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path"
@@ -164,6 +165,16 @@ func (in *installer) installCommands(h harness) error {
 		if in.dryRun {
 			in.ui.simulated("%d bytes", len(data))
 			continue
+		}
+		// Remover o destino antes de escrever: os.WriteFile segue symlink, e
+		// um link plantado aqui faria a instalação sobrescrever um arquivo
+		// que ela nunca escolheu. O gate de conflito usa Lstat e enxerga o
+		// link, mas --force e "substituir" passam por cima dele.
+		//
+		// É o mesmo cuidado que o RemoveAll já dava às skills, onde o link
+		// é apagado em vez de seguido.
+		if err := os.Remove(dst); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return err
 		}
 		if err := os.WriteFile(dst, data, filePerm); err != nil {
 			return err

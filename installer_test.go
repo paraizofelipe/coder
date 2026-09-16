@@ -376,3 +376,48 @@ func TestCopilotRecebeSkillsENenhumCommand(t *testing.T) {
 		t.Errorf("o diretório de commands não deveria ter sido criado (err=%v)", err)
 	}
 }
+
+// Escrever seguindo symlink deixa o instalador sobrescrever um arquivo que
+// ele nunca escolheu. O gate de conflito usa Lstat e enxerga o link, mas
+// --force e "substituir" passam reto — e o WriteFile escreve do outro lado.
+//
+// O caminho das skills não tem essa exposição porque o RemoveAll apaga o
+// próprio link; o dos commands escrevia por cima.
+func TestCommandNaoEscreveAtravesDeSymlink(t *testing.T) {
+	base := t.TempDir()
+	t.Setenv("CLAUDE_DIR", base)
+	h, _ := lookupHarness("claude")
+
+	alvo := filepath.Join(t.TempDir(), "arquivo-do-usuario.txt")
+	const original = "conteúdo que o instalador nunca deveria tocar"
+	if err := os.WriteFile(alvo, []byte(original), filePerm); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(base, "commands", "implement.md")
+	if err := os.MkdirAll(filepath.Dir(dst), dirPerm); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(alvo, dst); err != nil {
+		t.Fatal(err)
+	}
+
+	in := &installer{content: content, man: manifestoReal(t), ui: uiSilencioso(), force: true}
+	if err := in.run([]harness{h}); err != nil {
+		t.Fatalf("instalação falhou: %v", err)
+	}
+
+	data, err := os.ReadFile(alvo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != original {
+		t.Errorf("o arquivo apontado pelo symlink foi sobrescrito: %.60q", data)
+	}
+	info, err := os.Lstat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		t.Error("o destino deveria ter virado arquivo comum, não seguir sendo link")
+	}
+}
