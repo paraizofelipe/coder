@@ -2,7 +2,7 @@
 
 ## Sobre o repositório
 
-Markdown puro: as skills e os commands do fluxo `planning` → `to-spec` → `implement`, para OpenCode, Claude Code e Oh My Pi (`omp`). Não há código executável, dependências, build ou testes. O único script é o `install.sh`.
+As skills e os commands do fluxo `planning` → `to-spec` → `implement`, para OpenCode, Claude Code, Oh My Pi (`omp`) e GitHub Copilot — este último recebe só as skills. O conteúdo é markdown puro; o instalador é um binário Go na raiz que o embute com `go:embed`. O Go existe para distribuir o markdown — o fluxo em si não depende dele.
 
 Esta branch (`feat-new-flow`) não contém agentes: as sete skills rodam no agente ativo do harness.
 
@@ -13,7 +13,11 @@ skills/    7 subdiretórios — SKILL.md + references/ (opcional)
            planning · to-spec · to-cards · implement · tdd · code-review · to-memory
 commands/  5 subdiretórios — body.md + opencode.yml + claude.yml + omp.yml
            to-spec · to-cards · implement · code-review · to-memory
-install.sh                 — monta e copia para o diretório nativo de cada harness
+manifest.toml  lista do que é instalado, na ordem do fluxo
+*.go       instalador — main · embed · harness · assemble · installer
+           tree · banner · output · prompt
+*_test.go  manifesto vs conteúdo embutido, montagem, gate de sobrescrita
+install.sh instalador anterior, em bash; saída idêntica à do binário
 ```
 
 ## O fluxo
@@ -80,10 +84,11 @@ Enviar é irreversível e nunca resumido: a ingestão pede conteúdo bruto, e a 
 | OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/commands/` |
 | Claude Code | `~/.claude/skills/` | `~/.claude/commands/` |
 | Oh My Pi | `~/.agents/skills/` | `~/.agents/commands/` |
+| GitHub Copilot | `~/.copilot/skills/` | — não lê command em markdown |
 
 O OMP sabe ler os diretórios do Claude Code e do OpenCode, mas **só no nível de projeto** — `skills.enableClaudeUser`, `commands.enableClaudeUser` e `commands.enableOpencodeUser` vêm desligados. No nível de usuário, o único caminho ligado por padrão é `~/.agents`. Instalar no alvo `omp` é necessário, não opcional.
 
-Invocação por harness: no Claude Code a skill já responde a `/<nome>`; no OMP ela responde a `/skill:<nome>` e o command dá o nome curto com `argument-hint`; no OpenCode a skill só é carregada pelo tool `skill`, escolhido pelo modelo — ali o command é a única porta do usuário. Por isso têm command as skills que o usuário dispara (`to-spec`, `to-cards`, `implement`, `code-review`, `to-memory`) e não a `tdd`, acionada pela `implement`.
+Invocação por harness: no Claude Code e no Copilot a skill já responde a `/<nome>`; no OMP ela responde a `/skill:<nome>` e o command dá o nome curto com `argument-hint`; no OpenCode a skill só é carregada pelo tool `skill`, escolhido pelo modelo — ali o command é a única porta do usuário. Por isso têm command as skills que o usuário dispara (`to-spec`, `to-cards`, `implement`, `code-review`, `to-memory`) e não a `tdd`, acionada pela `implement`.
 
 Este `AGENTS.md` é documentação do repositório: o instalador não o copia para lugar nenhum.
 
@@ -91,7 +96,12 @@ Este `AGENTS.md` é documentação do repositório: o instalador não o copia pa
 
 ```bash
 for s in planning to-spec to-cards implement tdd code-review to-memory; do npx -y skills-ref validate ./skills/$s; done
+timeout 180s env CI=true go test ./...
 bash -n install.sh
 ```
+
+Skill nova exige uma linha em `manifest.toml`: sem ela, `TestManifestoCobreExatamenteOQueFoiEmbutido` falha, e a skill seria embutida no binário sem nunca ser instalada.
+
+A CLI do Copilot também varre `~/.agents/skills` — o destino do alvo `omp`. Quem instala no `omp` já alimenta o Copilot; o alvo `copilot` existe para quem não usa o OMP.
 
 O validador aceita só `allowed-tools`, `compatibility`, `description`, `license`, `metadata` e `name` no frontmatter. Campo de harness específico, como `disable-model-invocation`, é rejeitado.

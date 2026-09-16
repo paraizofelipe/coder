@@ -6,7 +6,7 @@ Guia para o Claude Code (claude.ai/code) ao trabalhar neste repositório.
 
 `feat-new-flow` isola o fluxo `planning` → `to-spec` → `implement`. Contém apenas essas skills, mais `to-cards` para distribuir, `tdd` e `code-review` que a `implement` aciona, `to-memory` como epílogo opcional, os commands correspondentes e o instalador. Os agentes e as demais skills do `coder` vivem na `main` e **não** devem ser trazidos para cá.
 
-Markdown puro mais um shell script. Sem código executável, dependências, build ou testes automatizados.
+O conteúdo é markdown puro. O instalador é um binário Go na raiz do repositório, que embute `skills/` e `commands/` com `go:embed` — é o único código executável, e existe para distribuir o markdown, não para participar do fluxo.
 
 ## Estrutura
 
@@ -25,7 +25,10 @@ commands/
   implement/{...}
   code-review/{...}
   to-memory/{...}
-install.sh
+main.go · embed.go · harness.go · assemble.go · installer.go
+tree.go · banner.go · output.go · prompt.go
+*_test.go
+install.sh          instalador anterior, em bash
 ```
 
 ## O fluxo
@@ -97,11 +100,12 @@ Validar antes de commitar:
 
 ```bash
 npx -y skills-ref validate ./skills/<nome>
+timeout 180s env CI=true go test ./...
 ```
 
 ### Commands
 
-`commands/<name>/` com `body.md` mais um `.yml` por harness (`opencode.yml`, `claude.yml`, `omp.yml`). O `install.sh` monta frontmatter + corpo. Commands desta branch não declaram `agent:` — não há agentes aqui, então rodam no agente ativo.
+`commands/<name>/` com `body.md` mais um `.yml` por harness que lê commands (`opencode.yml`, `claude.yml`, `omp.yml`). O instalador monta frontmatter + corpo. O Copilot não entra nessa lista: não lê command em markdown. Commands desta branch não declaram `agent:` — não há agentes aqui, então rodam no agente ativo.
 
 Tem command a skill que o **usuário** dispara: `to-spec`, `implement` e `code-review`. A `tdd` não tem, porque quem a aciona é a `implement`. A `planning` também não, por não precisar de argumento.
 
@@ -117,9 +121,52 @@ Não remover `<output_format>` de nenhuma skill — é o contrato de resposta.
 
 Português do Brasil em todo conteúdo. Commits em inglês, Conventional Commits.
 
-## install.sh
+## O instalador
 
-Copia `skills/` e `commands/` para o diretório nativo de cada harness selecionado (OpenCode, Claude Code, Oh My Pi) e monta cada command juntando `<harness>.yml` + `body.md`. Skills são copiadas como diretórios completos, preservando `references/`.
+Binário Go na raiz. Copia `skills/` e `commands/` para o diretório nativo de cada harness selecionado (OpenCode, Claude Code, Oh My Pi, GitHub Copilot) e monta cada command juntando `<harness>.yml` + `body.md`. O Copilot é a exceção: recebe só as skills. Skills são copiadas como diretórios completos, preservando `references/`.
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `main.go` | Flags, orquestração, ajuda |
+| `manifest.toml` | O que é instalado, e em que ordem — dado, não código |
+| `embed.go` | `go:embed` do conteúdo e leitura do manifesto |
+| `harness.go` | Destinos, overrides de diretório, parsing de `--harness` |
+| `assemble.go` | Frontmatter do harness + `body.md` no `.md` final |
+| `installer.go` | Cópia das skills e o gate de sobrescrita |
+| `banner.go` | A arte ASCII e a largura calculada dela |
+| `output.go` | Cores, detecção de terminal, banner e resumo |
+| `prompt.go` | Formulários `huh`: seleção de harness e gate de conflito |
+
+| Regra | Razão |
+|---|---|
+| Conteúdo embutido, nunca baixado | A instalação vira atômica: sem rede, sem `REPO_URL` apontando para branch, sem download pela metade |
+| O manifesto é TOML, não slice em Go | Adicionar uma skill vira editar um arquivo de dados, não recompilar uma decisão |
+| O manifesto tem teste, não confiança | `TestManifestoCobreExatamenteOQueFoiEmbutido` falha se uma skill entrar no repositório sem entrar no `manifest.toml`, ou vice-versa |
+| O teste de ordem não fixa a lista | Fixá-la duplicaria o manifesto e faria toda skill nova quebrar o teste sem defeito nenhum; ele verifica a invariante — não alfabética, começa em `planning` |
+| Manifesto quebrado devolve erro, não pânico | É defeito de build, e quem roda merece a mensagem, não uma stack trace |
+| Terminal é verificado com `IsTerminal` | `/dev/null` é character device: uma checagem ingênua abriria o formulário para ninguém e estouraria no meio da instalação |
+| Sem terminal, conflito é pulado | Travar esperando resposta em CI é pior do que não substituir |
+| `Height` explícita nos formulários | Terminal que não negocia tamanho encolhe o viewport e esconde opções — o usuário escolheria entre o que vê |
+| O `prompt` é injetado no `installer` | É a seam: com ela, a instalação inteira é testável sem terminal |
+| `--dry-run` pergunta, mas não grava | Percorrer o fluxo é o ponto; pular as perguntas simularia outra coisa |
+| `[instalado]` só no harness detectado | Rótulo em toda linha vira ruído e para de destacar; a ausência de marca é a informação |
+| A marca do artefato cobre só os destinos escolhidos | Saber que a skill existe num harness não selecionado não muda decisão, e alonga a linha |
+| Artefatos vêm pré-marcados | Enter instala tudo, como antes da tela existir; o contrário obrigaria a marcar sete itens no caminho mais comum |
+| A escolha é reordenada pelo manifesto | A ordem do fluxo é contrato — não se confia na ordem que o formulário devolve |
+| `--harness` pula os dois menus | É o caminho de script, e o `--help` já promete "sem menu interativo" |
+| Seção vazia não cria diretório | Zero skills selecionadas não deve deixar um `skills/` vazio para trás |
+| A marca é texto, a cor é decoração | Sem cor — `NO_COLOR`, modo acessível — a informação continua legível |
+| Arte e legenda somem se não couberem | Cabeçalho quebrado em terminal estreito é ruído; `bannerWidth` é calculado da arte, não fixado à mão |
+| A arte pede 111 colunas | `catlog-agents` em ANSI Shadow tem 109 células — em terminal de 80 o banner simplesmente não aparece |
+| Arte em dois tons | Corpo (`█`) em azul, contorno de linha dupla (`═║╔╗╚╝`) em branco — é o contorno que faz a sombra da fonte |
+| Um escape por troca de cor | Um por caractere multiplicaria a saída por dez sem diferença visual: 26–40 escapes por linha, não 109 |
+| `--dry-run` ainda monta o frontmatter | É o que detecta `.yml` faltando para um harness, sem esperar a instalação real |
+| O Copilot não recebe command | A CLI dele invoca a skill por `/<nome>` e não lê prompt file: os cinco arquivos ficariam no disco sem ninguém para abrir |
+| Destino sem command diz por quê | Pedir cinco e receber zero, em silêncio, parece instalação pela metade |
+| O menu de commands some quando nenhum destino os lê | Cobrar uma decisão que não muda nada é pior do que não perguntar |
+| `COPILOT_HOME`, não `COPILOT_DIR` | É a variável da própria CLI. Inventar outra criaria dois lugares para apontar o mesmo diretório, livres para discordar |
+
+O `install.sh` continua no repositório como instalador anterior. A saída dos dois foi comparada byte a byte: 111 arquivos idênticos.
 
 Diferenças em relação ao instalador da `main`:
 
@@ -130,9 +177,12 @@ Diferenças em relação ao instalador da `main`:
 | Harnesses `codex` e `pi` | Fora do escopo deste fluxo |
 | `install_agentsmd()` | Existia só para Codex e Pi. O OMP descobre skills e commands nativamente, e um `~/.agents/AGENTS.md` seria injetado em toda sessão de todo projeto |
 
-Adicionado: harness `omp` (Oh My Pi) → `~/.agents/skills` e `~/.agents/commands`, override por `OMP_AGENTS_DIR`.
+Adicionados:
 
-Flags: `--force`, `--local`, `--harness <lista>`, `--help`.
+- harness `omp` (Oh My Pi) → `~/.agents/skills` e `~/.agents/commands`, override por `OMP_AGENTS_DIR`
+- harness `copilot` (GitHub Copilot) → `~/.copilot/skills`, override por `COPILOT_HOME`. Sem commands
+
+Flags do binário: `--dry-run`, `--force`, `--harness <lista>`, `--version`, `--help`. O `--local` do `install.sh` é aceito com aviso de depreciação — o conteúdo vem embutido, então não há de onde escolher.
 
 O `AGENTS.md` da raiz é documentação do repositório e não é instalado em lugar nenhum.
 
@@ -141,7 +191,8 @@ No modo remoto, o `REPO_URL` aponta para a branch `feat-new-flow`. **Ao integrar
 ## O que não fazer
 
 - Não trazer agentes, skills ou commands da `main` para esta branch
-- Não adicionar código executável, dependências ou configuração de build
+- Não adicionar código executável ao **conteúdo**: o Go existe para instalar o markdown, e o fluxo não depende dele
+- Não registrar skill nova só no `manifest.toml` nem só no disco — o teste de manifesto cobre os dois lados
 - Não remover `<output_format>` de nenhuma skill
 - Não deixar o `to-spec` fazer perguntas além da confirmação das seams
 - Não deixar a `implement` decidir o que o spec não decidiu, nem implementar o que ele não pediu

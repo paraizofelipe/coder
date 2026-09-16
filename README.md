@@ -2,7 +2,7 @@
 
 Branch isolada com o fluxo completo: uma entrevista que decide (`planning`), uma síntese que registra (`to-spec`) e uma execução que constrói (`implement`), apoiada por `tdd` no ciclo de cada fatia e por `code-review` na revisão. No fim, `to-memory` leva o que foi decidido para a memória de longo prazo — quando ela existir. Nada mais.
 
-Markdown puro mais um shell script. Sem código executável, dependências ou build.
+O conteúdo é markdown puro. O instalador é um binário Go que embute `skills/` e `commands/` com `go:embed` — existe para distribuir o markdown, não para participar do fluxo.
 
 ## Índice
 
@@ -99,7 +99,17 @@ commands/
   implement/     idem
   code-review/   idem
   to-memory/     idem
-install.sh
+manifest.toml    o que é instalado, na ordem do fluxo
+main.go          CLI: flags, orquestração, ajuda
+embed.go         go:embed do manifesto, das skills e dos commands
+harness.go       destinos, overrides de diretório, --harness
+assemble.go      frontmatter do harness + body.md → .md final
+installer.go     cópia das skills, gate de sobrescrita
+tree.go          caminhada da árvore embutida: cópia e contagem
+banner.go        a arte ASCII, a largura calculada dela e o traçado
+output.go        cores, detecção de terminal, banner e resumo
+prompt.go        formulários huh: seleção de harness e gate de conflito
+install.sh       instalador anterior, em bash (ver Instalação)
 ```
 
 Esta branch não contém agentes. As sete skills rodam no agente ativo do harness.
@@ -300,30 +310,88 @@ A `code-review` não escreve artefato, então os achados do eixo Padrões **não
 
 ## Instalação
 
-### Via curl
+O instalador é um binário único com as skills e os commands embutidos por `go:embed`. A instalação não acessa a rede: o conteúdo já está dentro do executável, e binário e conteúdo versionam juntos.
+
+### Via `go install`
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/paraizofelipe/coder/feat-new-flow/install.sh | bash
+go install github.com/paraizofelipe/coder@latest
+coder
 ```
 
-### A partir do repositório local
+### A partir do repositório
 
 ```bash
 git clone https://github.com/paraizofelipe/coder.git
 cd coder
 git switch feat-new-flow
-./install.sh --local
+go run .
 ```
 
 ### Seleção de harness
 
 ```bash
-./install.sh --harness claude            # só Claude Code
-./install.sh --harness opencode,omp      # dois harnesses
-./install.sh --harness all               # todos
+coder --harness claude            # só Claude Code
+coder --harness opencode,omp      # dois harnesses
+coder --harness copilot           # só as skills, no ~/.copilot
+coder --harness all               # todos
 ```
 
-Sem a flag, o instalador exibe o menu interativo.
+Sem a flag, abre o menu interativo — multi-seleção, espaço marca e enter confirma. O harness já presente na máquina vem marcado com `[instalado]` em amarelo; a ausência de marca é a informação sobre o resto.
+
+Depois do destino vêm duas telas de artefatos, uma para skills e outra para commands, com tudo pré-marcado: Enter instala o conjunto inteiro, e desmarcar é que é a ação. Cada linha mostra em quais dos destinos escolhidos o artefato **já existe**:
+
+```text
+Instalação de Skills
+[harness] marca onde o artefato já está instalado
+> ✓ planning - [opencode]
+  ✓ to-spec - [opencode, omp]
+  ✓ tdd - [omp]
+  ✓ to-memory
+```
+
+A marca cobre só os harnesses selecionados. Saber que uma skill está instalada num destino que você não escolheu não muda decisão nenhuma.
+
+A detecção é a existência do diretório base — o mesmo caminho onde a instalação vai gravar, e o mesmo que os overrides de ambiente mudam. Apontar `CLAUDE_DIR` para um sandbox muda destino **e** marca, para o menu não descrever um lugar enquanto a instalação escreve em outro.
+
+### Simulação
+
+```bash
+coder --dry-run --harness all
+```
+
+Percorre tudo — menu, conflitos, montagem de cada command — e não escreve um byte. Cada item sai como `simulado (N arquivos)` em vez de `instalado`, e o aviso de simulação aparece no começo e no fim, porque uma instalação longa rola a tela e o aviso do topo some.
+
+A montagem do frontmatter roda mesmo assim: é o que detecta um `.yml` faltando para algum harness, defeito que de outra forma só apareceria no dia da instalação real.
+
+### Sem terminal
+
+Em CI, sob pipe ou com a saída redirecionada, não há onde desenhar o formulário. O binário detecta isso e não trava esperando uma resposta que não virá:
+
+| Situação | Comportamento |
+|---|---|
+| Sem terminal e sem `--harness` | Para e diz para informar `--harness` |
+| Sem terminal, com `--harness`, arquivo já existe | Pula o conflito e segue, em vez de sobrescrever |
+| Sem terminal, com `--harness` e `--force` | Instala tudo, sem pergunta nenhuma |
+
+A detecção é `IsTerminal` no descritor, não a existência dele: `/dev/null` é um character device e seria aceito por uma checagem ingênua.
+
+### Adicionar uma skill
+
+Duas coisas, nesta ordem:
+
+1. Criar `skills/<nome>/` com `SKILL.md` e, se houver, `references/`
+2. Acrescentar `"<nome>"` à lista `skills` do `manifest.toml`
+
+O `go:embed` traz o diretório para dentro do binário automaticamente, mas o instalador percorre o manifesto, não o filesystem — sem o passo 2 a skill é embutida e nunca instalada. `TestManifestoCobreExatamenteOQueFoiEmbutido` falha nomeando exatamente o que ficou de fora, nos dois sentidos: diretório sem entrada, e entrada sem diretório.
+
+A posição na lista é a posição no menu e no log. Ela é a ordem do fluxo, não alfabética.
+
+Command novo segue a mesma regra, na lista `commands`, e precisa de um `.yml` para cada harness que lê commands — `TestTodoCommandTemFrontmatterParaTodosOsHarnesses` cobre isso.
+
+### O `install.sh` continua aqui
+
+É o instalador anterior, em bash, que baixa o conteúdo do GitHub arquivo a arquivo. Produz exatamente os mesmos 111 arquivos que o binário — a saída dos dois foi comparada byte a byte. Enquanto não houver release publicado, ele é o caminho para instalar em máquina sem Go.
 
 ## Diretórios de instalação
 
@@ -332,8 +400,17 @@ Sem a flag, o instalador exibe o menu interativo.
 | OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/commands/` |
 | Claude Code | `~/.claude/skills/` | `~/.claude/commands/` |
 | Oh My Pi (`omp`) | `~/.agents/skills/` | `~/.agents/commands/` |
+| GitHub Copilot | `~/.copilot/skills/` | — |
 
 O destino do OMP é `~/.agents` porque é o que o provider **Agent Dirs** dele varre: `.agent/` e `.agents/`, tanto no walk-up do projeto quanto no home do usuário. É também o diretório canônico do padrão Agent Skills.
+
+### O Copilot recebe skills e mais nada
+
+A CLI do Copilot lê skills pessoais em `~/.copilot/skills` (override pela variável dela própria, `COPILOT_HOME`) e invoca cada uma por `/<nome>` — mesma porta do Claude Code. Command em markdown ela não lê: prompt file (`*.prompt.md`) continua sendo coisa de IDE, e as requisições para trazê-lo à linha de comando seguem abertas no repositório da CLI.
+
+Por isso o alvo `copilot` instala as sete skills e nenhum dos cinco commands. Instalá-los ali deixaria cinco arquivos que nenhuma ferramenta abre — e que ninguém iria remover depois. O instalador diz isso em uma linha (`copilot não lê commands: a skill já responde a /<nome>`) em vez de calar: quem pediu cinco commands e viu zero concluiria que a instalação falhou pela metade.
+
+Há uma sobreposição que vale conhecer: a CLI do Copilot também varre `~/.agents/skills`, que é exatamente o destino do alvo `omp`. Quem já instala no `omp` recebe as skills no Copilot sem escolher o alvo `copilot`. O alvo existe para quem não usa o OMP, e para quem prefere o diretório nativo.
 
 ### O OMP lê os outros dois, mas só no nível de projeto
 
@@ -361,23 +438,33 @@ Instalar em mais de um alvo não duplica: a deduplicação é por nome, e o prov
 | Claude Code | `/<nome-da-skill>` | `/<nome>` (redundante aqui) |
 | Oh My Pi | `/skill:<nome>` (setting `skills.enableSkillCommands`, ligado) | `/<nome>`, com `argument-hint` no autocomplete |
 | OpenCode | não invocável por slash — carregada pelo tool `skill`, que o **modelo** escolhe chamar | `/<nome>` |
+| GitHub Copilot | `/<nome-da-skill>` (`/skills reload` recarrega sem reiniciar a sessão) | não tem |
 
 É por isso que `to-spec`, `implement` e `code-review` têm command: no OpenCode ele é a única porta para o usuário disparar o fluxo, e no OMP ele troca `/skill:implement` por um nome curto com dica de argumento.
 
-A `tdd` não precisa disso: quem a aciona é a `implement`, e o caminho que o modelo usa para carregá-la — o tool `skill` no OpenCode, a skill pelo nome nos outros — funciona sem command em todos os três.
+A `tdd` não precisa disso: quem a aciona é a `implement`, e o caminho que o modelo usa para carregá-la — o tool `skill` no OpenCode, a skill pelo nome nos outros — funciona sem command em todos eles.
 
-Overrides por variável de ambiente: `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR`.
+Overrides por variável de ambiente: `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR` e `COPILOT_HOME` — esta última é a variável da própria CLI do Copilot, não uma inventada aqui.
 
 ## Opções do instalador
 
 | Flag | Efeito |
 |---|---|
+| `--dry-run`, `-n` | Percorre o fluxo inteiro sem gravar nada |
 | `--force`, `-f` | Substitui tudo sem perguntar |
-| `--local`, `-l` | Instala dos arquivos locais em vez de baixar do GitHub |
-| `--harness <lista>` | `opencode`, `claude`, `omp`, `all` — vírgula ou espaço |
+| `--harness <lista>` | `opencode`, `claude`, `omp`, `copilot`, `all` — vírgula ou espaço. Pula **os dois** menus e instala o manifesto inteiro |
+| `--version`, `-v` | Versão do binário |
 | `--help`, `-h` | Ajuda |
 
-Em conflito, o prompt aceita `s` (só este), `n`/Enter (pular) e `todos` (este e todos os seguintes).
+`--local` deixou de existir: o conteúdo vem embutido, então não há de onde escolher. A flag é aceita com um aviso, para não quebrar o hábito de quem vinha do script.
+
+Em conflito, o menu oferece três saídas: pular, substituir e substituir todos os próximos. "Pular" é a opção destacada ao abrir — Enter preserva o arquivo existente.
+
+| Variável | Efeito |
+|---|---|
+| `OPENCODE_DIR`, `CLAUDE_DIR`, `OMP_AGENTS_DIR`, `COPILOT_HOME` | Override do diretório base de cada harness |
+| `NO_COLOR` | Desliga as cores da saída |
+| `ACCESSIBLE` | Troca o TUI por prompts de texto, para leitor de tela |
 
 Não há seleção de vendor nesta branch: ela só existia para injetar modelo nos agentes primários, que não estão aqui.
 
@@ -392,4 +479,4 @@ Não há seleção de vendor nesta branch: ela só existia para injetar modelo n
 | XML tags | `<role>`, `<context>`, `<workflow>`, `<rules>`, `<checklist>`, `<output_format>` |
 | `<output_format>` | Obrigatório — é o contrato de resposta da skill |
 
-O `install.sh` desta branch aponta o `REPO_URL` para `feat-new-flow`. Ao integrar em `main`, voltar para `/main`.
+O `install.sh` desta branch aponta o `REPO_URL` para `feat-new-flow`. Ao integrar em `main`, voltar para `/main`. O binário não tem esse problema: ele não baixa nada.
